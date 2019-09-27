@@ -1,0 +1,101 @@
+{
+  "name": "cql",
+  "displayName": "Language Support for CQL",
+  "preview": true,
+  "enableProposedApi": false,
+  "engines": {
+    "vscode": "^1.31.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DBCG/vscode-cql"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:cql"
+  ],
+  "main": "./dist/extension",
+  "contributes": {
+    "languages": [
+      {
+        "id": "cql",
+        "extensions": [
+          ".cql"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "CQL configuration",
+      "properties": {
+        "cql.java.home": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Specifies the folder path to the JDK (8 or more recent) used to launch the CQL Language Server.\nOn Windows, backslashes must be escaped, i.e.\n\"java.home\":\"C:\\\\Program Files\\\\Java\\\\jdk1.8.0_161\"",
+          "scope": "window"
+        },
+        "cql.java.jdt.ls.vmargs": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": "-noverify -Xmx1G -XX:+UseG1GC -XX:+UseStringDeduplication",
+          "description": "Specifies extra VM arguments used to launch the CQL Language Server. Eg. use `-noverify -Xmx1G  -XX:+UseG1GC -XX:+UseStringDeduplication` to bypass class verification, increase the heap size to 1GB and enable String deduplication with the G1 Garbage collector",
+          "scope": "window"
+        },
+        "cql.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the CQL language server.",
+          "scope": "window"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "webpack --mode production",
+    "compile": "tsc -p ./",
+    "watch": "webpack --mode development --watch --info-verbosity verbose",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "node ./node_modules/vscode/bin/test",
+    "build-server": "./node_modules/.bin/gulp build_server",
+    "watch-server": "./node_modules/.bin/gulp watch_server",
+    "webpack": "webpack --mode development"
+  },
+  "devDependencies": {
+    "@types/glob": "5.0.30",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^6.0.40",
+    "gulp": "^4.0.0",
+    "gulp-decompress": "2.0.1",
+    "gulp-download": "0.0.1",
+    "mocha": "^5.2.0",
+    "ts-loader": "^5.3.1",
+    "tslint": "^5.11.0",
+    "typescript": "^3.4.1",
+    "typescript-tslint-plugin": "^0.3.1",
+    "vscode": "^1.1.33",
+    "webpack": "^4.27.1",
+    "webpack-cli": "^3.1.2"
+  },
+  "dependencies": {
+    "vscode-languageclient": "~5.1.1",
+    "find-java-home": "0.2.0",
+    "tmp": "^0.0.33",
+    "path-exists": "^3.0.0",
+    "expand-home-dir": "^0.0.3",
+    "glob": "^7.1.3"
+  }
+}
