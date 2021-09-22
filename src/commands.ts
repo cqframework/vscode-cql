@@ -2,7 +2,8 @@
 
 /**
  * These are constants for the commands used by or implemented by this extension
- * Commands that are defined by the vscode api are na
+ * Commands that are defined by the vscode api are named accordingly,
+ * Commands implemented  defined by this extension are prefixed "cql"
  */
 export namespace Commands {
     /**
@@ -42,6 +43,7 @@ export namespace Commands {
 
 	/*
 	* Execute CQL
+	* TODO: Deprecate once full debugging support exists
 	*/
 	export const EXECUTE_CQL = 'cql.action.executeCql';
 

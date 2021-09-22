@@ -29,25 +29,25 @@ export class CqlLanguageClient {
 		this.languageClient = new LanguageClient('cql', extensionName, serverOptions, clientOptions);
 
 		this.languageClient.onReady().then(() => {
-			this.languageClient.onNotification(StatusNotification.type, (report) => {
-				switch (report.type) {
-					case 'ServiceReady':
-						break;
-					case 'Started':
-						this.status = ClientStatus.Started;
-						statusBar.setReady();
-						break;
-					case 'Error':
-						this.status = ClientStatus.Error;
-						statusBar.setError();
-						break;
-					case 'Starting':
-					case 'Message':
-						// message goes to progress report instead
-						break;
-				}
-				statusBar.updateTooltip(report.message);
-			});
+			// this.languageClient.onNotification(StatusNotification.type, (report) => {
+			// 	switch (report.type) {
+			// 		case 'ServiceReady':
+			// 			break;
+			// 		case 'Started':
+			// 			this.status = ClientStatus.Started;
+			// 			statusBar.setReady();
+			// 			break;
+			// 		case 'Error':
+			// 			this.status = ClientStatus.Error;
+			// 			statusBar.setError();
+			// 			break;
+			// 		case 'Starting':
+			// 		case 'Message':
+			// 			// message goes to progress report instead
+			// 			break;
+			// 	}
+			// 	statusBar.updateTooltip(report.message);
+			// });
 
 			this.languageClient.onNotification(ProgressReportNotification.type, (progress) => {
 				// TODO: Support for long-running tasks
@@ -94,6 +94,8 @@ export class CqlLanguageClient {
 
 				return null;
 			});
+
+			statusBar.setReady();
 		});
 
 		this.registerCommands(context);

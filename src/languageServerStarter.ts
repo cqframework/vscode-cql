@@ -1,14 +1,11 @@
 
 import * as path from 'path';
 import * as net from 'net';
-import * as glob from 'glob';
-import * as os from 'os';
-import * as fs from 'fs';
 import { StreamInfo, Executable, ExecutableOptions } from 'vscode-languageclient/node';
 import { RequirementsData } from './requirements';
 import { logger } from './log';
-import { deleteDirectory, ensureExists, getTimestamp } from './utils';
-import { workspace, ExtensionContext } from 'vscode';
+
+import { ExtensionContext } from 'vscode';
 
 declare var v8debug;
 const DEBUG = (typeof v8debug === 'object') || startedInDebugMode();
@@ -53,8 +50,9 @@ function prepareParams(requirements: RequirementsData, context: ExtensionContext
 		params.push('-Dlog.level=ALL');
 	}
 
-	params.push('-jar');
-	params.push(path.resolve(requirements.cql_ls_requirements.cql_ls_home));
+	params.push('-cp');
+	params.push(path.resolve(requirements.cql_ls_info.cql_ls_jar));
+	params.push('org.opencds.cqf.cql.ls.Main');
 
 	// TODO: Add support to the language server to support using the workspace.
 	params.push("-workspace");

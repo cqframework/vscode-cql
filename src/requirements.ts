@@ -6,9 +6,7 @@ import * as fse from 'fs-extra';
 import * as expandHomeDir from 'expand-home-dir';
 import { Commands } from './commands';
 import { findJavaHomes, getJavaVersion, JavaRuntime } from './findJavaRuntimes';
-import { readManifest } from 'vscode-read-manifest';
-import { ensureExists } from './utils';
-import Downloader from 'nodejs-file-downloader';
+import { installJavaDependencies, getServicePath } from './javaServiceInstaller';
 
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
@@ -16,7 +14,7 @@ const JAVA_FILENAME = 'java' + (isWindows ? '.exe' : '');
 const REQUIRED_JDK_VERSION = 8;
 export interface RequirementsData {
 	java_requirements: JavaRequirements;
-	cql_ls_requirements: CqlLsRequirements;
+	cql_ls_info: CqlLsInfo;
 }
 
 export interface JavaRequirements {
@@ -24,9 +22,8 @@ export interface JavaRequirements {
     java_version: number;
 }
 
-export interface CqlLsRequirements {
+export interface CqlLsInfo {
 	cql_ls_jar: string;
-	cql_ls_version: string;
 }
 
 /**
@@ -76,29 +73,19 @@ export async function resolveJavaRequirements(context: ExtensionContext): Promis
     });
 }
 
-export async function resolveCqlRequirements(context: ExtensionContext): Promise<CqlLsRequirements> {
+export async function resolveJavaDependencies(context: ExtensionContext): Promise<CqlLsInfo> {
     return new Promise(async (resolve, reject) => {
-		const cqlLsVersion = await getCqlLsVersion();
-		const fileDownloader = new Downloader({
-			url: 'http://212.183.159.230/200MB.zip',
-			directory: "./downloads"
-		  });
-
-		await fileDownloader.download();
-        resolve({ cql_ls_jar: "", cql_ls_version: cqlLsVersion });
+		await installJavaDependencies(context);
+		const cqlLsJar = await getServicePath(context, "cql-language-server");
+        resolve({ cql_ls_jar: cqlLsJar });
     });
 }
 
 export async function resolveRequirements(context: ExtensionContext): Promise<RequirementsData> {
 	const javaRequirements = await resolveJavaRequirements(context);
-	const cqlRequirements = await resolveCqlRequirements(context);
+	const cqlRequirements = await resolveJavaDependencies(context);
 
-	return { java_requirements: javaRequirements, cql_ls_requirements: cqlRequirements};
-}
-
-async function getCqlLsVersion(): Promise<string> {
-	const manifest = await readManifest();
-	return (manifest as any).javaDependencies.cql_language_server;
+	return { java_requirements: javaRequirements, cql_ls_info: cqlRequirements};
 }
 
 function sortJdksBySource(jdks: JavaRuntime[]) {

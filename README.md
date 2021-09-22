@@ -35,6 +35,12 @@ Inquires for commercial support can be directed to [info@alphora.com](info@alpho
 * [cql-translator](https://github.com/cqframework/clinical_quality_language/tree/master/Src/java/cql-to-elm) - The ELM generation component used in this project.
 * [cql-engine](https://github.com/DBCG/cql_engine) - The Java CQL runtime environment used in the extension.
 
+## Local Plugin Development
+
+Install `npm`
+Run `npm install` from the root
+Run the `debug` launch from VS Code
+
 ## Acknowledgements
 
 This plugin is a reimplementation of much of the functionality in the [atom_cql_support](https://github.com/cqframework/atom_cql_support) plugin for the Atom editor. Additionally, the Red Hat [vscode-java](https://github.com/redhat-developer/vscode-java) plugin was referenced extensively in developing this plugin.

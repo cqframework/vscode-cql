@@ -1,5 +1,5 @@
 /**
- * This file contains the public api for the extension. Anything that other extensions may be dependent above should be defined here
+ * This file contains the public api for the extension. Anything that other extensions may be dependent upon should be defined here
  */
 export enum ClientStatus {
 	Uninitialized = "Uninitialized",
