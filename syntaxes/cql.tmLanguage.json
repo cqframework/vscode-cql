@@ -1,0 +1,281 @@
+{
+    "information_for_contributors": [
+        "This textmate file was ported from the tree-sitter version in the atom_cql_support package"
+    ],
+    "version": "0.0.0",
+    "name": "CQL",
+    "scopeName": "source.cql",
+    "patterns": [
+        {
+            "begin": "/\\*",
+            "captures": {
+                "1": {
+                    "name": "punctuation.definition.comment.cql"
+                }
+            },
+            "end": "\\*/\\n?",
+            "name": "comment.block.cql"
+        },
+        {
+            "begin": "//",
+            "captures": {
+                "1": {
+                    "name": "punctuation.definition.comment.cql"
+                }
+            },
+            "end": "$\\n?",
+            "name": "comment.line.double-slash.cql"
+        },
+        {
+            "begin": "'",
+            "beginCaptures": {
+                "1": {
+                    "name": "punctuation.definition.string.begin.cql"
+                }
+            },
+            "end": "'",
+            "endCaptures": {
+                "1": {
+                    "name": "punctuation.definition.string.end.cql"
+                }
+            },
+            "name": "string.quoted.single.cql",
+            "patterns": [
+                {
+                    "match": "\\\\(x\\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)",
+                    "name": "constant.character.escape.cql"
+                }
+            ]
+        },
+        {
+            "begin": "\"",
+            "beginCaptures": {
+                "1": {
+                    "name": "variable.other.cql"
+                }
+            },
+            "end": "\"",
+            "endCaptures": {
+                "1": {
+                    "name": "variable.other.cql"
+                }
+            },
+            "name": "variable.other.cql",
+            "patterns": [
+                {
+                    "match": "\\\\(x\\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)",
+                    "name": "constant.character.escape.cql"
+                }
+            ]
+        },
+        {
+            "match": "@\\b[0-9][0-9][0-9][0-9](\\-[0-1][0-9](\\-[0-3][0-9](T[0-2][0-9](\\:[0-5][0-9](\\:[0-5][0-9](\\.[0-9][0-9]?[0-9]?(Z|((\\+|\\-)[0-2][0-9](\\:[0-5][0-9])?))?)?)?)?)?)?)?\\b",
+            "name": "constant.date.cql"
+        },
+        {
+            "match": "@\\bT[0-2][0-9](\\:[0-5][0-9](\\:[0-5][0-9](\\.[0-9][0-9]?[0-9]?(Z|((\\+|\\-)[0-2][0-9](\\:[0-5][0-9])?))?)?)?)?\\b",
+            "name": "constant.time.cql"
+        },
+        {
+            "match": "(?<!\\$)\\b((0([box])[0-9a-fA-F]+)|([0-9]+(\\.[0-9]+)?(e[+\\-]?[0-9]+)?))\\b",
+            "name": "constant.numeric.cql"
+        },
+        {
+            "match": "\\b(library|using|include|version|called|parameter|default|valueset|code|codesystems?|display|public|private|context +(Patient|Population))\\b",
+            "captures": {
+                "1": {
+                    "name": "keyword.declarations.cql"
+                },
+                "2": {
+                    "name": "support.constant.cql"
+                }
+            }
+        },
+        {
+            "begin": "\\b(define function)\\b",
+            "beginCaptures": {
+                "1": {
+                    "name": "keyword.declarations.cql"
+                }
+            },
+            "patterns": [
+                {
+                    "match": "(.+?)",
+                    "captures": {
+                        "1": {
+                            "name": "entity.name.function.cql"
+                        }
+                    }
+                }
+            ],
+            "end": "(:|\\n)"
+        },
+        {
+            "begin": "\\b(define)\\b",
+            "beginCaptures": {
+                "1": {
+                    "name": "keyword.declarations.cql"
+                }
+            },
+            "patterns": [
+                {
+                    "match": "(.+?)",
+                    "captures": {
+                        "1": {
+                            "name": "variable.other.cql"
+                        }
+                    }
+                }
+            ],
+            "end": "(:|\\n)"
+        },
+        {
+            "match": "\\b([^\\s,\\(\\[:\"]+?)\\(",
+            "captures": {
+                "1": {
+                    "name": "entity.name.function.cql"
+                }
+            }
+        },
+        {
+            "match": "(\".+?\")\\(",
+            "captures": {
+                "1": {
+                    "name": "entity.name.function.cql"
+                }
+            }
+        },
+        {
+            "match": "\\bsame +((year|month|day|hour|minute|second|millisecond) +)?(or +before|or +after|as)\\b",
+            "name": "keyword.operator.temporal.cql"
+        },
+        {
+            "begin": "{",
+            "beginCaptures": {
+                "0": {
+                    "name": "meta.brace.curly.cql"
+                }
+            },
+            "end": "}",
+            "endCaptures": {
+                "1": {
+                    "name": "meta.brace.curly.cql"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "$self"
+                }
+            ]
+        },
+        {
+            "match": "\\b(properly +)?within\\s+(\\d+)\\s+(year|month|day|hour|minute|second|millisecond)s? +of\\b",
+            "captures": {
+                "2": {
+                    "name": "constant.numeric.cql"
+                }
+            },
+            "name": "keyword.operator.temporal.cql"
+        },
+        {
+            "match": "\\b(starts|ends|occurs|meets|overlaps|(properly +)?(contains|includes|during|included +in)|before|after|(start|end)( +of)?)\\b",
+            "name": "keyword.operator.temporal.cql"
+        },
+        {
+            "match": "\\b(year|month|day|hour|minute|second|millisecond)s?( +or +(less|more))? (before|after)\\b",
+            "name": "keyword.operator.temporal.cql"
+        },
+        {
+            "match": "\\b(and|or|xor|not)\\b",
+            "name": "keyword.operator.logical.cql"
+        },
+        {
+            "match": "\\b(Coalesce|is +null|is +not +null)\\b",
+            "name": "keyword.operator.nullological.cql"
+        },
+        {
+            "match": "\\b(cast|as|convert|to|is|ToBoolean|ToConcept|ToDateTime|ToDecimal|ToInteger|ToQuantity|ToString|ToTime)\\b",
+            "name": "keyword.operator.type.cql"
+        },
+        {
+            "match": "=|<|>|matches",
+            "name": "keyword.operator.comparison.cql"
+        },
+        {
+            "match": "\\b(properly +)?between\\b",
+            "name": "keyword.operator.comparison.cql"
+        },
+        {
+            "match": "\\+|\\-|\\*|\\/|\\^",
+            "name": "keyword.operator.arithmetic.cql"
+        },
+        {
+            "match": "\\b(Abs|Ceiling|div|Floor|Log|Ln|maximum|minimum|mod|predecessor +of|Round|successor +of|Truncate)\\b",
+            "name": "keyword.operator.arithmetic.cql"
+        },
+        {
+            "match": "\\b(Combine|Length|Lower|PositionOf|Split|Substring|Upper)\\b",
+            "name": "keyword.operator.string.cql"
+        },
+        {
+            "match": "\\b(DateTime|Now|TimeOfDay|Today)\\b",
+            "name": "keyword.operator.datetime.cql"
+        },
+        {
+            "match": "\\b(year|month|day|hour|minute|second|millisecond|timezone|date|time) +from\\b",
+            "name": "keyword.operator.datetime.cql"
+        },
+        {
+            "match": "\\b(years|months|days|hours|minutes|seconds|milliseconds) +between\\b",
+            "name": "keyword.operator.datetime.cql"
+        },
+        {
+            "match": "\\b(duration|difference) +in +(years|months|days|hours|minutes|seconds|milliseconds) +of\\b",
+            "name": "keyword.operator.datetime.cql"
+        },
+        {
+            "match": "\\b(years?|months?|days?|hours?|minutes?|seconds?|milliseconds?)\\b",
+            "name": "keyword.operator.datetime.cql"
+        },
+        {
+            "match": "\\b(Calculate)?Age(In(Years|Months|Days|Hours|Minutes|Seconds))?(At)?\\b",
+            "name": "keyword.operator.datetime.cql"
+        },
+        {
+            "match": "\\b(collapse|width +of)\\b",
+            "name": "keyword.operator.interval.cql"
+        },
+        {
+            "match": "\\b(all|distinct|exists|expand|First|IndexOf|Last|Length|singleton +from)\\b",
+            "name": "keyword.operator.list.cql"
+        },
+        {
+            "match": "\\b(contains|except|in|intersect|union)\\b",
+            "name": "keyword.operator.intervalOrList.cql"
+        },
+        {
+            "match": "\\b(AllTrue|AnyTrue|Avg|Count|Max|Min|Median|Mode|PopulationStdDev|PopulationVariance|StdDev|Sum|Variance)\\b",
+            "name": "keyword.operator.aggregate.cql"
+        },
+        {
+            "match": "\\b(if|then|else|case|when|end)\\b",
+            "name": "keyword.control.cql"
+        },
+        {
+            "match": "\\b(from|with|without|where|return|such that|sort( +asc(ending)?|desc(ending)?)?( +by)|asc(ending)|desc(ending))\\b",
+            "name": "keyword.control.query.cql"
+        },
+        {
+            "match": "\\b(Any|Boolean|Code|Concept|DateTime|Decimal|Integer|Interval|List|Quantity|String|Time|Tuple)\\b",
+            "name": "support.type.cql"
+        },
+        {
+            "match": "\\b(true|false|null)\\b",
+            "name": "constant.language.cql"
+        },
+        {
+            "match": "\\b([A-Za-z]|_)([A-Za-z0-9]|_)*",
+            "name": "variable.other.cql"
+        }
+    ]
+}
