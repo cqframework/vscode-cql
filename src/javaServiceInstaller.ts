@@ -7,7 +7,8 @@ import * as path from "path";
 import * as fs from "fs";
 import { ensureExists } from './utils';
 import fetch from 'node-fetch';
-import { ExtensionContext } from "vscode";
+import { ExtensionContext, Progress, ProgressLocation, window } from "vscode";
+import { VersionedTextDocumentIdentifier } from "vscode-languageserver-types";
 
 interface MavenCoords {
 	groupId: string;
@@ -69,13 +70,13 @@ function getSearchUrl(coords: MavenCoords): string {
 async function installServiceIfMissing(serviceName: string, coords: MavenCoords): Promise<void> {
 	const doesExist = await isServiceInstalled(coords);
 	if (!doesExist) {
-		try {
-			await installJar(serviceName, coords);
-		}
-		catch (e) {
-			throw e;
-		}
+
+		return await window.withProgress({ location: ProgressLocation.Notification, cancellable: false, title: `Installing ${serviceName}` }, async (progress) => {
+			await installJar(serviceName, coords, progress);
+		});
 	}
+
+	return;
 }
 
 async function isServiceInstalled(coords: MavenCoords): Promise<boolean> {
@@ -84,15 +85,22 @@ async function isServiceInstalled(coords: MavenCoords): Promise<boolean> {
 }
 
 // Installs a jar using maven coordinates
-async function installJar(serviceName: string, coords: MavenCoords): Promise<void> {
+async function installJar(serviceName: string, coords: MavenCoords, progress?: Progress<{ message?: string; increment?: number; }>): Promise<void> {
 	const jarPath = await getServicePathFromCoords(coords);
 	const jarHome = getJarHome();
 
+	if (progress) {
+		progress.report({ message: `Starting download`});
+	}
 	ensureExists(jarHome);
 	const searchUrl = getSearchUrl(coords);
 	const setupInfo = await setupDownload(serviceName, searchUrl);
 
-	await downloadFile(setupInfo.serverDownloadUrl, jarPath);
+	await downloadFile(setupInfo.serverDownloadUrl, jarPath, serviceName, setupInfo.serverDownloadSize, progress);
+
+	if (progress) {
+		progress.report({ message: `Download complete`});
+	}
 
 	const doesExist = fs.existsSync(jarPath);
 	if (!doesExist) {
@@ -100,11 +108,19 @@ async function installJar(serviceName: string, coords: MavenCoords): Promise<voi
 	}
 }
 
-async function downloadFile(url, path) {
+async function downloadFile(url: string, path: string, serviceName: string, totalBytes?: number, progress?: Progress<{ message?: string; increment?: number; }>) {
 	const res = await fetch(url);
 	const fileStream = fs.createWriteStream(path);
+	let bytesSoFar = 0;
 	await new Promise((resolve, reject) => {
 		res.body.pipe(fileStream);
+		res.body.on("data", (chunk) => { if (progress) {
+			bytesSoFar += chunk.length;
+			progress.report({
+				message: `Downloading`,
+				increment: (bytesSoFar / totalBytes)
+			});
+		} });
 		res.body.on("error", reject);
 		fileStream.on("finish", resolve);
 	});
@@ -121,5 +137,5 @@ async function setupDownload(serviceName: string, url: string) {
 	response = await fetch(redirectUrl, { method: "head" });
 	const length = response.headers.get("content-length");
 
-	return { serverDownloadUrl: redirectUrl, serverDownloadSize: length };
+	return { serverDownloadUrl: redirectUrl, serverDownloadSize: length ? parseInt(length) : null  };
 }
