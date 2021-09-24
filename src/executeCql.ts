@@ -41,7 +41,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
 	const resultPath = path.join(testPath, 'results');
 
 	const fhirVersionRegex = /using (FHIR|"FHIR") version '(\d(.|\d)*)'/;
-	const matches = window.activeTextEditor.document.getText().match(fhirVersion);
+	const matches = window.activeTextEditor.document.getText().match(fhirVersionRegex);
 	if (matches && matches.length > 2) {
 		const version = matches[2];
 		if (version.startsWith("2")) {
@@ -90,10 +90,11 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
 
 	if (modelRootPath && modelRootPath !== '' && fs.existsSync(modelRootPath)) {
 		const dirs = fs.readdirSync(modelRootPath)
-			.filter(dirent => fs.statSync(path.join(modelRootPath, dirent)).isDirectory);
+			.filter(dirent => fs.statSync(path.join(modelRootPath, dirent)).isDirectory());
 
 		if (dirs && dirs.length > 0) {
-			dirs.forEach(async (dirent) => {
+			dirs.forEach((dirent) => {
+				const context = dirent;
 				const modelPath = path.join(modelRootPath, dirent);
 				operationArgs = getExecArgs(operationArgs, libraryDirectory, libraryName, modelType, modelPath, terminologyPathActual, context, measurementPeriod);
 			});
