@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.1
+
+* Fixes for test discovery found in review
+
 ## 0.1.0
 
 * Initial preview release
