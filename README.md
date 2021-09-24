@@ -38,7 +38,11 @@ Inquires for commercial support can be directed to [info@alphora.com](info@alpho
 ## Local Plugin Development
 
 Install `npm`
+
 Run `npm install` from the root
+
+Run `npm run watch` from the root
+
 Run the `debug` launch from VS Code
 
 ## Acknowledgements
