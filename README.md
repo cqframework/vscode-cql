@@ -1,6 +1,6 @@
 # Clinical Quality Language (CQL) for VSCode
 
-Adds syntax highlighting, semantic (error) highlighting, and (*SOON*) local execution for the HL7 Clinical Quality Language (CQL) to VS Code
+Adds syntax highlighting, semantic (error) highlighting, and local execution for the HL7 Clinical Quality Language (CQL) to VS Code
 
 ## Quick Start
 
