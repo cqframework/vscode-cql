@@ -22,7 +22,7 @@ electronic clinical quality measures (eCQM) and clinical decision support rules
 
 ## Getting Help
 
-Bugs and feature requests can be filed with [Github Issues](https://github.com/DBCG/vscode-cql/issues).
+Bugs and feature requests can be filed with [Github Issues](https://github.com/cqframework/vscode-cql/issues).
 
 The implementers are active on the official FHIR [Zulip chat for CQL](https://chat.fhir.org/#narrow/stream/179220-cql).
 
