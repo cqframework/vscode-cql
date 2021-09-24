@@ -39,18 +39,16 @@ export namespace Commands {
 	/*
 	* View ELM for CQL
 	*/
-	export const VIEW_ELM = 'cql.action.viewElm';
+	// TODO: Shorten the command, the whole namespace isn't needed.
+	export const VIEW_ELM_COMMAND = 'cql.action.viewElm';
+	export const VIEW_ELM = 'org.opencds.cqf.cql.ls.viewElm';
 
 	/*
 	* Execute CQL
 	* TODO: Deprecate once full debugging support exists
 	*/
-	export const EXECUTE_CQL = 'cql.action.executeCql';
-
-	/*
-	* TODO: Start Debug Session
-	*/
-	export const START_DEBUG_SESSION = 'cql.action.startDebugSession';
+	export const EXECUTE_CQL_COMMAND = 'cql.action.executeCql';
+	export const EXECUTE_CQL = 'org.opencds.cqf.cql.ls.plugin.debug.startDebugSession';
 
 	/*
      * Open settings.json

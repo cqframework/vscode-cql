@@ -75,8 +75,32 @@
         "command": "cql.open.logs",
         "title": "Open Logs",
         "category": "CQL"
+      },
+      {
+        "command": "cql.action.viewElm",
+        "title": "View ELM",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.action.executeCql",
+        "title": "Execute CQL",
+        "category": "CQL"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "cql.action.viewElm",
+          "when": "editorLangId == cql",
+          "group": "1_cqlactions"
+        },
+        {
+          "command": "cql.action.executeCql",
+          "when": "editorLangId == cql",
+          "group": "1_cqlactions"
+        }
+      ]
+    }
   },
   "resolutions": {
     "minimist": "^1.2.5",

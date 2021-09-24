@@ -1,15 +1,16 @@
 'use strict';
 
-import { ExtensionContext, window, workspace, commands, Uri, ProgressLocation, ViewColumn, EventEmitter, extensions, Location, languages, CodeActionKind, TextEditor, CancellationToken } from "vscode";
+import { ExtensionContext, window, workspace, commands, Uri, ProgressLocation, ViewColumn, EventEmitter, extensions, Location, languages, CodeActionKind, TextEditor } from "vscode";
 import { Commands } from "./commands";
 import { prepareExecutable, awaitServerConnection } from "./languageServerStarter";
-import { LanguageClientOptions, Position as LSPosition, Location as LSLocation, MessageType, TextDocumentPositionParams, ConfigurationRequest, ConfigurationParams } from "vscode-languageclient";
+import { LanguageClientOptions, Position as LSPosition, Location as LSLocation, MessageType, TextDocumentPositionParams, ConfigurationRequest, ConfigurationParams, CancellationToken, ExecuteCommandRequest, ExecuteCommandParams } from "vscode-languageclient";
 import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
 import { StatusNotification, ProgressReportNotification, ActionableNotification, ExecuteClientCommandRequest } from "./protocol";
 import { RequirementsData } from "./requirements";
 import { statusBar } from "./statusBar";
 import { logger } from "./log";
 import { ClientStatus } from "./extension.api";
+import { executeCQLFile } from "./executeCql";
 
 const extensionName = 'Language Support for CQL';
 
@@ -29,6 +30,7 @@ export class CqlLanguageClient {
 		this.languageClient = new LanguageClient('cql', extensionName, serverOptions, clientOptions);
 
 		this.languageClient.onReady().then(() => {
+			this.status = ClientStatus.Started;
 			// this.languageClient.onNotification(StatusNotification.type, (report) => {
 			// 	switch (report.type) {
 			// 		case 'ServiceReady':
@@ -95,6 +97,7 @@ export class CqlLanguageClient {
 				return null;
 			});
 
+			// TODO: Set this once we have the initialization signal from the LS.
 			statusBar.setReady();
 		});
 
@@ -104,6 +107,15 @@ export class CqlLanguageClient {
 
 	private registerCommands(context: ExtensionContext): void {
 		context.subscriptions.push(commands.registerCommand(Commands.OPEN_OUTPUT, () => this.languageClient.outputChannel.show(ViewColumn.Three)));
+
+		context.subscriptions.push(commands.registerCommand(Commands.VIEW_ELM_COMMAND, async (uri: Uri) => {
+			const xml: string = await <any>commands.executeCommand(Commands.EXECUTE_WORKSPACE_COMMAND, Commands.VIEW_ELM, uri.toString());
+			workspace.openTextDocument({ language: "xml", content: xml }).then(t => window.showTextDocument(t));
+		}));
+
+		context.subscriptions.push(commands.registerCommand(Commands.EXECUTE_CQL_COMMAND, async (uri: Uri) => {
+			await executeCQLFile(uri);
+		}));
 	}
 
 	public start(): void {

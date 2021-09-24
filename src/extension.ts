@@ -124,7 +124,7 @@ export function activate(context: ExtensionContext): Promise<void> {
 					{ scheme: 'file', language: 'cql' },
 					{ scheme: 'untitled', language: 'cql' }
 				],
-				revealOutputChannelOn: RevealOutputChannelOn.Info, // TODO: The Debug output should be handled a different way.
+				revealOutputChannelOn: RevealOutputChannelOn.Warn, // TODO: The Debug output should be handled a different way.
 				errorHandler: new ClientErrorHandler(extensionName),
 				initializationFailedHandler: error => {
 					logger.error(`Failed to initialize ${extensionName} due to ${error && error.toString()}`);

@@ -48,7 +48,7 @@ export async function resolveJavaRequirements(context: ExtensionContext): Promis
 			javaVersion = validJdks[0].version;
 		}
         if (javaHome) {
-            // java.home explictly specified
+            // java.home explicitly specified
             source = `java.home variable defined in ${env.appName} settings`;
             javaHome = expandHomeDir(javaHome);
             if (!await fse.pathExists(javaHome)) {
