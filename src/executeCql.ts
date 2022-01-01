@@ -36,6 +36,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
 	const modelType = "FHIR";
 	const contextType = 'Patient';
 	let fhirVersion = "R4";
+	const optionsPath = path.join(libraryDirectory, 'cql-options.json');
 	const measurementPeriod = '';
 	const testPath = path.join(projectPath, 'input', 'tests');
 	const resultPath = path.join(testPath, 'results');
@@ -86,7 +87,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
 	await insertTextAtEnd(textEditor, `${modelMessage}\r\n`);
 	await insertTextAtEnd(textEditor, `${terminologyMessage}\r\n`);
 
-	let operationArgs = getCqlCommandArgs(fhirVersion);
+	let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath);
 
 	if (modelRootPath && modelRootPath !== '' && fs.existsSync(modelRootPath)) {
 		const dirs = fs.readdirSync(modelRootPath)
@@ -144,7 +145,7 @@ async function executeCQL(textEditor: TextEditor, operationArgs: string[]) {
 	await insertTextAtEnd(textEditor, `elapsed: ${((endExecution.getMilliseconds() - startExecution.getMilliseconds()) / 1000).toString()} seconds\r\n\r\n`);
 }
 
-function getCqlCommandArgs(fhirVersion: string): string[] {
+function getCqlCommandArgs(fhirVersion: string, optionsPath: string): string[] {
 	const args = ["cql"];
 
 	if (fhirVersion && fhirVersion !== '') {
@@ -153,7 +154,12 @@ function getCqlCommandArgs(fhirVersion: string): string[] {
 	else {
 		args.push(`-fv=R4`);
 	}
-	return args;
+
+	if (optionsPath && fs.existsSync(optionsPath)) {
+		args.push(`-op=${optionsPath}`);
+	}
+
+return args;
 }
 
 function getExecArgs(args, libraryDirectory, libraryName, modelType, modelPath, terminologyPath, contextValue, measurementPeriod): string[] {
