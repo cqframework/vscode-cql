@@ -67,6 +67,10 @@ export class OutputInfoCollector implements OutputChannel {
 	constructor(public name: string) {
 		this.channel = window.createOutputChannel(this.name);
 	}
+	replace(value: string): void {
+		this.clear();
+		this.append(value);
+	}
 
 	append(value: string): void {
 		logger.info(value);

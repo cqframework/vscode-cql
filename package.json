@@ -1,6 +1,6 @@
 {
   "name": "cql",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "displayName": "Clinical Quality Language (CQL)",
   "description": "Syntax highlighting, linting, and execution for the HL7 Clinical Quality Language (CQL) for VS Code",
   "publisher": "cqframework",
@@ -16,7 +16,6 @@
   ],
   "icon": "icons/cqframework.png",
   "preview": true,
-  "enableProposedApi": false,
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": false
@@ -132,9 +131,6 @@
     "@types/node": "^8.10.51",
     "@types/vscode": "^1.53.0",
     "@types/winreg": "^1.2.30",
-    "gulp": "^4.0.2",
-    "gulp-decompress": "^3.0.0",
-    "gulp-download": "0.0.1",
     "lodash.findindex": "^4.6.0",
     "lodash.template": ">=4.5.0",
     "minimist": ">=1.2.5",
