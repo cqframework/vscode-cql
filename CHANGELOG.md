@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.1.3
+
+* Update to cql-language server 1.5.4
+  * fixes for CQL 1.5
+  * fixes for duplicate problems
+  * fixes for no error highlighting on certain CQL files
+  * fixes for null pointer exceptions in output
+
 ## 0.1.2
 
 * Add support for cql-options.json file in the cql directory
