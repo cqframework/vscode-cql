@@ -1,4 +1,4 @@
-import { ExtensionContext, window, workspace, commands, Uri, ProgressLocation, ViewColumn, EventEmitter, extensions, Location, languages, CodeActionKind, TextEditor, TextDocument, Position } from "vscode";
+import { ExtensionContext, window, workspace, commands, Uri, ProgressLocation, ViewColumn, EventEmitter, extensions, Location, languages, CodeActionKind, TextEditor, TextDocument, Position, InputBoxOptions } from "vscode";
 import { Commands } from "./commands";
 import { prepareExecutable, awaitServerConnection } from "./languageServerStarter";
 import { LanguageClientOptions, Position as LSPosition, Location as LSLocation, MessageType, TextDocumentPositionParams, ConfigurationRequest, ConfigurationParams, CancellationToken, ExecuteCommandRequest, ExecuteCommandParams } from "vscode-languageclient";
@@ -13,12 +13,26 @@ import * as fs from "fs";
 // NOTE: This is not the intended future state of executing CQL.
 // There's a CQL debug server under development that will replace this.
 export async function executeCQLFile(uri: Uri): Promise<void> {
-
 	const libraryPath: string = uri.fsPath;
 	if (!fs.existsSync(libraryPath)) {
 		window.showInformationMessage("No library content found. Please save before executing.");
 		return;
 	}
+
+	let periodStartInputOptions: InputBoxOptions = {
+		title: "Reporting Period Start",
+		placeHolder: "YYYY-MM-DDTHH:MM:SS-08:00"
+	};
+	let periodEndInputOptions: InputBoxOptions = {
+		title: "Reporting Period End",
+		placeHolder: "YYYY-MM-DDTHH:MM:SS-08:00"
+	};
+	const dateTimeRegex = /([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)))?)?)?/gm;
+	const periodStart = await window.showInputBox(periodStartInputOptions);
+	const periodEnd = await window.showInputBox(periodEndInputOptions);
+
+	const periodStartTest = new RegExp(dateTimeRegex).exec(periodStart);
+	const periodEndTest = new RegExp(dateTimeRegex).exec(periodEnd);
 
 	const libraryPathName = path.basename(libraryPath, '.cql');
 
@@ -32,12 +46,12 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
 	const terminologyPath = path.join(projectPath, 'input', 'vocabulary', 'valueset');
 
 	// todo: get this working (currently errors with: Index 0 out of bounds for length 0)
-	// const measurementPeriod = 'Interval[@2019-01-01T00:00:00.0, @2020-01-01T00:00:00.0)';
+	// const measurementPeriod = 'Interval[@2019-01-01T00:00:00.0, @2020-01-01T00:00:00.0]';
 	const modelType = "FHIR";
 	const contextType = 'Patient';
 	let fhirVersion = "R4";
 	const optionsPath = path.join(libraryDirectory, 'cql-options.json');
-	const measurementPeriod = '';
+	const measurementPeriod = periodStartTest && periodEndTest ? `Interval[@${periodStart}, @${periodEnd}]` : '';
 	const testPath = path.join(projectPath, 'input', 'tests');
 	const resultPath = path.join(testPath, 'results');
 
