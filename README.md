@@ -45,6 +45,13 @@ Run `npm run watch` from the root
 
 Run the `debug` launch from VS Code
 
+TIP: The cql-language-server that provides error highlighting is a Java project. It's also launched in debug mode when this VS Code extension is launched in debug mode, allowing you to attached a Java debugger as well. If you're simultaneously iterating on the cql-language-server, you can create a symlink to that Java artifact and changes will be picked up when VS Code restarts.
+
+On linux:
+`ln -s your-repo-home/cql-language-server/ls/service/target/cql-ls-service-1.5.7-SNAPSHOT.jar cql-ls-service-1.5.7-SNAPSHOT.jar`
+
+Set your repo home directory and update the versions as needed.
+
 ## Acknowledgements
 
 This plugin is a reimplementation of much of the functionality in the [atom_cql_support](https://github.com/cqframework/atom_cql_support) plugin for the Atom editor. Additionally, the Red Hat [vscode-java](https://github.com/redhat-developer/vscode-java) plugin was referenced extensively in developing this plugin.

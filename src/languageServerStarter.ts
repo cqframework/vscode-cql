@@ -7,7 +7,7 @@ import { logger } from './log';
 
 import { ExtensionContext } from 'vscode';
 
-declare var v8debug;
+declare const v8debug;
 const DEBUG = (typeof v8debug === 'object') || startedInDebugMode();
 
 export function prepareExecutable(requirements: RequirementsData, context: ExtensionContext, workspacePath: string): Executable {
@@ -41,18 +41,14 @@ function prepareParams(requirements: RequirementsData, context: ExtensionContext
 	const params: string[] = [];
 	if (DEBUG) {
 		const port =  1044;
+		params.push('-Dlog.level=ALL');
 		params.push(`-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${port},quiet=y`);
 		// suspend=y is the default. Use this form if you need to debug the server startup code:
 		//  params.push('-agentlib:jdwp=transport=dt_socket,server=y,address=1044');
 	}
 
-	if (DEBUG) {
-		params.push('-Dlog.level=ALL');
-	}
-
-	params.push('-cp');
+	params.push('-jar');
 	params.push(path.resolve(requirements.cql_ls_info.cql_ls_jar));
-	params.push('org.opencds.cqf.cql.ls.Main');
 
 	// TODO: Add support to the language server to support using the workspace.
 	params.push("-workspace");

@@ -8,7 +8,6 @@ import * as fs from "fs";
 import { ensureExists } from './utils';
 import fetch from 'node-fetch';
 import { ExtensionContext, Progress, ProgressLocation, window } from "vscode";
-import { VersionedTextDocumentIdentifier } from "vscode-languageserver-types";
 
 interface MavenCoords {
 	groupId: string;
@@ -22,17 +21,17 @@ function getJarHome(): string {
 	return path.join(__dirname, 'jars');
 }
 
-export async function getServicePath(context: ExtensionContext, serviceName: string): Promise<string> {
-	const coords = await getCoords(context);
+export function getServicePath(context: ExtensionContext, serviceName: string): string {
+	const coords = getCoords(context);
 	const serviceCoords = coords[serviceName];
 	if (!serviceCoords) {
-		throw `Maven coordinates not found for ${serviceName}`;
+		throw Error(`Maven coordinates not found for ${serviceName}`);
 	}
 
 	return getServicePathFromCoords(serviceCoords);
 }
 
-async function getCoords(context: ExtensionContext): Promise<{ [serviceName: string]: MavenCoords }> {
+function getCoords(context: ExtensionContext): { [serviceName: string]: MavenCoords } {
 	const extensionPath = path.resolve(context.extensionPath, "package.json");
 	const packageFile = JSON.parse(fs.readFileSync(extensionPath, 'utf8'));
 
@@ -47,7 +46,7 @@ function getServicePathFromCoords(coords: MavenCoords): string {
 }
 
 export async function installJavaDependencies(context: ExtensionContext): Promise<void> {
-	const coords = await getCoords(context);
+	const coords = getCoords(context);
 	await installJavaDependenciesFromCoords(coords);
 }
 
@@ -68,25 +67,23 @@ function getSearchUrl(coords: MavenCoords): string {
 }
 
 async function installServiceIfMissing(serviceName: string, coords: MavenCoords): Promise<void> {
-	const doesExist = await isServiceInstalled(coords);
+	const doesExist = isServiceInstalled(coords);
 	if (!doesExist) {
 
-		return await window.withProgress({ location: ProgressLocation.Notification, cancellable: false, title: `Installing ${serviceName}` }, async (progress) => {
+		return window.withProgress({ location: ProgressLocation.Notification, cancellable: false, title: `Installing ${serviceName}` }, async (progress) => {
 			await installJar(serviceName, coords, progress);
 		});
 	}
-
-	return;
 }
 
-async function isServiceInstalled(coords: MavenCoords): Promise<boolean> {
-	const jarPath = await getServicePathFromCoords(coords);
+function isServiceInstalled(coords: MavenCoords): boolean {
+	const jarPath = getServicePathFromCoords(coords);
 	return fs.existsSync(jarPath);
 }
 
 // Installs a jar using maven coordinates
 async function installJar(serviceName: string, coords: MavenCoords, progress?: Progress<{ message?: string; increment?: number; }>): Promise<void> {
-	const jarPath = await getServicePathFromCoords(coords);
+	const jarPath = getServicePathFromCoords(coords);
 	const jarHome = getJarHome();
 
 	if (progress) {

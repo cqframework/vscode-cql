@@ -76,7 +76,7 @@ export async function resolveJavaRequirements(context: ExtensionContext): Promis
 export async function resolveJavaDependencies(context: ExtensionContext): Promise<CqlLsInfo> {
     return new Promise(async (resolve, reject) => {
 		await installJavaDependencies(context);
-		const cqlLsJar = await getServicePath(context, "cql-language-server");
+		const cqlLsJar = getServicePath(context, "cql-language-server");
         resolve({ cql_ls_jar: cqlLsJar });
     });
 }

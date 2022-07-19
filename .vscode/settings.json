@@ -12,6 +12,7 @@
         "jvms",
         "LOCALAPPDATA",
         "preinstall",
+        "reimplementation",
         "Runtimes",
         "vscodesws"
     ]
