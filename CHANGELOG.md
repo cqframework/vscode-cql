@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.5
+
+* Update to cql-language server 1.5.7
+
 ## 0.1.4
 
 * Update to cql-language server 1.5.6
