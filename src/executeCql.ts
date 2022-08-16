@@ -80,10 +80,13 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
 		terminologyPathActual = '';
 	}
 
-	const modelMessage = (modelRootPath && modelRootPath !== '') ? `Data path: ${modelRootPath}` : `No tests found at ${testPath}. Evaluation may fail if data is required.`;
+	const cqlMessage = `CQL path: ${libraryDirectory}`
+	const modelMessage = (modelRootPath && modelRootPath !== '') ? `Data path: ${modelRootPath}` : `No data found at ${testPath}. Evaluation may fail if data is required.`;
 	const terminologyMessage = (terminologyPathActual && terminologyPathActual !== '') ? `Terminology path: ${terminologyPathActual}` : `No terminology found at ${terminologyPath}. Evaluation may fail if terminology is required.`;
 
-	await insertTextAtEnd(textEditor, 'Running tests.\r\n');
+
+	await insertTextAtEnd(textEditor, 'Executing CQL...\r\n');
+	await insertTextAtEnd(textEditor, `${cqlMessage}\r\n`);
 	await insertTextAtEnd(textEditor, `${modelMessage}\r\n`);
 	await insertTextAtEnd(textEditor, `${terminologyMessage}\r\n`);
 
@@ -137,12 +140,12 @@ async function insertTextAtEnd(textEditor: TextEditor, text: string) {
 }
 
 async function executeCQL(textEditor: TextEditor, operationArgs: string[]) {
-	const startExecution = new Date();
+	const startExecution = Date.now();
 	const result: string = await commands.executeCommand(Commands.EXECUTE_WORKSPACE_COMMAND, Commands.EXECUTE_CQL, ...operationArgs);
-	const endExecution = new Date();
+	const endExecution = Date.now();
 
 	await insertTextAtEnd(textEditor, result);
-	await insertTextAtEnd(textEditor, `elapsed: ${((endExecution.getMilliseconds() - startExecution.getMilliseconds()) / 1000).toString()} seconds\r\n\r\n`);
+	await insertTextAtEnd(textEditor, `elapsed: ${((endExecution - startExecution) / 1000).toString()} seconds\r\n\r\n`);
 }
 
 function getCqlCommandArgs(fhirVersion: string, optionsPath: string): string[] {
