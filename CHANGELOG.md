@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.1.6
+
+* Update to cql-language server 1.5.8
+  * Multi-root workspace support
+  * Performance enhancements
+
 ## 0.1.5
 
 * Update to cql-language server 1.5.7
