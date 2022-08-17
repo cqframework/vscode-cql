@@ -1,6 +1,10 @@
 # Change Log
 
-## 0.1.6
+## 0.1.7 - Prerelease
+
+* Size reductions in plugin
+
+## 0.1.6 - Prerelease
 
 * Update to cql-language server 1.5.8
   * Multi-root workspace support

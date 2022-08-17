@@ -6,7 +6,7 @@ import * as fse from "fs-extra";
 import * as _ from "lodash";
 import * as os from "os";
 import * as path from "path";;
-import * as  WinReg from "winreg";
+import WinReg from "winreg";
 const expandTilde = require("expand-tilde");
 const isWindows: boolean = process.platform.indexOf("win") === 0;
 const isMac: boolean = process.platform.indexOf("darwin") === 0;

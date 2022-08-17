@@ -1,7 +1,7 @@
 .vscode
-node_modules
 src/
 tsconfig.json
-out/jars
+dist
+node_modules
 *.vsix
 .gitignore
