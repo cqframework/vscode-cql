@@ -5,4 +5,3 @@ tsconfig.json
 out/jars
 *.vsix
 .gitignore
-dist/test
