@@ -1,7 +1,8 @@
 .vscode
 node_modules
-out/
 src/
 tsconfig.json
-webpack.config.js
-dist/jars
+out/jars
+*.vsix
+.gitignore
+dist/test
