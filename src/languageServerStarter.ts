@@ -7,7 +7,7 @@ import { logger } from './log';
 
 import { ExtensionContext } from 'vscode';
 
-declare const v8debug;
+declare const v8debug: any;
 const DEBUG = (typeof v8debug === 'object') || startedInDebugMode();
 
 export function prepareExecutable(requirements: RequirementsData, context: ExtensionContext, workspacePath: string): Executable {
@@ -20,7 +20,7 @@ export function prepareExecutable(requirements: RequirementsData, context: Exten
 	logger.info(`Starting CQL server with: ${executable.command} ${executable.args.join(' ')}`);
 	return executable;
 }
-export function awaitServerConnection(port): Thenable<StreamInfo> {
+export function awaitServerConnection(port: string): Thenable<StreamInfo> {
 	const addr = parseInt(port);
 	return new Promise((res, rej) => {
 		const server = net.createServer(stream => {

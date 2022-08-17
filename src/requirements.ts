@@ -3,7 +3,7 @@
 import { Uri, env, ExtensionContext } from 'vscode';
 import * as path from 'path';
 import * as fse from 'fs-extra';
-import * as expandHomeDir from 'expand-home-dir';
+const expandTilde = require("expand-tilde");
 import { Commands } from './commands';
 import { findJavaHomes, getJavaVersion, JavaRuntime } from './findJavaRuntimes';
 import { installJavaDependencies, getServicePath } from './javaServiceInstaller';
@@ -36,9 +36,9 @@ export interface CqlLsInfo {
 export async function resolveJavaRequirements(context: ExtensionContext): Promise<JavaRequirements> {
     return new Promise(async (resolve, reject) => {
         let source: string;
-        let javaVersion: number = 0;
+        let javaVersion: number | undefined;
 
-		let javaHome: string;
+		let javaHome: string | undefined;
 		// java.home not specified, search valid JDKs from env.JAVA_HOME, env.PATH, Registry(Window), Common directories
 		const javaRuntimes = await findJavaHomes();
 		const validJdks = javaRuntimes.filter(r => r.version >= REQUIRED_JDK_VERSION);
@@ -50,26 +50,26 @@ export async function resolveJavaRequirements(context: ExtensionContext): Promis
         if (javaHome) {
             // java.home explicitly specified
             source = `java.home variable defined in ${env.appName} settings`;
-            javaHome = expandHomeDir(javaHome);
-            if (!await fse.pathExists(javaHome)) {
+            javaHome = expandTilde(javaHome);
+            if (!await fse.pathExists(javaHome!)) {
                 rejectWithMessage(reject, `The ${source} points to a missing or inaccessible folder (${javaHome})`);
-            } else if (!await fse.pathExists(path.resolve(javaHome, 'bin', JAVAC_FILENAME))) {
+            } else if (!await fse.pathExists(path.resolve(javaHome!, 'bin', JAVAC_FILENAME))) {
                 let msg: string;
-                if (await fse.pathExists(path.resolve(javaHome, JAVAC_FILENAME))) {
+                if (await fse.pathExists(path.resolve(javaHome!, JAVAC_FILENAME))) {
                     msg = `'bin' should be removed from the ${source} (${javaHome})`;
                 } else {
                     msg = `The ${source} (${javaHome}) does not point to a JDK.`;
                 }
                 rejectWithMessage(reject, msg);
             }
-            javaVersion = await getJavaVersion(javaHome);
+            javaVersion = await getJavaVersion(javaHome!);
         }
 
-        if (javaVersion < REQUIRED_JDK_VERSION) {
+        if (javaVersion! < REQUIRED_JDK_VERSION) {
             openJDKDownload(reject, `Java ${REQUIRED_JDK_VERSION} or more recent is required to run the Java extension. Please download and install a recent JDK.`);
         }
 
-        resolve({ java_home: javaHome, java_version: javaVersion });
+        resolve({ java_home: javaHome!, java_version: javaVersion! });
     });
 }
 
@@ -102,7 +102,7 @@ function sortJdksBySource(jdks: JavaRuntime[]) {
     rankedJdks.sort((a, b) => a.rank - b.rank);
 }
 
-function openJDKDownload(reject, cause) {
+function openJDKDownload(reject: { (reason?: any): void; (arg0: { message: any; label: string; command: string; commandParam: Uri; }): void; }, cause: string) {
     const jdkUrl = getJdkUrl();
     reject({
         message: cause,
@@ -113,11 +113,11 @@ function openJDKDownload(reject, cause) {
 }
 
 function getJdkUrl() {
-    const jdkUrl = 'https://adoptopenjdk.net/';
+    const jdkUrl = 'https://adoptium.net/temurin/releases/';
     return jdkUrl;
 }
 
-function rejectWithMessage(reject, cause: string) {
+function rejectWithMessage(reject: { (reason?: any): void; (reason?: any): void; (arg0: { message: string; }): void; }, cause: string) {
 	reject({
 		message: cause,
 	});

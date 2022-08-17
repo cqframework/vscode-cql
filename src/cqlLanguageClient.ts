@@ -16,7 +16,7 @@ const extensionName = 'Language Support for CQL';
 
 export class CqlLanguageClient {
 
-	private languageClient: LanguageClient;
+	private languageClient: LanguageClient | undefined;
 	private status: ClientStatus = ClientStatus.Uninitialized;
 
 	public async initialize(context: ExtensionContext, requirements: RequirementsData, clientOptions: LanguageClientOptions, workspacePath: string): Promise<void> {
@@ -51,15 +51,17 @@ export class CqlLanguageClient {
 			// 	statusBar.updateTooltip(report.message);
 			// });
 
-			this.languageClient.onNotification(ProgressReportNotification.type, (progress) => {
+			this.languageClient!.onNotification(ProgressReportNotification.type, (progress) => {
 				// TODO: Support for long-running tasks
 			});
 
-			this.languageClient.onNotification(ActionableNotification.type, (notification) => {
+			this.languageClient!.onNotification(ActionableNotification.type, (notification) => {
+
+				const titles = notification.commands!.map(a => a.title);
 				let show = null;
 				switch (notification.severity) {
 					case MessageType.Log:
-						show = logNotification;
+						logNotification(notification.message);
 						break;
 					case MessageType.Info:
 						show = window.showInformationMessage;
@@ -74,23 +76,26 @@ export class CqlLanguageClient {
 				if (!show) {
 					return;
 				}
-				const titles = notification.commands.map(a => a.title);
-				show(notification.message, ...titles).then((selection) => {
-					for (const action of notification.commands) {
+
+
+				show(notification.message, ...titles).then((selection: string | undefined) => {
+					for (const action of notification.commands!) {
 						if (action.title === selection) {
 							const args: any[] = (action.arguments) ? action.arguments : [];
 							commands.executeCommand(action.command, ...args);
 							break;
 						}
 					}
+
+					return null;
 				});
 			});
 
-			this.languageClient.onRequest(ExecuteClientCommandRequest.type, (params) => {
-				return commands.executeCommand(params.command, ...params.arguments);
+			this.languageClient!.onRequest(ExecuteClientCommandRequest.type, (params) => {
+				return commands.executeCommand(params.command, ...params.arguments!);
 			});
 
-			this.languageClient.onRequest(ConfigurationRequest.type, (params: ConfigurationParams) => {
+			this.languageClient!.onRequest(ConfigurationRequest.type, (params: ConfigurationParams) => {
 				// TODO: This is a request for workspace configuration. In the context of the IG
 				// this ought to be the cql-options file at least.
 
@@ -106,7 +111,7 @@ export class CqlLanguageClient {
 	}
 
 	private registerCommands(context: ExtensionContext): void {
-		context.subscriptions.push(commands.registerCommand(Commands.OPEN_OUTPUT, () => this.languageClient.outputChannel.show(ViewColumn.Three)));
+		context.subscriptions.push(commands.registerCommand(Commands.OPEN_OUTPUT, () => this.languageClient!.outputChannel.show(ViewColumn.Three)));
 
 		context.subscriptions.push(commands.registerCommand(Commands.VIEW_ELM_COMMAND, async (uri: Uri) => {
 			const xml: string = await <any>commands.executeCommand(Commands.EXECUTE_WORKSPACE_COMMAND, Commands.VIEW_ELM, uri.toString());
@@ -133,7 +138,7 @@ export class CqlLanguageClient {
 	}
 
 	public getClient(): LanguageClient {
-		return this.languageClient;
+		return this.languageClient!;
 	}
 
 	public getClientStatus(): ClientStatus {
@@ -148,5 +153,5 @@ function logNotification(message: string) {
 }
 
 function decodeBase64(text: string): string {
-    return Buffer.from(text, 'base64').toString('ascii');
+	return Buffer.from(text, 'base64').toString('ascii');
 }

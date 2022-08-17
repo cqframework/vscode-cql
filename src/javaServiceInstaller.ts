@@ -1,13 +1,9 @@
-
-import * as cp from "child_process";
-import * as fse from "fs-extra";
 import * as _ from "lodash";
-import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import { ensureExists } from './utils';
-import fetch from 'node-fetch';
 import { ExtensionContext, Progress, ProgressLocation, window } from "vscode";
+import fetch  from "node-fetch";
 
 interface MavenCoords {
 	groupId: string;
@@ -110,15 +106,15 @@ async function downloadFile(url: string, path: string, serviceName: string, tota
 	const fileStream = fs.createWriteStream(path);
 	let bytesSoFar = 0;
 	await new Promise((resolve, reject) => {
-		res.body.pipe(fileStream);
-		res.body.on("data", (chunk) => { if (progress) {
+		res.body!.pipe(fileStream);
+		res.body!.on("data", (chunk) => { if (progress) {
 			bytesSoFar += chunk.length;
 			progress.report({
 				message: `Downloading`,
-				increment: (bytesSoFar / totalBytes)
+				increment: (bytesSoFar / totalBytes!)
 			});
 		} });
-		res.body.on("error", reject);
+		res.body!.on("error", reject);
 		fileStream.on("finish", resolve);
 	});
 }
@@ -134,5 +130,5 @@ async function setupDownload(serviceName: string, url: string) {
 	response = await fetch(redirectUrl, { method: "head" });
 	const length = response.headers.get("content-length");
 
-	return { serverDownloadUrl: redirectUrl, serverDownloadSize: length ? parseInt(length) : null  };
+	return { serverDownloadUrl: redirectUrl, serverDownloadSize: length ? parseInt(length) : undefined  };
 }

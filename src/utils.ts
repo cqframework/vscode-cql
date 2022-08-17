@@ -2,12 +2,11 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { workspace, WorkspaceConfiguration, TextDocument } from 'vscode';
 
-export function deleteDirectory(dir) {
+export function deleteDirectory(dir: fs.PathLike) {
 	if (fs.existsSync(dir)) {
 		fs.readdirSync(dir).forEach((child) => {
-			const entry = path.join(dir, child);
+			const entry = path.join(dir.toString(), child);
 			if (fs.lstatSync(entry).isDirectory()) {
 				deleteDirectory(entry);
 			} else {
@@ -18,7 +17,7 @@ export function deleteDirectory(dir) {
 	}
 }
 
-export function getTimestamp(file) {
+export function getTimestamp(file: fs.PathLike) {
 	if (!fs.existsSync(file)) {
 		return -1;
 	}
@@ -26,7 +25,7 @@ export function getTimestamp(file) {
 	return stat.mtimeMs;
 }
 
-export function ensureExists(folder) {
+export function ensureExists(folder: fs.PathLike) {
 	if (!fs.existsSync(folder)) {
 		fs.mkdirSync(folder);
 	}

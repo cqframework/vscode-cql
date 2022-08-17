@@ -1,12 +1,8 @@
-import { ExtensionContext, window, workspace, commands, Uri, ProgressLocation, ViewColumn, EventEmitter, extensions, Location, languages, CodeActionKind, TextEditor, TextDocument, Position } from "vscode";
+import { window, workspace, commands, Uri, TextEditor, Position } from "vscode";
 import { Commands } from "./commands";
-import { prepareExecutable, awaitServerConnection } from "./languageServerStarter";
-import { LanguageClientOptions, Position as LSPosition, Location as LSLocation, MessageType, TextDocumentPositionParams, ConfigurationRequest, ConfigurationParams, CancellationToken, ExecuteCommandRequest, ExecuteCommandParams } from "vscode-languageclient";
 
-import * as cp from "child_process";
 import * as fse from "fs-extra";
 import * as _ from "lodash";
-import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -26,7 +22,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
 	const libraryDirectory = path.dirname(libraryPath);
 	const libraryName = libraryPathName.split('-')[0];
 
-	const projectPath = workspace.getWorkspaceFolder(uri).uri.fsPath;
+	const projectPath = workspace.getWorkspaceFolder(uri)!.uri.fsPath;
 
 	// todo: make this a setting
 	const terminologyPath = path.join(projectPath, 'input', 'vocabulary', 'valueset');
@@ -42,7 +38,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
 	const resultPath = path.join(testPath, 'results');
 
 	const fhirVersionRegex = /using (FHIR|"FHIR") version '(\d(.|\d)*)'/;
-	const matches = window.activeTextEditor.document.getText().match(fhirVersionRegex);
+	const matches = window.activeTextEditor!.document.getText().match(fhirVersionRegex);
 	if (matches && matches.length > 2) {
 		const version = matches[2];
 		if (version.startsWith("2")) {
@@ -141,10 +137,10 @@ async function insertTextAtEnd(textEditor: TextEditor, text: string) {
 
 async function executeCQL(textEditor: TextEditor, operationArgs: string[]) {
 	const startExecution = Date.now();
-	const result: string = await commands.executeCommand(Commands.EXECUTE_WORKSPACE_COMMAND, Commands.EXECUTE_CQL, ...operationArgs);
+	const result: string | undefined = await commands.executeCommand(Commands.EXECUTE_WORKSPACE_COMMAND, Commands.EXECUTE_CQL, ...operationArgs);
 	const endExecution = Date.now();
 
-	await insertTextAtEnd(textEditor, result);
+	await insertTextAtEnd(textEditor, result!);
 	await insertTextAtEnd(textEditor, `elapsed: ${((endExecution - startExecution) / 1000).toString()} seconds\r\n\r\n`);
 }
 
@@ -165,7 +161,7 @@ function getCqlCommandArgs(fhirVersion: string, optionsPath: string): string[] {
 return args;
 }
 
-function getExecArgs(args, libraryDirectory, libraryName, modelType, modelPath, terminologyPath, contextValue, measurementPeriod): string[] {
+function getExecArgs(args: string[], libraryDirectory: string, libraryName: string, modelType: string, modelPath: string | null, terminologyPath: string, contextValue: string | null, measurementPeriod: string): string[] {
 	args.push(`-ln=${libraryName}`);
 	args.push(`-lu=${Uri.file(libraryDirectory)}`);
 

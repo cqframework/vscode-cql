@@ -3,7 +3,6 @@
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import * as fse from 'fs-extra';
 import { workspace, extensions, ExtensionContext, window, commands, ViewColumn, Uri, languages, IndentAction, InputBoxOptions, EventEmitter, OutputChannel, TextDocument, RelativePattern, ConfigurationTarget, WorkspaceConfiguration, env, UIKind } from 'vscode';
 import { ExecuteCommandParams, ExecuteCommandRequest, LanguageClientOptions, RevealOutputChannelOn, ErrorHandler, Message, ErrorAction, CloseAction, DidChangeConfigurationNotification, CancellationToken } from 'vscode-languageclient';
 import { statusBar } from './statusBar';
@@ -16,7 +15,7 @@ import { CqlLanguageClient } from './cqlLanguageClient';
 
 const cqlLanguageClient: CqlLanguageClient = new CqlLanguageClient();
 const extensionName = 'Language Support for CQL';
-let clientLogFile;
+let clientLogFile: string;
 
 export class ClientErrorHandler implements ErrorHandler {
 	private restarts: number[];
@@ -62,7 +61,7 @@ export class ClientErrorHandler implements ErrorHandler {
 }
 
 export class OutputInfoCollector implements OutputChannel {
-	private channel: OutputChannel = null;
+	private channel: OutputChannel;
 
 	constructor(public name: string) {
 		this.channel = window.createOutputChannel(this.name);
@@ -139,7 +138,7 @@ export function activate(context: ExtensionContext): Promise<void> {
 			};
 
 			context.subscriptions.push(commands.registerCommand(Commands.EXECUTE_WORKSPACE_COMMAND, (command, ...rest) => {
-				let token: CancellationToken;
+				let token: CancellationToken | undefined;
 				let commandArgs: any[] = rest;
 				if (rest && rest.length && CancellationToken.is(rest[rest.length - 1])) {
 					token = rest[rest.length - 1];
@@ -185,7 +184,7 @@ export function deactivate(): void {
 	cqlLanguageClient.stop();
 }
 
-function openServerLogFile(workspacePath, column: ViewColumn = ViewColumn.Active): Thenable<boolean> {
+function openServerLogFile(workspacePath: string, column: ViewColumn = ViewColumn.Active): Thenable<boolean> {
 	const serverLogFile = path.join(workspacePath, '.metadata', '.log');
 	return openLogFile(serverLogFile, 'Could not open CQL Language Server log file', column);
 }
@@ -212,7 +211,7 @@ async function openLogs() {
 	await commands.executeCommand(Commands.OPEN_SERVER_LOG, ViewColumn.Two);
 }
 
-function openLogFile(logFile, openingFailureWarning: string, column: ViewColumn = ViewColumn.Active): Thenable<boolean> {
+function openLogFile(logFile: string, openingFailureWarning: string, column: ViewColumn = ViewColumn.Active): Thenable<boolean> {
 	if (!fs.existsSync(logFile)) {
 		return window.showWarningMessage('No log file available').then(() => false);
 	}
@@ -237,7 +236,7 @@ function getTempWorkspace() {
 	return path.resolve(os.tmpdir(), 'vscodesws_' + makeRandomHexString(5));
 }
 
-function makeRandomHexString(length) {
+function makeRandomHexString(length: number) {
 	const chars = ['0', '1', '2', '3', '4', '5', '6', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 	let result = '';
 	for (let i = 0; i < length; i++) {

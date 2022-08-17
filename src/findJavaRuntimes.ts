@@ -5,9 +5,9 @@ import * as cp from "child_process";
 import * as fse from "fs-extra";
 import * as _ from "lodash";
 import * as os from "os";
-import * as path from "path";
-const expandHomeDir = require("expand-home-dir");
-const WinReg = require("winreg-utf8");
+import * as path from "path";;
+import * as  WinReg from "winreg";
+const expandTilde = require("expand-tilde");
 const isWindows: boolean = process.platform.indexOf("win") === 0;
 const isMac: boolean = process.platform.indexOf("darwin") === 0;
 const isLinux: boolean = process.platform.indexOf("linux") === 0;
@@ -64,7 +64,7 @@ function updateJDKs(map: Map<string, string[]>, newJdks: string[], source: strin
 async function fromEnv(name: string): Promise<string[]> {
     const ret: string[] = [];
     if (process.env[name]) {
-        const javaHome = await verifyJavaHome(process.env[name], JAVAC_FILENAME);
+        const javaHome = await verifyJavaHome(process.env[name]!, JAVAC_FILENAME);
         if (javaHome) {
             ret.push(javaHome);
         }
@@ -84,7 +84,7 @@ async function fromPath(): Promise<string[]> {
         }
 
         if (isMac) {
-            let dir = expandHomeDir(p);
+            let dir = expandTilde(p);
             dir = await findLinkedFile(dir);
             // on mac, java install has a utility script called java_home
             const macUtility = path.join(dir, "java_home");
@@ -259,7 +259,7 @@ async function fromCommonPlaces(): Promise<string[]> {
 }
 
 export async function verifyJavaHome(raw: string, javaFilename: string): Promise<string | undefined> {
-    const dir = expandHomeDir(raw);
+    const dir = expandTilde(raw);
     const targetJavaFile = await findLinkedFile(path.resolve(dir, "bin", javaFilename));
     const proposed = path.dirname(path.dirname(targetJavaFile));
     if (await fse.pathExists(proposed)

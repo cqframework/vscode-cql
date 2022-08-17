@@ -1,19 +1,20 @@
 {
-    "cSpell.words": [
-        "agentlib",
-        "cqlactions",
-        "Dlog",
-        "findindex",
-        "fmtr",
-        "HKLM",
-        "JAVAC",
-        "Jdks",
-        "jdwp",
-        "jvms",
-        "LOCALAPPDATA",
-        "preinstall",
-        "reimplementation",
-        "Runtimes",
-        "vscodesws"
-    ]
+	"cSpell.words": [
+		"agentlib",
+		"cqlactions",
+		"Dlog",
+		"findindex",
+		"fmtr",
+		"HKLM",
+		"JAVAC",
+		"Jdks",
+		"jdwp",
+		"jvms",
+		"LOCALAPPDATA",
+		"preinstall",
+		"reimplementation",
+		"Runtimes",
+		"vscodesws"
+	],
+	"debug.node.autoAttach": "on"
 }
