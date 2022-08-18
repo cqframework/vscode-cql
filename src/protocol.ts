@@ -1,11 +1,10 @@
-'use strict';
 
 /**
  * This file defines the API for messages exchanged between the client and the server
  */
 
 import { RequestType, NotificationType, ExecuteCommandParams } from 'vscode-languageclient';
-import { Command, Range } from 'vscode';
+import { Command } from 'vscode';
 
 /**
  * The message type. Copied from vscode protocol

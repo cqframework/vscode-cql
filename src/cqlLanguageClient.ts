@@ -1,11 +1,10 @@
-'use strict';
 
-import { ExtensionContext, window, workspace, commands, Uri, ProgressLocation, ViewColumn, EventEmitter, extensions, Location, languages, CodeActionKind, TextEditor } from "vscode";
+import { ExtensionContext, window, workspace, commands, Uri } from "vscode";
 import { Commands } from "./commands";
-import { prepareExecutable, awaitServerConnection } from "./languageServerStarter";
-import { LanguageClientOptions, Position as LSPosition, Location as LSLocation, MessageType, TextDocumentPositionParams, ConfigurationRequest, ConfigurationParams, CancellationToken, ExecuteCommandRequest, ExecuteCommandParams } from "vscode-languageclient";
-import { LanguageClient, StreamInfo } from "vscode-languageclient/node";
-import { StatusNotification, ProgressReportNotification, ActionableNotification, ExecuteClientCommandRequest } from "./protocol";
+import { prepareExecutable } from "./languageServerStarter";
+import { LanguageClientOptions, MessageType, ConfigurationRequest, ConfigurationParams } from "vscode-languageclient";
+import { LanguageClient } from "vscode-languageclient/node";
+import { ProgressReportNotification, ActionableNotification, ExecuteClientCommandRequest } from "./protocol";
 import { RequirementsData } from "./requirements";
 import { statusBar } from "./statusBar";
 import { logger } from "./log";
@@ -51,7 +50,7 @@ export class CqlLanguageClient {
 			// 	statusBar.updateTooltip(report.message);
 			// });
 
-			this.languageClient!.onNotification(ProgressReportNotification.type, (progress) => {
+			this.languageClient!.onNotification(ProgressReportNotification.type, (_progress) => {
 				// TODO: Support for long-running tasks
 			});
 
@@ -95,7 +94,7 @@ export class CqlLanguageClient {
 				return commands.executeCommand(params.command, ...params.arguments!);
 			});
 
-			this.languageClient!.onRequest(ConfigurationRequest.type, (params: ConfigurationParams) => {
+			this.languageClient!.onRequest(ConfigurationRequest.type, (_params: ConfigurationParams) => {
 				// TODO: This is a request for workspace configuration. In the context of the IG
 				// this ought to be the cql-options file at least.
 
@@ -111,7 +110,7 @@ export class CqlLanguageClient {
 	}
 
 	private registerCommands(context: ExtensionContext): void {
-		context.subscriptions.push(commands.registerCommand(Commands.OPEN_OUTPUT, () => this.languageClient!.outputChannel.show(ViewColumn.Three)));
+		context.subscriptions.push(commands.registerCommand(Commands.OPEN_OUTPUT, () => this.languageClient!.outputChannel.show()));
 
 		context.subscriptions.push(commands.registerCommand(Commands.VIEW_ELM_COMMAND, async (uri: Uri) => {
 			const xml: string = await <any>commands.executeCommand(Commands.EXECUTE_WORKSPACE_COMMAND, Commands.VIEW_ELM, uri.toString());
@@ -150,8 +149,4 @@ function logNotification(message: string) {
 	return new Promise(() => {
 		logger.verbose(message);
 	});
-}
-
-function decodeBase64(text: string): string {
-	return Buffer.from(text, 'base64').toString('ascii');
 }

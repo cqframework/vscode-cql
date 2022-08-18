@@ -1,4 +1,3 @@
-'use strict';
 
 import { Uri, env, ExtensionContext } from 'vscode';
 import * as path from 'path';
@@ -12,6 +11,7 @@ const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const JAVA_FILENAME = 'java' + (isWindows ? '.exe' : '');
 const REQUIRED_JDK_VERSION = 8;
+const JDK_URL = 'https://adoptium.net/temurin/releases/';
 export interface RequirementsData {
 	java_requirements: JavaRequirements;
 	cql_ls_info: CqlLsInfo;
@@ -33,7 +33,7 @@ export interface CqlLsInfo {
  * if any of the requirements fails to resolve.
  *
  */
-export async function resolveJavaRequirements(context: ExtensionContext): Promise<JavaRequirements> {
+export async function resolveJavaRequirements(_context: ExtensionContext): Promise<JavaRequirements> {
     return new Promise(async (resolve, reject) => {
         let source: string;
         let javaVersion: number | undefined;
@@ -103,18 +103,12 @@ function sortJdksBySource(jdks: JavaRuntime[]) {
 }
 
 function openJDKDownload(reject: { (reason?: any): void; (arg0: { message: any; label: string; command: string; commandParam: Uri; }): void; }, cause: string) {
-    const jdkUrl = getJdkUrl();
     reject({
         message: cause,
         label: 'Get the Java Development Kit',
         command: Commands.OPEN_BROWSER,
-        commandParam: Uri.parse(jdkUrl),
+        commandParam: Uri.parse(JDK_URL),
     });
-}
-
-function getJdkUrl() {
-    const jdkUrl = 'https://adoptium.net/temurin/releases/';
-    return jdkUrl;
 }
 
 function rejectWithMessage(reject: { (reason?: any): void; (reason?: any): void; (arg0: { message: string; }): void; }, cause: string) {

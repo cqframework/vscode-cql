@@ -1,10 +1,8 @@
-'use strict';
-
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import { workspace, extensions, ExtensionContext, window, commands, ViewColumn, Uri, languages, IndentAction, InputBoxOptions, EventEmitter, OutputChannel, TextDocument, RelativePattern, ConfigurationTarget, WorkspaceConfiguration, env, UIKind } from 'vscode';
-import { ExecuteCommandParams, ExecuteCommandRequest, LanguageClientOptions, RevealOutputChannelOn, ErrorHandler, Message, ErrorAction, CloseAction, DidChangeConfigurationNotification, CancellationToken } from 'vscode-languageclient';
+import { workspace, ExtensionContext, window, commands, ViewColumn, OutputChannel } from 'vscode';
+import { ExecuteCommandParams, ExecuteCommandRequest, LanguageClientOptions, RevealOutputChannelOn, ErrorHandler, Message, ErrorAction, CloseAction, CancellationToken } from 'vscode-languageclient';
 import { statusBar } from './statusBar';
 import * as requirements from './requirements';
 import { Commands } from './commands';
@@ -87,8 +85,8 @@ export class OutputInfoCollector implements OutputChannel {
 
 	show(preserveFocus?: boolean): void;
 	show(column?: ViewColumn, preserveFocus?: boolean): void;
-	show(column?: any, preserveFocus?: any) {
-		this.channel.show(column, preserveFocus);
+	show(_column?: any, preserveFocus?: any) {
+		this.channel.show(preserveFocus);
 	}
 
 	hide(): void {

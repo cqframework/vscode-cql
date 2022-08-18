@@ -1,7 +1,9 @@
 .vscode
 src/
-tsconfig.json
-dist
-node_modules
+# node_modules
 *.vsix
 .gitignore
+*.map.js
+tsconfig.json
+dist/jars
+dist/test

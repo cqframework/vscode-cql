@@ -1,4 +1,3 @@
-'use strict';
 
 import { StatusBarItem, window, StatusBarAlignment } from "vscode";
 import { Disposable } from "vscode-languageclient";

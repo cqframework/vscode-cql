@@ -1,4 +1,3 @@
-'use strict';
 
 /**
  * These are constants for the commands used by or implemented by this extension

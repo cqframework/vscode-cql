@@ -3,6 +3,7 @@
 		"agentlib",
 		"cqlactions",
 		"Dlog",
+		"esbuild",
 		"findindex",
 		"fmtr",
 		"HKLM",
@@ -16,5 +17,5 @@
 		"Runtimes",
 		"vscodesws"
 	],
-	"debug.node.autoAttach": "on"
+	"debug.javascript.autoAttachFilter": "smart"
 }
