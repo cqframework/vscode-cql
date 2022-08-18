@@ -1,4 +1,4 @@
-import { createLogger, format, transports } from 'winston';
+import { createLogger, format } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
 export function initializeLogFile(filename: string) {

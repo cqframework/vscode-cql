@@ -3,9 +3,9 @@
 
 import * as cp from "child_process";
 import * as fse from "fs-extra";
-import * as _ from "lodash";
+import _ from "lodash";
 import * as os from "os";
-import * as path from "path";;
+import * as path from "path";
 import WinReg from "winreg";
 const expandTilde = require("expand-tilde");
 const isWindows: boolean = process.platform.indexOf("win") === 0;

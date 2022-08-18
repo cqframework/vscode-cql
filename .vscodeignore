@@ -3,8 +3,8 @@ src/
 # node_modules
 *.vsix
 .gitignore
-*.map.js
 tsconfig.json
 dist/jars
 dist/test
+**/*.js.map
 out

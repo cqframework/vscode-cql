@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import * as path from "path";
 import * as fs from "fs";
 import { ensureExists } from './utils';
@@ -101,20 +100,20 @@ async function installJar(serviceName: string, coords: MavenCoords, progress?: P
 	}
 }
 
-async function downloadFile(url: string, path: string, serviceName: string, totalBytes?: number, progress?: Progress<{ message?: string; increment?: number; }>) {
+async function downloadFile(url: string, path: string, _serviceName: string, totalBytes?: number, progress?: Progress<{ message?: string; increment?: number; }>) {
 	const res = await fetch(url);
 	const fileStream = fs.createWriteStream(path);
 	let bytesSoFar = 0;
 	await new Promise((resolve, reject) => {
-		res.body!.pipe(fileStream);
-		res.body!.on("data", (chunk) => { if (progress) {
+		res.body.pipe(fileStream);
+		res.body.on("data", (chunk) => { if (progress) {
 			bytesSoFar += chunk.length;
 			progress.report({
 				message: `Downloading`,
 				increment: (bytesSoFar / totalBytes!)
 			});
 		} });
-		res.body!.on("error", reject);
+		res.body.on("error", reject);
 		fileStream.on("finish", resolve);
 	});
 }

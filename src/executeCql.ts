@@ -2,7 +2,6 @@ import { window, workspace, commands, Uri, TextEditor, Position } from "vscode";
 import { Commands } from "./commands";
 
 import * as fse from "fs-extra";
-import * as _ from "lodash";
 import * as path from "path";
 import * as fs from "fs";
 
