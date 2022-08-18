@@ -3,7 +3,7 @@ import { ExtensionContext, window, workspace, commands, Uri } from "vscode";
 import { Commands } from "./commands";
 import { prepareExecutable } from "./languageServerStarter";
 import { LanguageClientOptions, MessageType, ConfigurationRequest, ConfigurationParams } from "vscode-languageclient";
-import { LanguageClient } from "vscode-languageclient/node";
+import { LanguageClient, ServerOptions, TransportKind } from "vscode-languageclient/node";
 import { ProgressReportNotification, ActionableNotification, ExecuteClientCommandRequest } from "./protocol";
 import { RequirementsData } from "./requirements";
 import { statusBar } from "./statusBar";
@@ -23,8 +23,7 @@ export class CqlLanguageClient {
 			return;
 		}
 
-		const serverOptions = prepareExecutable(requirements, context, workspacePath);
-
+		let serverOptions = prepareExecutable(requirements, context, workspacePath);
 		// Create the language client and start the client.
 		this.languageClient = new LanguageClient('cql', extensionName, serverOptions, clientOptions);
 

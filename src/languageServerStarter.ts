@@ -1,7 +1,7 @@
 
 import * as path from 'path';
 import * as net from 'net';
-import { StreamInfo, Executable, ExecutableOptions } from 'vscode-languageclient/node';
+import { StreamInfo, Executable, ExecutableOptions, TransportKind } from 'vscode-languageclient/node';
 import { RequirementsData } from './requirements';
 import { logger } from './log';
 
@@ -10,14 +10,20 @@ import { ExtensionContext } from 'vscode';
 declare const v8debug: any;
 const DEBUG = (typeof v8debug === 'object') || startedInDebugMode();
 
-export function prepareExecutable(requirements: RequirementsData, context: ExtensionContext, workspacePath: string): Executable {
-	const executable: Executable = Object.create(null);
+export interface TransportExecutable extends Executable {
+    transport : TransportKind;
+}
+export function prepareExecutable(requirements: RequirementsData, context: ExtensionContext, workspacePath: string): TransportExecutable {
+	const executable: TransportExecutable = Object.create(null);
 	const options: ExecutableOptions = Object.create(null);
 	options.env = Object.assign(process.env);
 	executable.options = options;
 	executable.command = path.resolve(requirements.java_requirements.java_home + '/bin/java');
 	executable.args = prepareParams(requirements, context, workspacePath);
 	logger.info(`Starting CQL server with: ${executable.command} ${executable.args.join(' ')}`);
+
+	executable.transport = TransportKind.stdio;
+
 	return executable;
 }
 export function awaitServerConnection(port: string): Thenable<StreamInfo> {
