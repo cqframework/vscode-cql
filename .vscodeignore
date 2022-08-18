@@ -7,3 +7,4 @@ src/
 tsconfig.json
 dist/jars
 dist/test
+out

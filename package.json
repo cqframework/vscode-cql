@@ -140,10 +140,10 @@
     "eslint": "^8.22.0",
     "mocha": "^9.2.1",
     "source-map-support": "^0.5.21",
-    "typescript": "^4.7.2",
-    "tslib": "^2.4.0"
+    "typescript": "^4.7.2"
   },
   "dependencies": {
+    "tslib": "^2.4.0",
     "expand-tilde": "^2.0.2",
     "find-java-home": "1.2.2",
     "fs-extra": "^8.1.0",

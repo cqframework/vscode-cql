@@ -8,7 +8,8 @@
 		"rootDir": "src",
 		"strict": true,
 		"esModuleInterop": true,
-		"alwaysStrict": true
+		"alwaysStrict": true,
+		"importHelpers": true
 	},
 	"exclude": ["node_modules", ".vscode-test"]
 }
