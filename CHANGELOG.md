@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.0 Release
+
+* Fixed library resolution in multi-root CQL projects
+* Fixed URI handling issues on Windows
+  * These changes fixed numerous bugs on Windows, such as the return type hover, the error highlighting, the execute ELM functionality
+
 ## 0.1.7 - Prerelease
 
 * Size reductions in plugin
