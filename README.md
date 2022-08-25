@@ -48,7 +48,7 @@ Run the `debug` launch from VS Code
 TIP: The cql-language-server that provides error highlighting is a Java project. It's also launched in debug mode when this VS Code extension is launched in debug mode, allowing you to attached a Java debugger as well. If you're simultaneously iterating on the cql-language-server, you can create a symlink to that Java artifact and changes will be picked up when VS Code restarts.
 
 On linux:
-`vscode-cql/dist/jars$ ln -s your-repo-home/cql-language-server/ls/service/target/cql-ls-service-1.5.7-SNAPSHOT.jar cql-ls-service-1.5.7-SNAPSHOT.jar`
+`vscode-cql/dist/jars$ ln -s your-repo-home/cql-language-server/ls/service/target/cql-ls-service-1.5.8.jar cql-ls-service-1.5.8.jar`
 
 Set your repo home directory and update the versions as needed.
 

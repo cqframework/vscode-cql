@@ -1,6 +1,6 @@
 {
   "name": "cql",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "displayName": "Clinical Quality Language (CQL)",
   "description": "Syntax highlighting, linting, and execution for the HL7 Clinical Quality Language (CQL) for VS Code",
   "publisher": "cqframework",
@@ -120,7 +120,7 @@
     "cql-language-server": {
       "groupId": "org.opencds.cqf.cql.ls",
       "artifactId": "cql-ls-service",
-      "version": "1.5.8-SNAPSHOT"
+      "version": "1.5.8"
     }
   },
   "devDependencies": {
