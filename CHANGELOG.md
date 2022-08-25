@@ -2,7 +2,7 @@
 
 ## 0.2.0 Release
 
-* Fixed library resolution in multi-root CQL projects
+* Fixed library resolution in multi-root CQL projects (known issue: all CQL projects included in a multi-root project must use the same version of FHIRHelpers.  Multiple versions of FHIRHelpers in a multi-root CQL project will result in errors and is not currently supported)
 * Fixed URI handling issues on Windows
   * These changes fixed numerous bugs on Windows, such as the return type hover, the error highlighting, the execute ELM functionality
 
