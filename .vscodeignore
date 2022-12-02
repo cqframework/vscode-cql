@@ -1,10 +1,8 @@
 .vscode
 src/
-# node_modules
+node_modules
 *.vsix
 .gitignore
 tsconfig.json
 dist/jars
-dist/test
-**/*.js.map
-out
+.vscode-test

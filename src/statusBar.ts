@@ -1,4 +1,3 @@
-
 import { StatusBarItem, window, StatusBarAlignment } from "vscode";
 import { Disposable } from "vscode-languageclient";
 
@@ -6,7 +5,10 @@ class StatusBar implements Disposable {
 	private statusBarItem: StatusBarItem;
 
 	constructor() {
-		this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, Number.MIN_VALUE);
+		this.statusBarItem = window.createStatusBarItem(
+			StatusBarAlignment.Right,
+			Number.MIN_VALUE
+		);
 	}
 
 	public showStatusBar(): void {
@@ -43,7 +45,7 @@ class StatusBar implements Disposable {
 enum StatusIcon {
 	Busy = "$(sync~spin) CQL",
 	Ready = "$(check) CQL",
-	Error = "$(error) CQL"
+	Error = "$(error) CQL",
 }
 
 export const statusBar: StatusBar = new StatusBar();

@@ -6,7 +6,9 @@
 		"streetsidesoftware.code-spell-checker",
 		"streetsidesoftware.code-spell-checker-medical-terms",
 		"streetsidesoftware.code-spell-checker-scientific-terms",
-		"sonarsource.sonarlint-vscode"
+		"sonarsource.sonarlint-vscode",
+		"esbenp.prettier-vscode",
+		"connor4312.esbuild-problem-matchers"
 	],
 	"unwantedRecommendations": [
 		"ms-vscode.vscode-typescript-tslint-plugin",

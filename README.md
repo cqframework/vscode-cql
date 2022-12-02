@@ -14,11 +14,11 @@ The Clinical Quality Language (CQL) is a domain specific language for expressing
 electronic clinical quality measures (eCQM) and clinical decision support rules
 (CDS) in an author-friendly computable format. Find out more about CQL:
 
-* [CQL Specification](http://cql.hl7.org)
-* [CQL Stream on FHIR Zulip Chat](https://chat.fhir.org/#narrow/stream/179220-cql)
-* [clinical_quality_language on GitHub](https://github.com/cqframework/clinical_quality_language)
-* [Clinical Quality Expression Language at HL7](http://www.hl7.org/special/Committees/projman/searchableProjectIndex.cfm?action=view&ProjectNumber=1108)
-* [Clinical Quality Framework (CQF)](https://confluence.hl7.org/display/CQIWC/Clinical+Quality+Framework)
+- [CQL Specification](http://cql.hl7.org)
+- [CQL Stream on FHIR Zulip Chat](https://chat.fhir.org/#narrow/stream/179220-cql)
+- [clinical_quality_language on GitHub](https://github.com/cqframework/clinical_quality_language)
+- [Clinical Quality Expression Language at HL7](http://www.hl7.org/special/Committees/projman/searchableProjectIndex.cfm?action=view&ProjectNumber=1108)
+- [Clinical Quality Framework (CQF)](https://confluence.hl7.org/display/CQIWC/Clinical+Quality+Framework)
 
 ## Getting Help
 
@@ -30,10 +30,10 @@ Inquires for commercial support can be directed to [info@alphora.com](info@alpho
 
 ## Related Projects
 
-* [atom_cql_support](https://github.com/cqframework/atom_cql_support) - CQL Support for the Atom editor.
-* [cql-language-server](https://github.com/DBCG/cql-language-server) - The Java and Language Server Protocol based server that powers this extension.
-* [cql-translator](https://github.com/cqframework/clinical_quality_language/tree/master/Src/java/cql-to-elm) - The ELM generation component used in this project.
-* [cql-engine](https://github.com/DBCG/cql_engine) - The Java CQL runtime environment used in the extension.
+- [atom_cql_support](https://github.com/cqframework/atom_cql_support) - CQL Support for the Atom editor.
+- [cql-language-server](https://github.com/DBCG/cql-language-server) - The Java and Language Server Protocol based server that powers this extension.
+- [cql-translator](https://github.com/cqframework/clinical_quality_language/tree/master/Src/java/cql-to-elm) - The ELM generation component used in this project.
+- [cql-engine](https://github.com/DBCG/cql_engine) - The Java CQL runtime environment used in the extension.
 
 ## Local Plugin Development
 
@@ -53,6 +53,7 @@ On linux:
 Set your repo home directory and update the versions as needed.
 
 ## Versioning
+
 This project follows the guidance given by Microsoft for the VS Code marketplace [here](https://code.visualstudio.com/updates/v1_63#_publishing-prerelease-extensions) and publishes prereleases to the VS Code marketplace using odd minor version numbers. Full releases are published using even minor version numbers.
 
 ## Acknowledgements
