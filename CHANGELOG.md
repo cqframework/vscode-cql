@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.6.0 Release
+
+* Update to CQL Language Server 2.0.0
+  * Support for loading CQL libraries via NPM
+  * Various bug fixes for CQL Translator, Engine, and Evaluator
+
 ## 0.2.0 Release
 
 * Fixed library resolution in multi-root CQL projects (known issue: all CQL projects included in a multi-root project must use the same version of FHIRHelpers.  Multiple versions of FHIRHelpers in a multi-root CQL project will result in errors and is not currently supported)
