@@ -4,5 +4,7 @@ node_modules
 *.vsix
 .gitignore
 tsconfig.json
-dist/jars
+dist
+!dist/extension.js
 .vscode-test
+tests
