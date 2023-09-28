@@ -17,7 +17,7 @@ electronic clinical quality measures (eCQM) and clinical decision support rules
 - [CQL Specification](http://cql.hl7.org)
 - [CQL Stream on FHIR Zulip Chat](https://chat.fhir.org/#narrow/stream/179220-cql)
 - [clinical_quality_language on GitHub](https://github.com/cqframework/clinical_quality_language)
-- [Clinical Quality Expression Language at HL7](http://www.hl7.org/special/Committees/projman/searchableProjectIndex.cfm?action=view&ProjectNumber=1108)
+- [Clinical Quality Language at HL7](https://confluence.hl7.org/display/CDS/Clinical+Quality+Language)
 - [Clinical Quality Framework (CQF)](https://confluence.hl7.org/display/CQIWC/Clinical+Quality+Framework)
 
 ## Getting Help
@@ -31,9 +31,9 @@ Inquires for commercial support can be directed to [info@alphora.com](info@alpho
 ## Related Projects
 
 - [atom_cql_support](https://github.com/cqframework/atom_cql_support) - CQL Support for the Atom editor.
-- [cql-language-server](https://github.com/DBCG/cql-language-server) - The Java and Language Server Protocol based server that powers this extension.
+- [cql-language-server](https://github.com/cqframework/cql-language-server) - The Java and Language Server Protocol based server that powers this extension.
 - [cql-translator](https://github.com/cqframework/clinical_quality_language/tree/master/Src/java/cql-to-elm) - The ELM generation component used in this project.
-- [cql-engine](https://github.com/DBCG/cql_engine) - The Java CQL runtime environment used in the extension.
+- [clinical-reasoning](https://github.com/cqframework/clinical-reasoning) - The Java CQL runtime environment used in the extension.
 
 ## Local Plugin Development
 
@@ -45,7 +45,7 @@ Run `npm run watch` from the root
 
 Run the `debug` launch from VS Code
 
-TIP: The cql-language-server that provides error highlighting is a Java project. It's also launched in debug mode when this VS Code extension is launched in debug mode, allowing you to attached a Java debugger as well. If you're simultaneously iterating on the cql-language-server, you can create a symlink to that Java artifact and changes will be picked up when VS Code restarts.
+TIP: The cql-language-server that provides error highlighting is a Java project. It's also launched in debug mode when this VS Code extension is launched in debug mode, allowing you to attach a Java debugger as well. If you're simultaneously iterating on the cql-language-server, you can create a symlink to that Java artifact and changes will be picked up when VS Code restarts.
 
 On linux:
 `vscode-cql/dist/jars$ ln -s your-repo-home/cql-language-server/ls/service/target/cql-ls-service-1.5.8.jar cql-ls-service-1.5.8.jar`
