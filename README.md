@@ -8,7 +8,7 @@ The [cqframework.cql](https://marketplace.visualstudio.com/items?itemName=cqfram
 
 This extension requires Java to be installed. It'll prompt you to install Java if required.
 
-This project maintains a [User Guide](wiki/User-Guide) that provides detailed instructions on how to use the plugin to author and test CQL content.
+This project maintains a [User Guide](https://github.com/cqframework/vscode-cql/wiki/User-Guide) that provides detailed instructions on how to use the plugin to author and test CQL content.
 
 ## More About the Clinical Quality Language
 
