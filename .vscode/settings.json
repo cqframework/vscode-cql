@@ -1,27 +1,27 @@
 {
-	"cSpell.words": [
-		"agentlib",
-		"cqlactions",
-		"Dlog",
-		"esbuild",
-		"findindex",
-		"fmtr",
-		"HKLM",
-		"JAVAC",
-		"Jdks",
-		"jdwp",
-		"jvms",
-		"LOCALAPPDATA",
-		"outfile",
-		"preinstall",
-		"reimplementation",
-		"Runtimes",
-		"vscodesws"
-	],
-	"debug.javascript.autoAttachFilter": "smart",
-	"editor.formatOnSave": true,
-	"editor.defaultFormatter": "esbenp.prettier-vscode",
-	"editor.codeActionsOnSave": {
-		"source.organizeImports": true
-	}
+  "cSpell.words": [
+    "agentlib",
+    "cqlactions",
+    "Dlog",
+    "esbuild",
+    "findindex",
+    "fmtr",
+    "HKLM",
+    "JAVAC",
+    "Jdks",
+    "jdwp",
+    "jvms",
+    "LOCALAPPDATA",
+    "outfile",
+    "preinstall",
+    "reimplementation",
+    "Runtimes",
+    "vscodesws"
+  ],
+  "debug.javascript.autoAttachFilter": "smart",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  }
 }

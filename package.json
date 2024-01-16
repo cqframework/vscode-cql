@@ -53,6 +53,12 @@
         ]
       }
     ],
+    "snippets": [
+      {
+        "language": "cql",
+        "path": "./snippets.json"
+      }
+    ],
     "grammars": [
       {
         "language": "cql",
