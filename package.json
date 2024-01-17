@@ -121,7 +121,7 @@
     "build": "npm run -S esbuild-base -- --sourcemap",
     "watch": "npm run -S esbuild-base -- --sourcemap --watch",
     "fmt": "prettier --write \"src/**/*.ts\"&& npm run test -- --fix",
-    "pretest": "eslint src --ext ts && tsc --noEmit && tsc -p ./",
+    "pretest": "vsce package && code --install-extension cql-0.7.0.vsix eslint src --ext ts && tsc --noEmit && tsc -p ./",
     "test": "node ./dist/test/suite/runTest.js"
   },
   "javaDependencies": {
@@ -143,7 +143,8 @@
     "@types/winreg": "^1.2.31",
     "@typescript-eslint/eslint-plugin": "^5.30.0",
     "@typescript-eslint/parser": "^5.30.0",
-    "@vscode/test-electron": "^1.6.1",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^1.6.2",
     "esbuild": "^0.15.16",
     "eslint": "^8.28.0",
     "eslint-plugin-header": "^3.1.1",
