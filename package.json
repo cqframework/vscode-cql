@@ -121,7 +121,7 @@
     "build": "npm run -S esbuild-base -- --sourcemap",
     "watch": "npm run -S esbuild-base -- --sourcemap --watch",
     "fmt": "prettier --write \"src/**/*.ts\"&& npm run test -- --fix",
-    "pretest": "vsce package && code --install-extension cql-0.7.0.vsix eslint src --ext ts && tsc --noEmit && tsc -p ./",
+    "pretest": "vsce package && code --install-extension $npm_package_name-$npm_package_version.vsix eslint src --ext ts && tsc --noEmit && tsc -p ./",
     "test": "node ./dist/test/suite/runTest.js"
   },
   "javaDependencies": {
