@@ -2,7 +2,7 @@
   "Print to console": {
     "prefix": "log",
     "body": [
-      "console.log('Print to console: $1');",
+      "console.log('$1');",
       "$2"
     ],
     "description": "Log output to console"

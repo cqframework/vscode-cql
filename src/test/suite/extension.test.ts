@@ -5,17 +5,9 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 // import * as myExtension from '../../extension';
 
-suite('Extension Test Suite', () => {
-  vscode.window.showInformationMessage('Start all tests.');
-
-  test('Sample test', () => {
-    assert.strictEqual([1, 2, 3].indexOf(5), -1);
-    assert.strictEqual([1, 2, 3].indexOf(3), 2);
-  });
-});
-
 suite('CQL Code Suggestions', () => {
   test('Should provide code suggestions after typing "log" in a .cql file', async () => {
+    vscode.window.showInformationMessage('Start vscode-cql extension tests.');
     // Open a .cql file
     const doc = await vscode.workspace.openTextDocument({
       language: 'cql',  // Specify the language ID for .cql files
