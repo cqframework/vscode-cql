@@ -10,8 +10,8 @@ suite('CQL Code Suggestions', () => {
     vscode.window.showInformationMessage('Start vscode-cql extension tests.');
     // Open a .cql file
     const doc = await vscode.workspace.openTextDocument({
-      language: 'cql',  // Specify the language ID for .cql files
-      content: '',     // Start with an empty document
+      language: 'cql', // Specify the language ID for .cql files
+      content: '', // Start with an empty document
     });
     await vscode.window.showTextDocument(doc);
 
@@ -22,7 +22,7 @@ suite('CQL Code Suggestions', () => {
     const suggestions = await vscode.commands.executeCommand(
       'vscode.executeCompletionItemProvider',
       doc.uri,
-      new vscode.Position(0, 3)  // Position cursor after "log"
+      new vscode.Position(0, 3) // Position cursor after "log"
     );
 
     // Assert that suggestions have been provided
@@ -43,4 +43,3 @@ suite('CQL Code Suggestions', () => {
     });
   });
 });
-

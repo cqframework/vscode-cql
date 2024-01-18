@@ -1,9 +1,12 @@
 {
   "cSpell.words": [
     "agentlib",
+    "Alphora",
+    "cqframework",
     "cqlactions",
     "Dlog",
     "esbuild",
+    "fhir",
     "findindex",
     "fmtr",
     "HKLM",
@@ -12,6 +15,7 @@
     "jdwp",
     "jvms",
     "LOCALAPPDATA",
+    "opencds",
     "outfile",
     "preinstall",
     "reimplementation",
