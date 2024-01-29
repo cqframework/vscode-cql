@@ -1,0 +1,31 @@
+{
+  "define MostRecentFunction": {
+    "prefix": "define func",
+    "body": [
+      "define function MostRecent(observations List<Observation>, asOf DateTime):",
+      "First(",
+      "observations O",
+      "sort by issued",
+      ")"
+    ],
+    "description": "Define MostRecent Function"
+  },
+  "define IssuedWithinFunction": {
+    "prefix": "define func",
+    "body": [
+      "define function IssuedWithin(observations List<Observation>, lookback System.Quantity):",
+      "observations O",
+      "where O.issued on or after day of AsOf - lookback"
+    ],
+    "description": "Define IssuedWithin Function"
+  },
+  "define PerformedWithinFunction": {
+    "prefix": "define func",
+    "body": [
+      "define function PerformedWithin(procedures List<Procedure>, lookback System.Quantity):",
+      "procedures P",
+      "where end of FC.ToInterval(P.performed) on or after day of AsOf - lookback"
+    ],
+    "description": "Define PerformedWithin Function"
+  }
+}
