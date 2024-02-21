@@ -36,6 +36,9 @@
     "Snippets"
   ],
   "main": "./dist/extension",
+  "activationEvents": [
+    "onLanguage:cql"
+  ],
   "contributes": {
     "languages": [
       {
