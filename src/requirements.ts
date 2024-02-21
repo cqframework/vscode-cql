@@ -1,18 +1,18 @@
-import { Uri, env, ExtensionContext } from "vscode";
-import * as path from "path";
-import * as fse from "fs-extra";
 import expandTilde from "expand-tilde";
+import * as fse from "fs-extra";
+import * as path from "path";
+import { ExtensionContext, Uri, env } from "vscode";
 import { Commands } from "./commands";
-import { findJavaHomes, getJavaVersion, JavaRuntime } from "./findJavaRuntimes";
+import { JavaRuntime, findJavaHomes, getJavaVersion } from "./findJavaRuntimes";
 import {
-	installJavaDependencies,
 	getServicePath,
+	installJavaDependencies,
 } from "./javaServiceInstaller";
 
 const isWindows = process.platform.indexOf("win") === 0;
 const JAVAC_FILENAME = "javac" + (isWindows ? ".exe" : "");
 const JAVA_FILENAME = "java" + (isWindows ? ".exe" : "");
-const REQUIRED_JDK_VERSION = 8;
+const REQUIRED_JDK_VERSION = 11;
 const JDK_URL = "https://adoptium.net/temurin/releases/";
 export interface RequirementsData {
 	java_requirements: JavaRequirements;
