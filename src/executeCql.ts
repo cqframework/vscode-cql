@@ -214,7 +214,7 @@ function getCqlCommandArgs(fhirVersion: string, optionsPath: string): string[] {
 	}
 
 	if (optionsPath && fs.existsSync(optionsPath)) {
-		args.push(`-op=${optionsPath}`);
+		args.push(`-op=${Uri.file(optionsPath)}`);
 	}
 
 	return args;
