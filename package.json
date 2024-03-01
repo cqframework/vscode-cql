@@ -126,7 +126,7 @@
     "cql-language-server": {
       "groupId": "org.opencds.cqf.cql.ls",
       "artifactId": "cql-ls-service",
-      "version": "3.0.0-SNAPSHOT"
+      "version": "3.0.0"
     }
   },
   "devDependencies": {
