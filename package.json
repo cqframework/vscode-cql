@@ -23,7 +23,7 @@
     "virtualWorkspaces": false
   },
   "engines": {
-    "vscode": ">=1.73.0"
+    "vscode": ">=1.75.0"
   },
   "repository": {
     "type": "git",
@@ -36,9 +36,6 @@
     "Snippets"
   ],
   "main": "./dist/extension",
-  "activationEvents": [
-    "onLanguage:cql"
-  ],
   "contributes": {
     "languages": [
       {
