@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.1 Release
+
+- Update to CQL Language Server 3.1.0
+  - Fixes for paths on Windows
+
 ## 0.7.0 Release
 
 - Update to CQL Language Server 3.0.0
