@@ -2,9 +2,7 @@
   "resourceType": "Patient",
   "id": "example",
   "meta": {
-    "profile": [
-      "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient"
-    ]
+    "profile": ["http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient"]
   },
   "text": {
     "status": "generated",
@@ -12,98 +10,98 @@
   },
   "extension": [
     {
-      "url" : "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
-      "extension" : [
+      "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+      "extension": [
         {
-          "url" : "ombCategory",
-          "valueCoding" : {
-            "system" : "urn:oid:2.16.840.1.113883.6.238",
-            "code" : "2106-3",
-            "display" : "White"
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2106-3",
+            "display": "White"
           }
         },
         {
-          "url" : "ombCategory",
-          "valueCoding" : {
-            "system" : "urn:oid:2.16.840.1.113883.6.238",
-            "code" : "1002-5",
-            "display" : "American Indian or Alaska Native"
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "1002-5",
+            "display": "American Indian or Alaska Native"
           }
         },
         {
-          "url" : "ombCategory",
-          "valueCoding" : {
-            "system" : "urn:oid:2.16.840.1.113883.6.238",
-            "code" : "2028-9",
-            "display" : "Asian"
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2028-9",
+            "display": "Asian"
           }
         },
         {
-          "url" : "detailed",
-          "valueCoding" : {
-            "system" : "urn:oid:2.16.840.1.113883.6.238",
-            "code" : "1586-7",
-            "display" : "Shoshone"
+          "url": "detailed",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "1586-7",
+            "display": "Shoshone"
           }
         },
         {
-          "url" : "detailed",
-          "valueCoding" : {
-            "system" : "urn:oid:2.16.840.1.113883.6.238",
-            "code" : "2036-2",
-            "display" : "Filipino"
+          "url": "detailed",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2036-2",
+            "display": "Filipino"
           }
         },
         {
-          "url" : "detailed",
-          "valueCoding" : {
-            "system" : "urn:oid:2.16.840.1.113883.6.238",
-            "code" : "1735-0",
-            "display" : "Alaska Native"
+          "url": "detailed",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "1735-0",
+            "display": "Alaska Native"
           }
         },
         {
-          "url" : "text",
-          "valueString" : "Mixed"
+          "url": "text",
+          "valueString": "Mixed"
         }
       ]
     },
     {
-      "url" : "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
-      "extension" : [
+      "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+      "extension": [
         {
-          "url" : "ombCategory",
-          "valueCoding" : {
-            "system" : "urn:oid:2.16.840.1.113883.6.238",
-            "code" : "2135-2",
-            "display" : "Hispanic or Latino"
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2135-2",
+            "display": "Hispanic or Latino"
           }
         },
         {
-          "url" : "detailed",
-          "valueCoding" : {
-            "system" : "urn:oid:2.16.840.1.113883.6.238",
-            "code" : "2184-0",
-            "display" : "Dominican"
+          "url": "detailed",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2184-0",
+            "display": "Dominican"
           }
         },
         {
-          "url" : "detailed",
-          "valueCoding" : {
-            "system" : "urn:oid:2.16.840.1.113883.6.238",
-            "code" : "2148-5",
-            "display" : "Mexican"
+          "url": "detailed",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2148-5",
+            "display": "Mexican"
           }
         },
         {
-          "url" : "text",
-          "valueString" : "Hispanic or Latino"
+          "url": "text",
+          "valueString": "Hispanic or Latino"
         }
       ]
     },
     {
-      "url" : "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
-      "valueCode" : "M"
+      "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+      "valueCode": "M"
     }
   ],
   "identifier": [
@@ -132,25 +130,17 @@
     {
       "use": "official",
       "family": "Chalmers",
-      "given": [
-        "Peter",
-        "James"
-      ]
+      "given": ["Peter", "James"]
     },
     {
       "use": "usual",
       "family": "Chalmers",
-      "given": [
-        "Jim"
-      ]
+      "given": ["Jim"]
     },
     {
       "use": "maiden",
       "family": "Windsor",
-      "given": [
-        "Peter",
-        "James"
-      ],
+      "given": ["Peter", "James"],
       "period": {
         "end": "2002"
       }
@@ -194,9 +184,7 @@
       "use": "home",
       "type": "both",
       "text": "534 Erewhon St PeasantVille, Utah 84414",
-      "line": [
-        "534 Erewhon St"
-      ],
+      "line": ["534 Erewhon St"],
       "city": "PleasantVille",
       "district": "Rainbow",
       "state": "UT",
@@ -236,9 +224,7 @@
             }
           ]
         },
-        "given": [
-          "Bénédicte"
-        ]
+        "given": ["Bénédicte"]
       },
       "telecom": [
         {
@@ -249,9 +235,7 @@
       "address": {
         "use": "home",
         "type": "both",
-        "line": [
-          "534 Erewhon St"
-        ],
+        "line": ["534 Erewhon St"],
         "city": "PleasantVille",
         "district": "Rainbow",
         "state": "VT",
