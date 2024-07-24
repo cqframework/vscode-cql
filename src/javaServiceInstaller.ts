@@ -80,7 +80,7 @@ async function installServiceIfMissing(serviceName: string, coords: MavenCoords)
       },
       async progress => {
         await installJar(serviceName, coords, progress);
-      }
+      },
     );
   }
 }
@@ -99,7 +99,7 @@ function isServiceInstalled(coords: MavenCoords): boolean {
 async function installJar(
   serviceName: string,
   coords: MavenCoords,
-  progress?: Progress<{ message?: string; increment?: number }>
+  progress?: Progress<{ message?: string; increment?: number }>,
 ): Promise<void> {
   const jarPath = getServicePathFromCoords(coords);
   const jarHome = getJarHome();
@@ -116,7 +116,7 @@ async function installJar(
     jarPath,
     serviceName,
     setupInfo.serverDownloadSize,
-    progress
+    progress,
   );
 
   if (progress) {
@@ -134,7 +134,7 @@ async function downloadFile(
   path: string,
   _serviceName: string,
   totalBytes?: number,
-  progress?: Progress<{ message?: string; increment?: number }>
+  progress?: Progress<{ message?: string; increment?: number }>,
 ) {
   const res = await fetch(url);
   const fileStream = fs.createWriteStream(path);

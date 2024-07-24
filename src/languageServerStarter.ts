@@ -20,7 +20,7 @@ export interface TransportExecutable extends Executable {
 export function prepareExecutable(
   requirements: RequirementsData,
   context: ExtensionContext,
-  workspacePath: string
+  workspacePath: string,
 ): TransportExecutable {
   const executable: TransportExecutable = Object.create(null);
   const options: ExecutableOptions = Object.create(null);
@@ -54,7 +54,7 @@ export function awaitServerConnection(port: string): Thenable<StreamInfo> {
 function prepareParams(
   requirements: RequirementsData,
   context: ExtensionContext,
-  workspacePath: string
+  workspacePath: string,
 ): string[] {
   const params: string[] = [];
   if (DEBUG) {

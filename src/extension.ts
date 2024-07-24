@@ -35,7 +35,7 @@ export class ClientErrorHandler implements ErrorHandler {
   public error(_error: Error, _message: Message, count: number): ErrorAction {
     if (count && count <= 3) {
       logger.error(
-        `${this.name} server encountered error: ${_message}, ${_error && _error.toString()}`
+        `${this.name} server encountered error: ${_message}, ${_error && _error.toString()}`,
       );
       return ErrorAction.Continue;
     }
@@ -43,7 +43,7 @@ export class ClientErrorHandler implements ErrorHandler {
     logger.error(
       `${this.name} server encountered error and will shut down: ${_message}, ${
         _error && _error.toString()
-      }`
+      }`,
     );
     return ErrorAction.Shutdown;
   }
@@ -148,7 +148,7 @@ export function activate(context: ExtensionContext): Promise<void> {
           errorHandler: new ClientErrorHandler(extensionName),
           initializationFailedHandler: error => {
             logger.error(
-              `Failed to initialize ${extensionName} due to ${error && error.toString()}`
+              `Failed to initialize ${extensionName} due to ${error && error.toString()}`,
             );
             return true;
           },
@@ -175,20 +175,20 @@ export function activate(context: ExtensionContext): Promise<void> {
             } else {
               return cqlLanguageClient.getClient().sendRequest(ExecuteCommandRequest.type, params);
             }
-          })
+          }),
         );
 
         // Register commands here to make it available even when the language client fails
         context.subscriptions.push(
           commands.registerCommand(Commands.OPEN_SERVER_LOG, (column: ViewColumn) =>
-            openServerLogFile(workspacePath, column)
-          )
+            openServerLogFile(workspacePath, column),
+          ),
         );
 
         context.subscriptions.push(
           commands.registerCommand(Commands.OPEN_CLIENT_LOG, (column: ViewColumn) =>
-            openClientLogFile(clientLogFile, column)
-          )
+            openClientLogFile(clientLogFile, column),
+          ),
         );
 
         context.subscriptions.push(commands.registerCommand(Commands.OPEN_LOGS, () => openLogs()));
@@ -205,7 +205,7 @@ async function startServer(
   context: ExtensionContext,
   requirements: requirements.RequirementsData,
   clientOptions: LanguageClientOptions,
-  workspacePath: string
+  workspacePath: string,
 ) {
   if (cqlLanguageClient.getClientStatus() !== ClientStatus.Uninitialized) {
     return;
@@ -222,7 +222,7 @@ export function deactivate(): void {
 
 function openServerLogFile(
   workspacePath: string,
-  column: ViewColumn = ViewColumn.Active
+  column: ViewColumn = ViewColumn.Active,
 ): Thenable<boolean> {
   const serverLogFile = path.join(workspacePath, '.metadata', '.log');
   return openLogFile(serverLogFile, 'Could not open CQL Language Server log file', column);
@@ -230,7 +230,7 @@ function openServerLogFile(
 
 function openClientLogFile(
   logFile: string,
-  column: ViewColumn = ViewColumn.Active
+  column: ViewColumn = ViewColumn.Active,
 ): Thenable<boolean> {
   return new Promise(resolve => {
     const filename = path.basename(logFile);
@@ -244,7 +244,7 @@ function openClientLogFile(
       }
 
       openLogFile(logFile, 'Could not open CQL extension log file', column).then(result =>
-        resolve(result)
+        resolve(result),
       );
     });
   });
@@ -258,7 +258,7 @@ async function openLogs() {
 function openLogFile(
   logFile: string,
   openingFailureWarning: string,
-  column: ViewColumn = ViewColumn.Active
+  column: ViewColumn = ViewColumn.Active,
 ): Thenable<boolean> {
   if (!fs.existsSync(logFile)) {
     return window.showWarningMessage('No log file available').then(() => false);
@@ -273,7 +273,7 @@ function openLogFile(
         }
         return window.showTextDocument(doc, column).then(editor => !!editor);
       },
-      () => false
+      () => false,
     )
     .then(didOpen => {
       if (!didOpen) {

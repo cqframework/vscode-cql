@@ -58,10 +58,10 @@ define "Qualifying Encounters":
 
 ## Expressions
 
-* Every valid _expression_ can be _evaluated_ and either returns a _result_, or produces an _error_.
-* Every _expression_ has a _type_ that can be determined at author-time (i.e. by analysis, as opposed to having to evaluate the expression).
-* Every _result_ is either a _value_ or _null_
-* Every _value_ is of some type, and the result of a successful evaluation of an expression is guaranteed to be of the _type_ determined at author-time.
+- Every valid _expression_ can be _evaluated_ and either returns a _result_, or produces an _error_.
+- Every _expression_ has a _type_ that can be determined at author-time (i.e. by analysis, as opposed to having to evaluate the expression).
+- Every _result_ is either a _value_ or _null_
+- Every _value_ is of some type, and the result of a successful evaluation of an expression is guaranteed to be of the _type_ determined at author-time.
 
 ## Types
 
@@ -79,15 +79,15 @@ Simple types are single values like the Integer 5, or the String 'Hello'
 
 [System-Defined Types](https://cql.hl7.org/03-developersguide.html#system-defined-types)
 
-|Type|Example Values|
-|----|----|
-|Boolean|`true`, `false`|
-|Integer|`16`, `-28`|
-|Decimal|`100.015`|
-|String|`pending`, `active`, `complete`|
-|Date|`@2014-01-25`|
-|DateTime|`@2014-01-25T`,`@2014-01-25T14:30:14.559`|
-|Time|`@T12:00:00.0`,`@T14:30:14.559`|
+| Type     | Example Values                            |
+| -------- | ----------------------------------------- |
+| Boolean  | `true`, `false`                           |
+| Integer  | `16`, `-28`                               |
+| Decimal  | `100.015`                                 |
+| String   | `pending`, `active`, `complete`           |
+| Date     | `@2014-01-25`                             |
+| DateTime | `@2014-01-25T`,`@2014-01-25T14:30:14.559` |
+| Time     | `@T12:00:00.0`,`@T14:30:14.559`           |
 
 ### Structured Types
 
@@ -106,7 +106,7 @@ or they can be _classes_, which are _named tuple types_
 define PatientExpression: Patient { name: 'Patrick', birthDate: @2014-01-01 }
 ```
 
-CQL also defines several structured types to facilitate representation and manipulation of clinical information: Code, Concept, Quantity and Ratio. 
+CQL also defines several structured types to facilitate representation and manipulation of clinical information: Code, Concept, Quantity and Ratio.
 
 As per the CQL Reference Appendix B, the Quantity type represents quantities with a specified unit within CQL. The unit must be a valid UCUM unit or CQL temporal keyword. UCUM units in CQL use the case-sensitive (c/s) form. When a quantity value has no unit specified, operations are performed with the default UCUM unit ('1'). The value element of a Quantity must be present. https://cql.hl7.org/09-b-cqlreference.html#quantity
 
@@ -172,11 +172,11 @@ define ImagingProcedures: Procedures P where P is ImagingProcedure return P as I
 define ImagingProceduresOrError: Procedures P return cast P as ImagingProcedure
 ```
 
-CQL supports type testing with the `is` operator, and type casting with the `as` and `cast`...`as` operators. 
+CQL supports type testing with the `is` operator, and type casting with the `as` and `cast`...`as` operators.
 
-* `is` will return true if the value at runtime is of the given type.
-* `as` will return the value if it is of the given type, otherwise `null`
-* `cast`...`as` will return the value if it is of the given type, otherwise an error will be raised
+- `is` will return true if the value at runtime is of the given type.
+- `as` will return the value if it is of the given type, otherwise `null`
+- `cast`...`as` will return the value if it is of the given type, otherwise an error will be raised
 
 ## Casting with Choice Types
 
@@ -189,9 +189,9 @@ In particular, casting can be used with choice types to treat values that may be
 If the input is an Integer, the result is the same as invoking `value as Integer`
 */
 define function ToInteger(value Choice<Integer, Quantity>):
-  if value is Quantity then 
+  if value is Quantity then
     ToInteger(value as Quantity)
-  else 
+  else
     value as Integer
 ```
 
@@ -203,18 +203,18 @@ It is important to understand the following statement regarding the potential im
 
 Thus, even if the query expression casts a broader net, the result will be constrained to data specified by the ‘as type’. For example:
 
-* String data would not be returned if constrained ‘as Integer’ or ‘as Quantity’. 
-* Integer data would not be returned if constrained ‘as Quantity’.
-* Quantity data would not be returned if constrained ‘as Integer’.
+- String data would not be returned if constrained ‘as Integer’ or ‘as Quantity’.
+- Integer data would not be returned if constrained ‘as Quantity’.
+- Quantity data would not be returned if constrained ‘as Integer’.
 
-Code systems, such as LOINC, may permit data in more than one type as specified within LOINC 2.73 code definition as Property, eg Num, and Scale, eg Qn where a Property category of Num indicates the result is a count that begins with a number.  If Scale is Quantitative (Qn) that indicates the result of the test is a numeric value that relates to a continuous scale reported either as an integer, a ratio, a real number, or a range. The test result value may optionally contain a relational operator from the set [<=,<,>,>=]. Valid values for a quantitative test are of the form "7", "-7", "7.4", "-7.4", "7.8912", "0.125", "<10", ">12000", 1-10, 1:256
-Per QDM, LOINC and QRDA I specification, a numerical result could potentially be submitted as integer, decimal number or quantity.  For example, data submitted as a quantity for evaluation by the eCQM as Integer, or as lab results submitted as string for evaluation as Quantity or Quantity.value, would not be detected without further logic within the measure or receiving system. 
+Code systems, such as LOINC, may permit data in more than one type as specified within LOINC 2.73 code definition as Property, eg Num, and Scale, eg Qn where a Property category of Num indicates the result is a count that begins with a number. If Scale is Quantitative (Qn) that indicates the result of the test is a numeric value that relates to a continuous scale reported either as an integer, a ratio, a real number, or a range. The test result value may optionally contain a relational operator from the set [<=,<,>,>=]. Valid values for a quantitative test are of the form "7", "-7", "7.4", "-7.4", "7.8912", "0.125", "<10", ">12000", 1-10, 1:256
+Per QDM, LOINC and QRDA I specification, a numerical result could potentially be submitted as integer, decimal number or quantity. For example, data submitted as a quantity for evaluation by the eCQM as Integer, or as lab results submitted as string for evaluation as Quantity or Quantity.value, would not be detected without further logic within the measure or receiving system.
 
 Takeaways:
 
-* When evaluating a measure’s intent, one should assess the limits on data capture implied by use of ‘as type’ expression that further constrains the query expression.
-* When evaluating data for submission, one should assess the data format vs schema vs eCQM specification to prevent unintended limits on data capture.
-* To broaden data capture, potentially CQL logic could convert some data from one type to another. 
+- When evaluating a measure’s intent, one should assess the limits on data capture implied by use of ‘as type’ expression that further constrains the query expression.
+- When evaluating data for submission, one should assess the data format vs schema vs eCQM specification to prevent unintended limits on data capture.
+- To broaden data capture, potentially CQL logic could convert some data from one type to another.
 
 For example, appropriate data in Quantity.value where Quantity.unit = '1' might be converted to Integer by a CQL function:
 
@@ -226,13 +226,13 @@ and it has the default UCUM unit of '1'
 */
 define function ToInteger(value Quantity):
   case
-    when Abs(value.value - Truncate(value.value)) > 0.00000001 then 
+    when Abs(value.value - Truncate(value.value)) > 0.00000001 then
       Message(null, true, 'ToInteger.InvalidArgument', ErrorSeverity, 'The quantity has a non-zero decimal component and cannot be safely interpreted as an Integer')
     when value.unit != '1' then
       Message(null, true, 'ToInteger.InvalidUnit', ErrorSeverity, 'The quantity has non-default units specified and cannot be safely interpreted as an Integer')
     else
       Truncate(value.value)
   end
-  ```
+```
 
 > Hat tip Peter Muir for the guidance related to data retrieval, submission, and validation
