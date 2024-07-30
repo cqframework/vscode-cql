@@ -7,8 +7,8 @@ import {
 } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { Commands } from './commands';
-import { executeCQLFile } from './executeCql';
 import { ClientStatus } from './extension.api';
+import { initializeState } from './initializeState';
 import { prepareExecutable } from './languageServerStarter';
 import { logger } from './log';
 import {
@@ -142,7 +142,7 @@ export class CqlLanguageClient {
 
     context.subscriptions.push(
       commands.registerCommand(Commands.EXECUTE_CQL_COMMAND, async (uri: Uri) => {
-        await executeCQLFile(uri);
+        await initializeState(uri);
       }),
     );
   }
