@@ -89,8 +89,8 @@
         "category": "CQL"
       },
       {
-        "command": "cql.action.executeCql",
-        "title": "Execute CQL",
+        "command": "cql.action.executeCqlFile",
+        "title": "Execute CQL File",
         "category": "CQL"
       }
     ],
@@ -102,7 +102,7 @@
           "group": "1_cqlactions"
         },
         {
-          "command": "cql.action.executeCql",
+          "command": "cql.action.executeCqlFile",
           "when": "editorLangId == cql",
           "group": "1_cqlactions"
         }

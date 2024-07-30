@@ -141,7 +141,7 @@ export class CqlLanguageClient {
     );
 
     context.subscriptions.push(
-      commands.registerCommand(Commands.EXECUTE_CQL_COMMAND, async (uri: Uri) => {
+      commands.registerCommand(Commands.EXECUTE_CQL_FILE_COMMAND, async (uri: Uri) => {
         await executeCQLFile(uri);
       }),
     );
