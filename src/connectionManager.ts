@@ -1,31 +1,19 @@
-// TODO: Reference a library instead for GUID generation?
-export type GUID = string & { isGuid: true };
-export function guid(guid: string): GUID {
-  return guid as GUID;
-}
-
-export function generateGUID(): string {
-  const timestamp = new Date().getTime();
-  const randomNum = Math.floor(Math.random() * 1000000);
-  return `${timestamp}-${randomNum}`;
-}
-
 export interface Context {
-  id: GUID;
+  id: string;
   resourceID: string;
   resourceType: string;
   resourceDisplay?: string;
 }
 
 export interface Connection {
-  id: GUID;
+  id: string;
   url: URL;
-  active: boolean;
   context: Context[];
 }
 
 export class ConnectionManager {
   private connections: Connection[];
+  private currentConnection?: Connection;
 
   constructor() {
     this.connections = [];
@@ -36,9 +24,11 @@ export class ConnectionManager {
   }
 
   public getCurrentConnection(): Connection | undefined {
-    let activeConnections = this.getAllConnections().filter(x => x.active);
-    if (activeConnections[0] === undefined) return undefined;
-    else return this.getAllConnections().filter(x => x.active)[0];
+    return this.currentConnection;
+  }
+
+  public setCurrentConnection(connection: Connection | undefined) {
+    this.currentConnection = connection;
   }
 
   public addConnection(connection: Connection): void {
@@ -60,7 +50,7 @@ export class ConnectionManager {
         .map(function (x) {
           return x.id;
         })
-        .indexOf(guid(connection.id)),
+        .indexOf(connection.id),
       1,
     );
   }

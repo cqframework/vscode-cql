@@ -1,4 +1,5 @@
-import { Connection, ConnectionManager, Context, guid } from '../../connectionManager';
+import { v4 as uuidv4 } from 'uuid';
+import { Connection, ConnectionManager, Context } from '../../connectionManager';
 
 export function connectionManagerTester(): void {
   const manager = new ConnectionManager();
@@ -11,14 +12,13 @@ export function connectionManagerTester(): void {
   console.log('Testing Adding a Connection');
   let connectionContexts = new Array<Context>();
   connectionContexts.push({
-    id: guid('123-context'),
+    id: '123-context',
     resourceID: 'test',
     resourceType: 'Patient',
   });
   manager.addConnection({
-    id: guid('123-connection'),
+    id: '123-connection',
     url: new URL('http://smilecdr/fhir'),
-    active: true,
     context: connectionContexts,
   });
 
@@ -26,9 +26,18 @@ export function connectionManagerTester(): void {
   currentConnection = manager.getCurrentConnection();
   console.log(currentConnection);
 
+  console.log('Test Setting Current Connection');
+  currentConnection = manager
+    .getAllConnections()
+    .find(x => x != undefined && (x.id = '123-connection'));
+  manager.setCurrentConnection(currentConnection);
+  console.log('Testing Current Connection');
+  currentConnection = manager.getCurrentConnection();
+  console.log(currentConnection);
+
   console.log('Testing Add Context');
   let newContext: Context = {
-    id: guid('123-second-context'),
+    id: '123-second-context',
     resourceID: 'test-2',
     resourceType: 'Patient',
     resourceDisplay: 'A Test Patient',
@@ -40,21 +49,19 @@ export function connectionManagerTester(): void {
 
   console.log('Adding Multiple Connections');
   connectionContexts = new Array<Context>();
-  newContext = { id: guid('456-first-context'), resourceID: 'test-3', resourceType: 'Patient' };
+  newContext = { id: '456-first-context', resourceID: 'test-3', resourceType: 'Patient' };
   connectionContexts.push(newContext);
   manager.addConnection({
-    id: guid('connection-2'),
+    id: 'connection-2',
     url: new URL('http://smilecdr/fhir'),
-    active: true,
     context: connectionContexts,
   });
   connectionContexts = new Array<Context>();
-  newContext = { id: guid('789-first-context'), resourceID: 'test-4', resourceType: 'Patient' };
+  newContext = { id: '789-first-context', resourceID: 'test-4', resourceType: 'Patient' };
   connectionContexts.push(newContext);
   manager.addConnection({
-    id: guid('connection-3'),
+    id: 'connection-3',
     url: new URL('http://smilecdr/fhir'),
-    active: false,
     context: connectionContexts,
   });
 
@@ -71,20 +78,41 @@ export function connectionManagerTester(): void {
     .map(function (x) {
       return x.id;
     })
-    .indexOf(guid('123-connection'));
+    .indexOf('123-connection');
 
   var value2 = manager
     .getAllConnections()
     .map(function (x) {
       return x.id;
     })
-    .indexOf(guid('connection-3'));
+    .indexOf('connection-3');
 
   manager.deleteConnection(
     manager
       .getAllConnections()
-      .find(x => x != undefined && (x.id = guid('123-connection'))) as Connection,
+      .find(x => x != undefined && (x.id = '123-connection')) as Connection,
   );
+
+  console.log('Gathering All Connections');
+  console.log(manager.getAllConnections());
+
+  console.log('Test UUID Library');
+  var sampleUUID = uuidv4();
+  var contextUUID = uuidv4();
+  console.log(sampleUUID);
+  console.log('Adding UUID Connection');
+
+  connectionContexts = new Array<Context>();
+  connectionContexts.push({
+    id: contextUUID,
+    resourceID: 'test',
+    resourceType: 'Patient',
+  });
+  manager.addConnection({
+    id: sampleUUID,
+    url: new URL('http://smilecdr/fhir'),
+    context: connectionContexts,
+  });
 
   console.log('Gathering All Connections');
   console.log(manager.getAllConnections());
