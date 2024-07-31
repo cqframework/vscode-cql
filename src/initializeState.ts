@@ -5,7 +5,7 @@ import { executeCQL } from "./executeCql";
 export async function initializeState(uri: Uri) {
 
     // Needs a distinction between CQL file and single line
-    const isCqlFile = window.activeTextEditor!.document.fileName.includes(".cql");
+    const isCqlFile = window.activeTextEditor!.document.fileName.endsWith(".cql");
 
     if (isCqlFile) {
         // should normalize data
