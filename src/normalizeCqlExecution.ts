@@ -2,7 +2,7 @@ import { Uri, window } from "vscode";
 import { buildParameters } from "./buildParameters";
 import { executeCQL } from "./executeCql";
 
-export async function initializeState(uri: Uri) {
+export async function normalizeCqlExecution(uri: Uri) {
 
     // Needs a distinction between CQL file and single line
     const isCqlFile = window.activeTextEditor!.document.fileName.endsWith(".cql");
