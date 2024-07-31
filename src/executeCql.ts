@@ -11,7 +11,7 @@ async function insertLineAtEnd(textEditor: TextEditor, text: string) {
   });
 }
 
-export async function executeCQL(evaluationParameters: EvaluationParameters) {
+export async function executeCQL({operationArgs, testPath, outputPath}: EvaluationParameters) {
   let cqlMessage = '';
   let terminologyMessage = '';
   let testMessage = `Test cases:\n`;
