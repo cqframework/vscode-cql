@@ -30,17 +30,11 @@ export class ConnectionManager {
     this.currentConnection = this.connections[id];
   }
 
-  public addConnection(id: string, connection: Connection): void {
-    if (!this.connections.hasOwnProperty(id)) {
-      this.connections[id] = connection;
-    }
-  }
-
   // TODO
   public testConnection(id: string): void {}
 
-  public upsertConnection(id: string, connection: Connection): void {
-    this.connections[id] = connection;
+  public upsertConnection(connection: Connection): void {
+    this.connections[connection.id] = connection;
   }
 
   public deleteConnection(id: string): void {
@@ -49,12 +43,6 @@ export class ConnectionManager {
 
   public getCurrentContexts(): Record<string, Context> | undefined {
     return this.getCurrentConnection()?.contexts;
-  }
-
-  public addContext(connectionID: string, contextID: string, context: Context): void {
-    if (!this.connections[connectionID].contexts.hasOwnProperty(contextID)) {
-      this.connections[connectionID].contexts[contextID] = context;
-    }
   }
 
   public upsertContext(connectionID: string, contextID: string, context: Context): void {

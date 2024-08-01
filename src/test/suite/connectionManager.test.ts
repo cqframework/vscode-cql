@@ -5,7 +5,7 @@ export function connectionManagerTester(): void {
   console.log('Testing Connection Manager');
 
   console.log('Testing Adding a Connection');
-  manager.addConnection('123-connection', {
+  manager.upsertConnection({
     id: '123-connection',
     url: new URL('http://smilecdr/fhir'),
     contexts: {
@@ -32,13 +32,13 @@ export function connectionManagerTester(): void {
     resourceType: 'Patient',
     resourceDisplay: 'A Test Patient',
   };
-  manager.addContext(manager.getCurrentConnection()?.id as string, 'Patient/test-2', newContext);
+  manager.upsertContext(manager.getCurrentConnection()?.id as string, 'Patient/test-2', newContext);
 
   console.log('Gathering All Connections');
   console.log(manager.getAllConnections());
 
   console.log('Adding Multiple Connections');
-  manager.addConnection('connection-2', {
+  manager.upsertConnection({
     id: 'connection-2',
     url: new URL('http://smilecdr/fhir'),
     contexts: {
@@ -49,7 +49,7 @@ export function connectionManagerTester(): void {
     },
   });
 
-  manager.addConnection('connection-3', {
+  manager.upsertConnection({
     id: 'connection-3',
     url: new URL('http://smilecdr/fhir'),
     contexts: {
