@@ -45,10 +45,12 @@ export class ConnectionManager {
     return this.getCurrentConnection()?.contexts;
   }
 
-  public upsertContext(connectionID: string, contextID: string, context: Context): void {
-    this.connections[connectionID].contexts[contextID] = context;
+  public upsertContext(connectionName: string, context: Context): void {
+    this.connections[connectionName].contexts[context.resourceType + '/' + context.resourceID] =
+      context;
   }
 
-  // TODO
-  public deleteContext(connection: Connection | undefined, context: Context): void {}
+  public deleteContext(connectionName: string, contextID: string): void {
+    delete this.connections[connectionName].contexts[contextID];
+  }
 }
