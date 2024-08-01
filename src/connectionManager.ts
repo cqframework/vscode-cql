@@ -26,19 +26,19 @@ export class ConnectionManager {
     return this.currentConnection;
   }
 
-  public setCurrentConnection(id: string) {
-    this.currentConnection = this.connections[id];
+  public setCurrentConnection(name: string) {
+    this.currentConnection = this.connections[name];
   }
 
   // TODO
-  public testConnection(id: string): void {}
+  public testConnection(name: string): void {}
 
   public upsertConnection(connection: Connection): void {
     this.connections[connection.name] = connection;
   }
 
-  public deleteConnection(id: string): void {
-    delete this.connections[id];
+  public deleteConnection(name: string): void {
+    delete this.connections[name];
   }
 
   public getCurrentContexts(): Record<string, Context> | undefined {
