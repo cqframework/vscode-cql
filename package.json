@@ -92,17 +92,27 @@
         "command": "cql.action.executeCqlFile",
         "title": "Execute CQL File",
         "category": "CQL"
+      },
+      {
+        "command": "cql.action.executeCqlExpression",
+        "title": "Execute CQL Expression",
+        "category": "CQL"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "command": "cql.action.viewElm",
-          "when": "editorLangId == cql",
+          "command": "cql.action.executeCqlExpression",
+          "when": "(editorLangId == cql) && editorTextFocus",
           "group": "1_cqlactions"
         },
         {
           "command": "cql.action.executeCqlFile",
+          "when": "editorLangId == cql",
+          "group": "1_cqlactions"
+        },
+        {
+          "command": "cql.action.viewElm",
           "when": "editorLangId == cql",
           "group": "1_cqlactions"
         }

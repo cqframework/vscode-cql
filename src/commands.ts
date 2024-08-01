@@ -46,6 +46,7 @@ export namespace Commands {
    * TODO: Deprecate once full debugging support exists
    */
   export const EXECUTE_CQL_FILE_COMMAND = 'cql.action.executeCqlFile';
+  export const EXECUTE_CQL_EXPRESSION_COMMAND = 'cql.action.executeCqlExpression';
   export const EXECUTE_CQL = 'org.opencds.cqf.cql.ls.plugin.debug.startDebugSession';
 
   /*
