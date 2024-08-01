@@ -32,11 +32,7 @@ export function connectionManagerTester(): void {
     resourceType: 'Patient',
     resourceDisplay: 'A Test Patient',
   };
-  manager.upsertContext(
-    manager.getCurrentConnection()?.name as string,
-    'Patient/test-2',
-    newContext,
-  );
+  manager.upsertContext(manager.getCurrentConnection()?.name as string, newContext);
 
   console.log('Gathering All Connections');
   console.log(manager.getAllConnections());
