@@ -5,7 +5,7 @@ export interface Context {
 }
 
 export interface Connection {
-  id: string;
+  name: string;
   url: URL;
   contexts: Record<string, Context>;
 }
@@ -34,7 +34,7 @@ export class ConnectionManager {
   public testConnection(id: string): void {}
 
   public upsertConnection(connection: Connection): void {
-    this.connections[connection.id] = connection;
+    this.connections[connection.name] = connection;
   }
 
   public deleteConnection(id: string): void {
