@@ -1,5 +1,4 @@
 export interface Context {
-  id: string;
   resourceID: string;
   resourceType: string;
   resourceDisplay?: string;
@@ -8,18 +7,18 @@ export interface Context {
 export interface Connection {
   id: string;
   url: URL;
-  context: Context[];
+  contexts: Record<string, Context>;
 }
 
 export class ConnectionManager {
-  private connections: Connection[];
+  private connections: Record<string, Connection>;
   private currentConnection?: Connection;
 
   constructor() {
-    this.connections = [];
+    this.connections = {};
   }
 
-  public getAllConnections(): Connection[] {
+  public getAllConnections(): Record<string, Connection> {
     return this.connections;
   }
 
@@ -27,47 +26,40 @@ export class ConnectionManager {
     return this.currentConnection;
   }
 
-  public setCurrentConnection(connection: Connection | undefined) {
-    this.currentConnection = connection;
+  public setCurrentConnection(id: string) {
+    this.currentConnection = this.connections[id];
   }
 
-  public addConnection(connection: Connection): void {
-    this.connections?.push(connection);
-  }
-
-  // TODO
-  public testConnection(connection: Connection): void {}
-
-  // TODO
-  public upsertConnection(connection: Connection): void {}
-
-  // TODO
-  public updateConnection(connection: Connection): void {}
-
-  public deleteConnection(connection: Connection): void {
-    this.connections.splice(
-      this.getAllConnections()
-        .map(function (x) {
-          return x.id;
-        })
-        .indexOf(connection.id),
-      1,
-    );
-  }
-
-  public getCurrentContexts(): Context[] | undefined {
-    return this.getCurrentConnection()?.context;
-  }
-
-  public addContext(connection: Connection | undefined, context: Context): void {
-    connection?.context?.push(context);
+  public addConnection(id: string, connection: Connection): void {
+    if (!this.connections.hasOwnProperty(id)) {
+      this.connections[id] = connection;
+    }
   }
 
   // TODO
-  public upsertContext(connection: Connection | undefined, context: Context): void {}
+  public testConnection(id: string): void {}
 
-  // TODO
-  public updateContext(connection: Connection | undefined, context: Context): void {}
+  public upsertConnection(id: string, connection: Connection): void {
+    this.connections[id] = connection;
+  }
+
+  public deleteConnection(id: string): void {
+    delete this.connections[id];
+  }
+
+  public getCurrentContexts(): Record<string, Context> | undefined {
+    return this.getCurrentConnection()?.contexts;
+  }
+
+  public addContext(connectionID: string, contextID: string, context: Context): void {
+    if (!this.connections[connectionID].contexts.hasOwnProperty(contextID)) {
+      this.connections[connectionID].contexts[contextID] = context;
+    }
+  }
+
+  public upsertContext(connectionID: string, contextID: string, context: Context): void {
+    this.connections[connectionID].contexts[contextID] = context;
+  }
 
   // TODO
   public deleteContext(connection: Connection | undefined, context: Context): void {}
