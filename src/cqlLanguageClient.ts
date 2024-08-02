@@ -141,8 +141,14 @@ export class CqlLanguageClient {
     );
 
     context.subscriptions.push(
-      commands.registerCommand(Commands.EXECUTE_CQL_COMMAND, async (uri: Uri) => {
-        await normalizeCqlExecution(uri);
+      commands.registerCommand(Commands.EXECUTE_CQL_FILE_COMMAND, async (uri: Uri) => {
+        await normalizeCqlExecution(uri, 'file');
+      }),
+    );
+
+    context.subscriptions.push(
+      commands.registerCommand(Commands.EXECUTE_CQL_EXPRESSION_COMMAND, async (uri: Uri) => {
+        await normalizeCqlExecution(uri, 'expression');
       }),
     );
   }
