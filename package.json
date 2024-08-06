@@ -92,8 +92,58 @@
         "command": "cql.action.executeCql",
         "title": "Execute CQL",
         "category": "CQL"
+      },
+      {
+        "command": "calicoColors.addColor",
+        "category": "Calico Colors",
+        "title": "Add Color"
+      },
+      {
+        "command": "calicoColors.clearColors",
+        "category": "Calico Colors",
+        "title": "Clear Colors",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "calicoColors.showCat",
+        "category": "Calico Colors",
+        "title": "Show Cat"
+      },
+      {
+        "command": "connections.addConnection",
+        "category": "Connections",
+        "title": "Add Connection"
+      },
+      {
+        "command": "connections.clearConnections",
+        "category": "Connections",
+        "title": "Clear Colors",
+        "icon": "$(clear-all)"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "connection-manager",
+          "title": "Connection Manager",
+          "icon": "$(database)"
+        }
+      ]
+    },
+    "views": {
+      "connection-manager": [
+        {
+          "id": "calicoColors.colorsView",
+          "type": "webview",
+          "name": "Calico Colors"
+        },
+        {
+          "id": "connectionManager.connectionsView",
+          "type": "webview",
+          "name": "Manage FHIR Connections"
+        }
+      ]
+    },
     "menus": {
       "editor/context": [
         {
@@ -105,6 +155,18 @@
           "command": "cql.action.executeCql",
           "when": "editorLangId == cql",
           "group": "1_cqlactions"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "calicoColors.clearColors",
+          "group": "navigation",
+          "when": "view == calicoColors.colorsView"
+        },
+        {
+          "command": "connections.clearConnections",
+          "group": "navigation",
+          "when": "view == connectionManager.connectionsView"
         }
       ]
     }

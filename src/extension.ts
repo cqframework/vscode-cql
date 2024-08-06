@@ -18,6 +18,7 @@ import { CqlLanguageClient } from './cqlLanguageClient';
 import { ClientStatus } from './extension.api';
 import { initializeLogFile, logger } from './log';
 import * as requirements from './requirements';
+import { ColorsViewProvider, ConnectionsViewProvider } from './sideBar';
 import { statusBar } from './statusBar';
 import glob = require('glob');
 
@@ -178,6 +179,11 @@ export function activate(context: ExtensionContext): Promise<void> {
           }),
         );
 
+        // Views
+        const colorProvider = new ColorsViewProvider(context.extensionUri);
+        const connectionsProvider = new ConnectionsViewProvider(context.extensionUri);
+        // const addConnectionsProvider = new AddConnectionViewProvider(context.extensionUri);
+
         // Register commands here to make it available even when the language client fails
         context.subscriptions.push(
           commands.registerCommand(Commands.OPEN_SERVER_LOG, (column: ViewColumn) =>
@@ -191,9 +197,54 @@ export function activate(context: ExtensionContext): Promise<void> {
           ),
         );
 
+        context.subscriptions.push(
+          commands.registerCommand('calicoColors.addColor', () => {
+            colorProvider.addColor();
+          }),
+        );
+
+        context.subscriptions.push(
+          commands.registerCommand('calicoColors.clearColors', () => {
+            colorProvider.clearColors();
+          }),
+        );
+
+        context.subscriptions.push(
+          commands.registerCommand('calicoColors.showCat', () => {
+            colorProvider.showCat();
+          }),
+        );
+
+        // context.subscriptions.push(
+        //   commands.registerCommand('connections.addConnection', () => {
+        //     connectionsProvider.addConnection();
+        //   }),
+        // );
+
+        // context.subscriptions.push(
+        //   commands.registerCommand('connections.clearConnections', () => {
+        //     connectionsProvider.clearConnections();
+        //   }),
+        // );
+
         context.subscriptions.push(commands.registerCommand(Commands.OPEN_LOGS, () => openLogs()));
 
         context.subscriptions.push(statusBar);
+
+        context.subscriptions.push(
+          window.registerWebviewViewProvider(ColorsViewProvider.viewType, colorProvider),
+        );
+
+        context.subscriptions.push(
+          window.registerWebviewViewProvider(ConnectionsViewProvider.viewType, connectionsProvider),
+        );
+
+        // context.subscriptions.push(
+        //   window.registerWebviewViewProvider(
+        //     AddConnectionViewProvider.viewType,
+        //     addConnectionsProvider,
+        //   ),
+        // );
 
         await startServer(context, requirements, clientOptions, workspacePath);
         resolve();
