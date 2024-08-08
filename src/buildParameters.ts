@@ -5,7 +5,7 @@ import { Utils } from 'vscode-uri';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import path from 'path';
-import ConnectionManagerMock from './connectionManagerMock';
+import { Connection, ConnectionManager } from './connectionManager';
 
 export type EvaluationParameters = {
   operationArgs: string[] | undefined;
@@ -50,13 +50,18 @@ export function buildParameters(uri: Uri, expression: string | undefined | null)
   }
 
   // Instead of getTestPaths should get current connection and get current contexts
-  let connectionManager: ConnectionManagerMock = new ConnectionManagerMock();
-  let modelPath = connectionManager.getCurrentConnection().url;
+  
+  const connectionManager = mockConnectionManager();
+  console.log(connectionManager.getAllConnections());
+  console.log(connectionManager.getCurrentConnection());
+  console.log(connectionManager.getCurrentContexts());
+  let modelPath : URL | undefined = connectionManager.getCurrentConnection()?.url;
   let contextValues: {contextValue: string, contextType: string}[] = [];
-  for (var context of connectionManager.getCurrentContexts()) {
-    if (context.resourceId && context.type) {
-      contextValues.push({contextValue: context.resourceId, contextType: context.type})
-    }
+  var contexts = connectionManager.getCurrentContexts();
+  if (contexts) {
+      Object.entries(contexts).forEach(([key, value]) => {
+        contextValues.push({contextValue: value.resourceID, contextType: value.resourceType});
+    } );
   }
   // should go through contextValues
   for (var p of testPaths) {
@@ -189,3 +194,46 @@ function getExecArgs(
 
   return args;
 }
+
+const mockConnectionManager = () => {
+  const mockData: Record<string, Connection> = {
+    "Connection1": {
+      name: "Remote Connection",
+      url: new URL("http://localhost:8000"),
+      contexts: {
+        "Patient/R-3868": {
+          resourceID: "R-3868",
+          resourceType: "Patient",
+          resourceDisplay: "MIPS116_TC_12"
+        },
+        "Patient/R-4726": {
+          resourceID: "R-4726",
+          resourceType: "Patient",
+          resourceDisplay: "MIPS116_TC_14"
+        }
+      }
+    },
+    "Connection2": {
+      name: "Local Connection",
+      url: new URL("/Users/joshuareynolds/Documents/src/dqm-content-r4/input/tests/measure/CMS165/CMS165-patient-1"),
+      contexts: {
+        "Patient/CMS165-patient-1": {
+          resourceID: "CMS165-patient-1",
+          resourceType: "Patient",
+          resourceDisplay: "John Doe"
+        }
+      }
+    }
+  };
+
+  const manager = new ConnectionManager();
+  
+  Object.values(mockData).forEach(connection => {
+    manager.upsertConnection(connection);
+  });
+
+  manager.setCurrentConnection("Connection1");
+
+  return manager;
+};
+
