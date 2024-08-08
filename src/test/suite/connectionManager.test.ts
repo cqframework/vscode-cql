@@ -6,9 +6,8 @@ export function connectionManagerTester(): void {
 
   console.log('Testing Adding a Connection');
   manager.upsertConnection({
-    type: 'remote',
     name: '123-connection',
-    url: new URL('http://smilecdr/fhir'),
+    endpoint: 'http://smilecdr/fhir',
     contexts: {
       'Patient/test': {
         resourceID: 'test',
@@ -40,9 +39,8 @@ export function connectionManagerTester(): void {
 
   console.log('Adding Multiple Connections');
   manager.upsertConnection({
-    type: 'remote',
     name: 'connection-2',
-    url: new URL('http://smilecdr/fhir'),
+    endpoint: 'http://smilecdr/fhir',
     contexts: {
       'Patient/test-2': {
         resourceID: 'test-2',
@@ -52,9 +50,8 @@ export function connectionManagerTester(): void {
   });
 
   manager.upsertConnection({
-    type: 'remote',
     name: 'connection-3',
-    url: new URL('http://smilecdr/fhir'),
+    endpoint: 'http://smilecdr/fhir',
     contexts: {
       'Patient/test-3': {
         resourceID: 'test-3',
