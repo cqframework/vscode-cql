@@ -1,10 +1,8 @@
-import { glob } from 'glob';
 import { Uri, window, workspace } from 'vscode';
-import { Utils } from 'vscode-uri';
+import { URI, Utils } from 'vscode-uri';
 
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
-import path from 'path';
 import { Connection, ConnectionManager } from './connectionManager';
 
 export type EvaluationParameters = {
@@ -13,7 +11,6 @@ export type EvaluationParameters = {
   testPath: Uri | undefined;
 };
 
-// Should be working with normalized data
 export function buildParameters(uri: Uri, expression: string | undefined | null): EvaluationParameters {
   if (!fs.existsSync(uri.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
@@ -42,20 +39,10 @@ export function buildParameters(uri: Uri, expression: string | undefined | null)
   fse.ensureFileSync(outputPath.fsPath);
 
   var testCasesArgs: string[] = [];
-  var testPaths = getTestPaths(testPath, libraryName);
-
-  // We didn't find any test cases, so we'll just execute an empty one
-  if (testPaths.length === 0) {
-    testPaths.push({ name: null, path: null });
-  }
-
-  // Instead of getTestPaths should get current connection and get current contexts
   
   const connectionManager = mockConnectionManager();
-  console.log(connectionManager.getAllConnections());
-  console.log(connectionManager.getCurrentConnection());
-  console.log(connectionManager.getCurrentContexts());
-  let modelPath : URL | undefined = connectionManager.getCurrentConnection()?.url;
+  let connection = connectionManager.getCurrentConnection();
+  let modelPath : string | undefined = connection?.endpoint;
   let contextValues: {contextValue: string, contextType: string}[] = [];
   var contexts = connectionManager.getCurrentContexts();
   if (contexts) {
@@ -63,17 +50,17 @@ export function buildParameters(uri: Uri, expression: string | undefined | null)
         contextValues.push({contextValue: value.resourceID, contextType: value.resourceType});
     } );
   }
-  // should go through contextValues
-  for (var p of testPaths) {
+  
+  for (var cv of contextValues) {
     testCasesArgs.push(
       ...getExecArgs(
         libraryDirectory,
         libraryName,
         expression,
         terminologyPath, 
-        p.name, // each contextValue in contextValues should replace this
-        p.path, // modelPath should replace this
-        'Patient', // should be replaced with contextType
+        cv.contextValue,
+        modelPath,
+        cv.contextType,
         measurementPeriod
       ),
     );
@@ -108,35 +95,6 @@ function getFhirVersion(): string | null {
   return null;
 }
 
-interface TestCase {
-  name: string | null;
-  path: Uri | null;
-}
-
-/**
- * Get the test cases to execute
- * @param testPath the root path to look for test cases
- * @returns a list of test cases to execute
- */
-function getTestPaths(testPath: Uri, libraryName: string): TestCase[] {
-  if (!fs.existsSync(testPath.fsPath)) {
-    return [];
-  }
-
-  let testCases: TestCase[] = [];
-  let directories = glob
-    .sync(testPath.fsPath + `/**/${libraryName}`)
-    .filter(d => fs.statSync(d).isDirectory());
-  for (var dir of directories) {
-    let cases = fs.readdirSync(dir).filter(d => fs.statSync(path.join(dir, d)).isDirectory());
-    for (var c of cases) {
-      testCases.push({ name: c, path: Uri.file(path.join(dir, c)) });
-    }
-  }
-
-  return testCases;
-}
-
 function getCqlCommandArgs(
   fhirVersion: string,
   optionsPath: Uri): string[] {
@@ -157,7 +115,7 @@ function getExecArgs(
   expression : string | undefined | null,
   terminologyPath: Uri | null,
   contextValue: string | null,
-  modelPath: Uri | null,
+  modelPath: string | null | undefined,
   contextType: string | null,
   measurementPeriod: string
 ): string[] {
@@ -199,7 +157,7 @@ const mockConnectionManager = () => {
   const mockData: Record<string, Connection> = {
     "Connection1": {
       name: "Remote Connection",
-      url: new URL("http://localhost:8000"),
+      endpoint: new URL("http://localhost:8000").href,
       contexts: {
         "Patient/R-3868": {
           resourceID: "R-3868",
@@ -215,7 +173,7 @@ const mockConnectionManager = () => {
     },
     "Connection2": {
       name: "Local Connection",
-      url: new URL("/Users/joshuareynolds/Documents/src/dqm-content-r4/input/tests/measure/CMS165/CMS165-patient-1"),
+      endpoint: URI.file("/Users/joshuareynolds/Documents/src/dqm-content-r4/input/tests/measure/CMS165/CMS165-patient-1").toString(),
       contexts: {
         "Patient/CMS165-patient-1": {
           resourceID: "CMS165-patient-1",
@@ -232,7 +190,7 @@ const mockConnectionManager = () => {
     manager.upsertConnection(connection);
   });
 
-  manager.setCurrentConnection("Connection1");
+  manager.setCurrentConnection("Local Connection");
 
   return manager;
 };
