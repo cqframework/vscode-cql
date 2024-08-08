@@ -5,6 +5,7 @@ export function connectionManagerTester(manager: ConnectionManager): void {
 
   console.log('Testing Adding a Connection');
   manager.upsertConnection({
+    type: 'remote',
     name: '123-connection',
     endpoint: 'http://smilecdr/fhir',
     contexts: {
@@ -38,6 +39,7 @@ export function connectionManagerTester(manager: ConnectionManager): void {
 
   console.log('Adding Multiple Connections');
   manager.upsertConnection({
+    type: 'remote',
     name: 'connection-2',
     endpoint: 'http://smilecdr/fhir',
     contexts: {
@@ -49,6 +51,7 @@ export function connectionManagerTester(manager: ConnectionManager): void {
   });
 
   manager.upsertConnection({
+    type: 'remote',
     name: 'connection-3',
     endpoint: 'http://smilecdr/fhir',
     contexts: {
