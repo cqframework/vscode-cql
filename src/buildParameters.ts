@@ -20,16 +20,8 @@ export function buildParameters(uri: Uri, expression: string | undefined | null)
   const libraryDirectory = Utils.dirname(uri);
   const libraryName = Utils.basename(uri).replace('.cql', '').split('-')[0];
   const projectPath = workspace.getWorkspaceFolder(uri)!.uri;
-
-  // todo: make this a setting
   let terminologyPath: Uri = Utils.resolvePath(projectPath, 'input', 'vocabulary', 'valueset');
-
   let fhirVersion = getFhirVersion();
-  if (!fhirVersion) {
-    fhirVersion = 'R4';
-    window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
-  }
-
   const optionsPath = Utils.resolvePath(libraryDirectory, 'cql-options.json');
   const measurementPeriod = '';
   const testPath = Utils.resolvePath(projectPath, 'input', 'tests');
@@ -37,46 +29,76 @@ export function buildParameters(uri: Uri, expression: string | undefined | null)
   const outputPath = Utils.resolvePath(resultPath, `${libraryName}.txt`);
 
   fse.ensureFileSync(outputPath.fsPath);
-
-  var testCasesArgs: string[] = [];
   
   const connectionManager = mockConnectionManager();
-  let connection = connectionManager.getCurrentConnection();
-  let modelPath : string | undefined = connection?.endpoint;
-  let contextValues: {contextValue: string, contextType: string}[] = [];
-  var contexts = connectionManager.getCurrentContexts();
-  if (contexts) {
-      Object.entries(contexts).forEach(([key, value]) => {
-        contextValues.push({contextValue: value.resourceID, contextType: value.resourceType});
-    } );
-  }
-  
-  for (var cv of contextValues) {
-    testCasesArgs.push(
-      ...getExecArgs(
-        libraryDirectory,
-        libraryName,
-        expression,
-        terminologyPath, 
-        cv.contextValue,
-        modelPath,
-        cv.contextType,
-        measurementPeriod
-      ),
-    );
-  }
+  let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath,
+    libraryDirectory,
+    libraryName,
+    expression,
+    terminologyPath,
+    connectionManager,
+    measurementPeriod);
 
-  let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath);
-  operationArgs.push(...testCasesArgs);
   let evaluationParams: EvaluationParameters = {
     operationArgs,
     outputPath,
-    testPath,
+    testPath
   };
   return evaluationParams;
 }
 
-function getFhirVersion(): string | null {
+function getCqlCommandArgs(
+  fhirVersion: string,
+  optionsPath: Uri,
+  libraryDirectory: Uri,
+  libraryName: string,
+  expression : string | undefined | null,
+  terminologyPath: Uri | null,
+  connectionManager : ConnectionManager,
+  measurementPeriod: string): string[] {
+  const args = ['cql'];
+
+  args.push(`-fv=${fhirVersion}`);
+  if (optionsPath && fs.existsSync(optionsPath.fsPath)) {
+    args.push(`-op=${optionsPath}`);
+  }
+
+  let connection = connectionManager.getCurrentConnection();
+  let modelPath : string | undefined = connection?.endpoint;
+  let contexts = connectionManager.getCurrentContexts();
+  const modelType = 'FHIR';
+  
+  if (contexts) {
+    Object.entries(contexts).forEach(([key, value]) => {
+  args.push(`-ln=${libraryName}`);
+  args.push(`-lu=${libraryDirectory}`);
+
+  if (expression && expression != undefined && expression != null) {
+    args.push(`-e=${expression}`)
+  }
+
+  if (terminologyPath) {
+    args.push(`-t=${terminologyPath}`);
+  }
+  
+  if (modelPath) {
+    args.push(`-m=${modelType}`);
+    args.push(`-mu=${modelPath}`);
+  }
+
+  if (measurementPeriod && measurementPeriod !== '') {
+    args.push(`-p=${libraryName}."Measurement Period"`);
+    args.push(`-pv=${measurementPeriod}`);
+  }
+    args.push(`-c=${value.resourceType}`);
+    args.push(`-cv=${value.resourceID}`);
+  } );
+  }
+
+  return args;
+}
+
+function getFhirVersion(): string {
   const fhirVersionRegex = /using (FHIR|"FHIR") version '(\d(.|\d)*)'/;
   const matches = window.activeTextEditor!.document.getText().match(fhirVersionRegex);
   if (matches && matches.length > 2) {
@@ -91,66 +113,8 @@ function getFhirVersion(): string | null {
       return 'R5';
     }
   }
-
-  return null;
-}
-
-function getCqlCommandArgs(
-  fhirVersion: string,
-  optionsPath: Uri): string[] {
-  const args = ['cql'];
-
-  args.push(`-fv=${fhirVersion}`);
-
-  if (optionsPath && fs.existsSync(optionsPath.fsPath)) {
-    args.push(`-op=${optionsPath}`);
-  }
-
-  return args;
-}
-
-function getExecArgs(
-  libraryDirectory: Uri,
-  libraryName: string,
-  expression : string | undefined | null,
-  terminologyPath: Uri | null,
-  contextValue: string | null,
-  modelPath: string | null | undefined,
-  contextType: string | null,
-  measurementPeriod: string
-): string[] {
-  // TODO: One day we might support other models and contexts
-  let args: string[] = [];
-  const modelType = 'FHIR';
-
-
-  args.push(`-ln=${libraryName}`);
-  args.push(`-lu=${libraryDirectory}`);
-
-  if (expression && expression != undefined && expression != null) {
-    args.push(`-e=${expression}`)
-  }
-
-  if (terminologyPath) {
-    args.push(`-t=${terminologyPath}`);
-  }
-
-  if (modelPath) {
-    args.push(`-m=${modelType}`);
-    args.push(`-mu=${modelPath}`);
-  }
-
-  if (contextValue) {
-    args.push(`-c=${contextType}`);
-    args.push(`-cv=${contextValue}`);
-  }
-
-  if (measurementPeriod && measurementPeriod !== '') {
-    args.push(`-p=${libraryName}."Measurement Period"`);
-    args.push(`-pv=${measurementPeriod}`);
-  }
-
-  return args;
+  window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
+  return 'R4';
 }
 
 const mockConnectionManager = () => {
@@ -173,10 +137,15 @@ const mockConnectionManager = () => {
     },
     "Connection2": {
       name: "Local Connection",
-      endpoint: URI.file("/Users/joshuareynolds/Documents/src/dqm-content-r4/input/tests/measure/CMS165/CMS165-patient-1").toString(),
+      endpoint: URI.file("/Users/joshuareynolds/Documents/src/dqm-content-r4/input/tests/measure/CMS165/CMS165-patient-10").toString(),
       contexts: {
-        "Patient/CMS165-patient-1": {
-          resourceID: "CMS165-patient-1",
+        "Patient/CMS165-patient-10": {
+          resourceID: "CMS165-patient-10",
+          resourceType: "Patient",
+          resourceDisplay: "John Doe"
+        }, 
+        "Patient/CMS165-patient-11": {
+          resourceID: "CMS165-patient-11",
           resourceType: "Patient",
           resourceDisplay: "John Doe"
         }
