@@ -13,15 +13,16 @@ export type EvaluationParameters = {
   testPath: URI | undefined;
 };
 
-export function buildParameters(URI: URI, expression: string | undefined): EvaluationParameters {
-  if (!fs.existsSync(URI.fsPath)) {
+// Should be working with normalized data
+export function buildParameters(uri: URI, expression: string | undefined): EvaluationParameters {
+  if (!fs.existsSync(uri.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
     return { operationArgs: undefined, outputPath: undefined, testPath: undefined };
   }
 
-  const libraryDirectory = Utils.dirname(URI);
-  const libraryName = Utils.basename(URI).replace('.cql', '').split('-')[0];
-  const projectPath = workspace.getWorkspaceFolder(URI)!.uri;
+  const libraryDirectory = Utils.dirname(uri);
+  const libraryName = Utils.basename(uri).replace('.cql', '').split('-')[0];
+  const projectPath = workspace.getWorkspaceFolder(uri)!.uri;
   const terminologyPath: URI = Utils.resolvePath(projectPath, 'input', 'vocabulary', 'valueset');
   const fhirVersion = getFhirVersion();
   const optionsPath = Utils.resolvePath(libraryDirectory, 'cql-options.json');
