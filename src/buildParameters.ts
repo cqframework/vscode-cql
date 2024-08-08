@@ -5,6 +5,7 @@ import { Utils } from 'vscode-uri';
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import path from 'path';
+import ConnectionManagerMock from './connectionManagerMock';
 
 export type EvaluationParameters = {
   operationArgs: string[] | undefined;
@@ -13,7 +14,7 @@ export type EvaluationParameters = {
 };
 
 // Should be working with normalized data
-export function buildParameters(uri: Uri): EvaluationParameters {
+export function buildParameters(uri: Uri, expression: string | undefined | null): EvaluationParameters {
   if (!fs.existsSync(uri.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
     return { operationArgs: undefined, outputPath: undefined, testPath: undefined };
@@ -48,15 +49,27 @@ export function buildParameters(uri: Uri): EvaluationParameters {
     testPaths.push({ name: null, path: null });
   }
 
+  // Instead of getTestPaths should get current connection and get current contexts
+  let connectionManager: ConnectionManagerMock = new ConnectionManagerMock();
+  let modelPath = connectionManager.getCurrentConnection().url;
+  let contextValues: {contextValue: string, contextType: string}[] = [];
+  for (var context of connectionManager.getCurrentContexts()) {
+    if (context.resourceId && context.type) {
+      contextValues.push({contextValue: context.resourceId, contextType: context.type})
+    }
+  }
+  // should go through contextValues
   for (var p of testPaths) {
     testCasesArgs.push(
       ...getExecArgs(
         libraryDirectory,
         libraryName,
-        p.path,
-        terminologyPath,
-        p.name,
-        measurementPeriod,
+        expression,
+        terminologyPath, 
+        p.name, // each contextValue in contextValues should replace this
+        p.path, // modelPath should replace this
+        'Patient', // should be replaced with contextType
+        measurementPeriod
       ),
     );
   }
@@ -119,7 +132,9 @@ function getTestPaths(testPath: Uri, libraryName: string): TestCase[] {
   return testCases;
 }
 
-function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri): string[] {
+function getCqlCommandArgs(
+  fhirVersion: string,
+  optionsPath: Uri): string[] {
   const args = ['cql'];
 
   args.push(`-fv=${fhirVersion}`);
@@ -134,26 +149,32 @@ function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri): string[] {
 function getExecArgs(
   libraryDirectory: Uri,
   libraryName: string,
-  modelPath: Uri | null,
+  expression : string | undefined | null,
   terminologyPath: Uri | null,
   contextValue: string | null,
-  measurementPeriod: string,
+  modelPath: Uri | null,
+  contextType: string | null,
+  measurementPeriod: string
 ): string[] {
   // TODO: One day we might support other models and contexts
-  const modelType = 'FHIR';
-  const contextType = 'Patient';
-
   let args: string[] = [];
+  const modelType = 'FHIR';
+
+
   args.push(`-ln=${libraryName}`);
   args.push(`-lu=${libraryDirectory}`);
 
-  if (modelPath) {
-    args.push(`-m=${modelType}`);
-    args.push(`-mu=${modelPath}`);
+  if (expression && expression != undefined && expression != null) {
+    args.push(`-e=${expression}`)
   }
 
   if (terminologyPath) {
     args.push(`-t=${terminologyPath}`);
+  }
+
+  if (modelPath) {
+    args.push(`-m=${modelType}`);
+    args.push(`-mu=${modelPath}`);
   }
 
   if (contextValue) {
