@@ -1,10 +1,9 @@
-import { glob } from 'glob';
 import { Uri, window, workspace } from 'vscode';
-import { Utils } from 'vscode-uri';
+import { URI, Utils } from 'vscode-uri';
 
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
-import path from 'path';
+import { Connection, ConnectionManager } from './connectionManager';
 
 export type EvaluationParameters = {
   operationArgs: string[] | undefined;
@@ -12,8 +11,7 @@ export type EvaluationParameters = {
   testPath: Uri | undefined;
 };
 
-// Should be working with normalized data
-export function buildParameters(uri: Uri): EvaluationParameters {
+export function buildParameters(uri: Uri, expression: string | undefined | null): EvaluationParameters {
   if (!fs.existsSync(uri.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
     return { operationArgs: undefined, outputPath: undefined, testPath: undefined };
@@ -22,16 +20,8 @@ export function buildParameters(uri: Uri): EvaluationParameters {
   const libraryDirectory = Utils.dirname(uri);
   const libraryName = Utils.basename(uri).replace('.cql', '').split('-')[0];
   const projectPath = workspace.getWorkspaceFolder(uri)!.uri;
-
-  // todo: make this a setting
-  let terminologyPath: Uri = Utils.resolvePath(projectPath, 'input', 'vocabulary', 'valueset');
-
-  let fhirVersion = getFhirVersion();
-  if (!fhirVersion) {
-    fhirVersion = 'R4';
-    window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
-  }
-
+  const terminologyPath: Uri = Utils.resolvePath(projectPath, 'input', 'vocabulary', 'valueset');
+  const fhirVersion = getFhirVersion();
   const optionsPath = Utils.resolvePath(libraryDirectory, 'cql-options.json');
   const measurementPeriod = '';
   const testPath = Utils.resolvePath(projectPath, 'input', 'tests');
@@ -39,39 +29,76 @@ export function buildParameters(uri: Uri): EvaluationParameters {
   const outputPath = Utils.resolvePath(resultPath, `${libraryName}.txt`);
 
   fse.ensureFileSync(outputPath.fsPath);
+  
+  const connectionManager = mockConnectionManager();
+  let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath,
+    libraryDirectory,
+    libraryName,
+    expression,
+    terminologyPath,
+    connectionManager,
+    measurementPeriod);
 
-  var testCasesArgs: string[] = [];
-  var testPaths = getTestPaths(testPath, libraryName);
-
-  // We didn't find any test cases, so we'll just execute an empty one
-  if (testPaths.length === 0) {
-    testPaths.push({ name: null, path: null });
-  }
-
-  for (var p of testPaths) {
-    testCasesArgs.push(
-      ...getExecArgs(
-        libraryDirectory,
-        libraryName,
-        p.path,
-        terminologyPath,
-        p.name,
-        measurementPeriod,
-      ),
-    );
-  }
-
-  let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath);
-  operationArgs.push(...testCasesArgs);
   let evaluationParams: EvaluationParameters = {
     operationArgs,
     outputPath,
-    testPath,
+    testPath
   };
   return evaluationParams;
 }
 
-function getFhirVersion(): string | null {
+function getCqlCommandArgs(
+  fhirVersion: string,
+  optionsPath: Uri,
+  libraryDirectory: Uri,
+  libraryName: string,
+  expression : string | undefined | null,
+  terminologyPath: Uri | null,
+  connectionManager : ConnectionManager,
+  measurementPeriod: string): string[] {
+  const args = ['cql'];
+
+  args.push(`-fv=${fhirVersion}`);
+  if (optionsPath && fs.existsSync(optionsPath.fsPath)) {
+    args.push(`-op=${optionsPath}`);
+  }
+
+  let connection = connectionManager.getCurrentConnection();
+  let modelPath : string | undefined = connection?.endpoint;
+  let contexts = connectionManager.getCurrentContexts();
+  const modelType = 'FHIR';
+  
+  if (contexts) {
+    Object.entries(contexts).forEach(([key, value]) => {
+  args.push(`-ln=${libraryName}`);
+  args.push(`-lu=${libraryDirectory}`);
+
+  if (expression && expression != undefined && expression != null) {
+    args.push(`-e=${expression}`)
+  }
+
+  if (terminologyPath) {
+    args.push(`-t=${terminologyPath}`);
+  }
+  
+  if (modelPath) {
+    args.push(`-m=${modelType}`);
+    args.push(`-mu=${modelPath}`);
+  }
+
+  if (measurementPeriod && measurementPeriod !== '') {
+    args.push(`-p=${libraryName}."Measurement Period"`);
+    args.push(`-pv=${measurementPeriod}`);
+  }
+    args.push(`-c=${value.resourceType}`);
+    args.push(`-cv=${value.resourceID}`);
+  } );
+  }
+
+  return args;
+}
+
+function getFhirVersion(): string {
   const fhirVersionRegex = /using (FHIR|"FHIR") version '(\d(.|\d)*)'/;
   const matches = window.activeTextEditor!.document.getText().match(fhirVersionRegex);
   if (matches && matches.length > 2) {
@@ -86,85 +113,54 @@ function getFhirVersion(): string | null {
       return 'R5';
     }
   }
-
-  return null;
+  window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
+  return 'R4';
 }
 
-interface TestCase {
-  name: string | null;
-  path: Uri | null;
-}
-
-/**
- * Get the test cases to execute
- * @param testPath the root path to look for test cases
- * @returns a list of test cases to execute
- */
-function getTestPaths(testPath: Uri, libraryName: string): TestCase[] {
-  if (!fs.existsSync(testPath.fsPath)) {
-    return [];
-  }
-
-  let testCases: TestCase[] = [];
-  let directories = glob
-    .sync(testPath.fsPath + `/**/${libraryName}`)
-    .filter(d => fs.statSync(d).isDirectory());
-  for (var dir of directories) {
-    let cases = fs.readdirSync(dir).filter(d => fs.statSync(path.join(dir, d)).isDirectory());
-    for (var c of cases) {
-      testCases.push({ name: c, path: Uri.file(path.join(dir, c)) });
+const mockConnectionManager = () => {
+  const mockData: Record<string, Connection> = {
+    "Connection1": {
+      name: "Remote Connection",
+      endpoint: new URL("http://localhost:8000").href,
+      contexts: {
+        "Patient/R-3868": {
+          resourceID: "R-3868",
+          resourceType: "Patient",
+          resourceDisplay: "MIPS116_TC_12"
+        },
+        "Patient/R-4726": {
+          resourceID: "R-4726",
+          resourceType: "Patient",
+          resourceDisplay: "MIPS116_TC_14"
+        }
+      }
+    },
+    "Connection2": {
+      name: "Local Connection",
+      endpoint: URI.file("/Users/joshuareynolds/Documents/src/dqm-content-r4/input/tests/measure/CMS165/CMS165-patient-10").toString(),
+      contexts: {
+        "Patient/CMS165-patient-10": {
+          resourceID: "CMS165-patient-10",
+          resourceType: "Patient",
+          resourceDisplay: "John Doe"
+        }, 
+        "Patient/CMS165-patient-11": {
+          resourceID: "CMS165-patient-11",
+          resourceType: "Patient",
+          resourceDisplay: "John Doe"
+        }
+      }
     }
-  }
+  };
 
-  return testCases;
-}
+  const manager = new ConnectionManager();
+  
+  Object.values(mockData).forEach(connection => {
+    manager.upsertConnection(connection);
+  });
 
-function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri): string[] {
-  const args = ['cql'];
+  manager.setCurrentConnection("Remote Connection");
 
-  args.push(`-fv=${fhirVersion}`);
+  return manager;
+};
 
-  if (optionsPath && fs.existsSync(optionsPath.fsPath)) {
-    args.push(`-op=${optionsPath}`);
-  }
-
-  return args;
-}
-
-function getExecArgs(
-  libraryDirectory: Uri,
-  libraryName: string,
-  modelPath: Uri | null,
-  terminologyPath: Uri | null,
-  contextValue: string | null,
-  measurementPeriod: string,
-): string[] {
-  // TODO: One day we might support other models and contexts
-  const modelType = 'FHIR';
-  const contextType = 'Patient';
-
-  let args: string[] = [];
-  args.push(`-ln=${libraryName}`);
-  args.push(`-lu=${libraryDirectory}`);
-
-  if (modelPath) {
-    args.push(`-m=${modelType}`);
-    args.push(`-mu=${modelPath}`);
-  }
-
-  if (terminologyPath) {
-    args.push(`-t=${terminologyPath}`);
-  }
-
-  if (contextValue) {
-    args.push(`-c=${contextType}`);
-    args.push(`-cv=${contextValue}`);
-  }
-
-  if (measurementPeriod && measurementPeriod !== '') {
-    args.push(`-p=${libraryName}."Measurement Period"`);
-    args.push(`-pv=${measurementPeriod}`);
-  }
-
-  return args;
-}

@@ -142,13 +142,19 @@ export class CqlLanguageClient {
 
     context.subscriptions.push(
       commands.registerCommand(Commands.EXECUTE_CQL_FILE_COMMAND, async (uri: Uri) => {
-        await normalizeCqlExecution(uri, 'file');
+        await normalizeCqlExecution(uri, "file");
       }),
     );
 
+    // I'm not sure if the language server communicates at the start of the command, or only when we pass the arguments at the end.
+    // If we pass some information at the time of the command like the position of the cursor and return something, 
+    // it would be better to just return something like a ExpressionDefinition in json.
+    // For now I'm assuming a position is sent from the client first and we need to use that to pass the cql evaluate command to the server
+    // Could try something like https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_selectionRange after grabbing the start and end positions of a selection
+    // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_signatureHelp *Definition Signature???*
     context.subscriptions.push(
       commands.registerCommand(Commands.EXECUTE_CQL_EXPRESSION_COMMAND, async (uri: Uri) => {
-        await normalizeCqlExecution(uri, 'expression');
+        await normalizeCqlExecution(uri, "expression");
       }),
     );
   }
