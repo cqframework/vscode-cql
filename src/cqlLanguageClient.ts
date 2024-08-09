@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, Position, Uri, window, workspace } from 'vscode';
+import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
 import {
   ConfigurationParams,
   ConfigurationRequest,
@@ -142,7 +142,7 @@ export class CqlLanguageClient {
 
     context.subscriptions.push(
       commands.registerCommand(Commands.EXECUTE_CQL_FILE_COMMAND, async (uri: Uri) => {
-        await normalizeCqlExecution(uri, undefined);
+        await normalizeCqlExecution(uri, "file");
       }),
     );
 
@@ -150,9 +150,11 @@ export class CqlLanguageClient {
     // If we pass some information at the time of the command like the position of the cursor and return something, 
     // it would be better to just return something like a ExpressionDefinition in json.
     // For now I'm assuming a position is sent from the client first and we need to use that to pass the cql evaluate command to the server
+    // Could try something like https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_selectionRange after grabbing the start and end positions of a selection
+    // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_signatureHelp *Definition Signature???*
     context.subscriptions.push(
-      commands.registerCommand(Commands.EXECUTE_CQL_EXPRESSION_COMMAND, async (uri: Uri, position: Position) => { // Maybe position is range?
-        await normalizeCqlExecution(uri, position);
+      commands.registerCommand(Commands.EXECUTE_CQL_EXPRESSION_COMMAND, async (uri: Uri) => {
+        await normalizeCqlExecution(uri, "expression");
       }),
     );
   }

@@ -20,8 +20,8 @@ export function buildParameters(uri: Uri, expression: string | undefined | null)
   const libraryDirectory = Utils.dirname(uri);
   const libraryName = Utils.basename(uri).replace('.cql', '').split('-')[0];
   const projectPath = workspace.getWorkspaceFolder(uri)!.uri;
-  let terminologyPath: Uri = Utils.resolvePath(projectPath, 'input', 'vocabulary', 'valueset');
-  let fhirVersion = getFhirVersion();
+  const terminologyPath: Uri = Utils.resolvePath(projectPath, 'input', 'vocabulary', 'valueset');
+  const fhirVersion = getFhirVersion();
   const optionsPath = Utils.resolvePath(libraryDirectory, 'cql-options.json');
   const measurementPeriod = '';
   const testPath = Utils.resolvePath(projectPath, 'input', 'tests');
@@ -159,7 +159,7 @@ const mockConnectionManager = () => {
     manager.upsertConnection(connection);
   });
 
-  manager.setCurrentConnection("Local Connection");
+  manager.setCurrentConnection("Remote Connection");
 
   return manager;
 };
