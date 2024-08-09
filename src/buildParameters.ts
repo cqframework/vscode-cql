@@ -11,7 +11,7 @@ export type EvaluationParameters = {
   testPath: Uri | undefined;
 };
 
-export function buildParameters(uri: Uri, expression: string | undefined | null): EvaluationParameters {
+export function buildParameters(uri: Uri, expression: string | undefined): EvaluationParameters {
   if (!fs.existsSync(uri.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
     return { operationArgs: undefined, outputPath: undefined, testPath: undefined };
@@ -52,8 +52,8 @@ function getCqlCommandArgs(
   optionsPath: Uri,
   libraryDirectory: Uri,
   libraryName: string,
-  expression : string | undefined | null,
-  terminologyPath: Uri | null,
+  expression : string | undefined,
+  terminologyPath: Uri,
   connectionManager : ConnectionManager,
   measurementPeriod: string): string[] {
   const args = ['cql'];
@@ -73,7 +73,7 @@ function getCqlCommandArgs(
   args.push(`-ln=${libraryName}`);
   args.push(`-lu=${libraryDirectory}`);
 
-  if (expression && expression != undefined && expression != null) {
+  if (expression && expression != undefined) {
     args.push(`-e=${expression}`)
   }
 
@@ -159,7 +159,7 @@ const mockConnectionManager = () => {
     manager.upsertConnection(connection);
   });
 
-  manager.setCurrentConnection("Remote Connection");
+  manager.setCurrentConnection("Local Connection");
 
   return manager;
 };
