@@ -31,18 +31,21 @@ export function buildParameters(uri: Uri, expression: string | undefined): Evalu
 
   fse.ensureFileSync(outputPath.fsPath);
 
-  let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath,
+  let operationArgs = getCqlCommandArgs(
+    fhirVersion,
+    optionsPath,
     libraryDirectory,
     libraryName,
     expression,
     terminologyPath,
     connectionManager,
-    measurementPeriod);
+    measurementPeriod,
+  );
 
   let evaluationParams: EvaluationParameters = {
     operationArgs,
     outputPath,
-    testPath
+    testPath,
   };
   return evaluationParams;
 }
@@ -52,10 +55,11 @@ function getCqlCommandArgs(
   optionsPath: Uri,
   libraryDirectory: Uri,
   libraryName: string,
-  expression : string | undefined,
+  expression: string | undefined,
   terminologyPath: Uri,
-  connectionManager : ConnectionManager,
-  measurementPeriod: string): string[] {
+  connectionManager: ConnectionManager,
+  measurementPeriod: string,
+): string[] {
   const args = ['cql'];
 
   args.push(`-fv=${fhirVersion}`);
@@ -64,35 +68,35 @@ function getCqlCommandArgs(
   }
 
   let connection = connectionManager.getCurrentConnection();
-  let modelPath : string | undefined = connection?.endpoint;
+  let modelPath: string | undefined = connection?.endpoint;
   let contexts = connectionManager.getCurrentContexts();
   const modelType = 'FHIR';
-  
+
   if (contexts) {
     Object.entries(contexts).forEach(([key, value]) => {
-  args.push(`-ln=${libraryName}`);
-  args.push(`-lu=${libraryDirectory}`);
+      args.push(`-ln=${libraryName}`);
+      args.push(`-lu=${libraryDirectory}`);
 
-  if (expression && expression != undefined) {
-    args.push(`-e=${expression}`)
-  }
+      if (expression && expression != undefined) {
+        args.push(`-e=${expression}`);
+      }
 
-  if (terminologyPath) {
-    args.push(`-t=${terminologyPath}`);
-  }
-  
-  if (modelPath) {
-    args.push(`-m=${modelType}`);
-    args.push(`-mu=${modelPath}`);
-  }
+      if (terminologyPath) {
+        args.push(`-t=${terminologyPath}`);
+      }
 
-  if (measurementPeriod && measurementPeriod !== '') {
-    args.push(`-p=${libraryName}."Measurement Period"`);
-    args.push(`-pv=${measurementPeriod}`);
-  }
-    args.push(`-c=${value.resourceType}`);
-    args.push(`-cv=${value.resourceID}`);
-  } );
+      if (modelPath) {
+        args.push(`-m=${modelType}`);
+        args.push(`-mu=${modelPath}`);
+      }
+
+      if (measurementPeriod && measurementPeriod !== '') {
+        args.push(`-p=${libraryName}."Measurement Period"`);
+        args.push(`-pv=${measurementPeriod}`);
+      }
+      args.push(`-c=${value.resourceType}`);
+      args.push(`-cv=${value.resourceID}`);
+    });
   }
 
   return args;
@@ -116,4 +120,3 @@ function getFhirVersion(): string {
   window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
   return 'R4';
 }
-
