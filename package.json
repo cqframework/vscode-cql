@@ -92,6 +92,11 @@
         "command": "cql.action.executeCql",
         "title": "Execute CQL",
         "category": "CQL"
+      },
+      {
+        "command": "cql.connections.clearConnections",
+        "title": "Clear Connections",
+        "category": "connections"
       }
     ],
     "viewsContainers": {
@@ -127,7 +132,7 @@
       ],
       "view/title": [
         {
-          "command": "connections.clearConnections",
+          "command": "cql.connections.clearConnections",
           "group": "navigation",
           "when": "view == connectionManager.connectionsView"
         }

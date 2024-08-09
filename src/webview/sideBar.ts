@@ -73,7 +73,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
           this.refreshConnections();
           break;
         }
-        case 'connections.clearConnections': {
+        case 'cql.connections.clearConnections': {
           let connections = ConnectionManager.connectionManager.getAllConnections();
           for (const key in connections) {
             delete connections[key];
@@ -89,6 +89,20 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
     // Initialize view
     this.refreshConnections();
+  }
+
+  public ClearConnections() {
+    if (this._view) {
+      for (let connection in ConnectionManager.connectionManager.getAllConnections()) {
+        console.log(connection);
+        ConnectionManager.connectionManager.deleteConnection(connection);
+      }
+      ConnectionsViewProvider.getContext().globalState.update(
+        'ConnectionManager.connections',
+        ConnectionManager.connectionManager.getAllConnections(),
+      );
+      this._view.webview.postMessage({ type: 'clearConnections' });
+    }
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {

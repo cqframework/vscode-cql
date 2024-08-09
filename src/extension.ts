@@ -202,6 +202,14 @@ export function activate(context: ExtensionContext): Promise<void> {
           ),
         );
 
+        context.subscriptions.push(
+          commands.registerCommand('cql.connections.clearConnections', () =>
+            connectionsProvider.ClearConnections(),
+          ),
+        );
+
+        context.subscriptions.push();
+
         context.subscriptions.push(commands.registerCommand(Commands.OPEN_LOGS, () => openLogs()));
 
         context.subscriptions.push(statusBar);
