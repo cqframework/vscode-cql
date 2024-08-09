@@ -1,9 +1,9 @@
 import { Uri, window, workspace } from 'vscode';
-import { URI, Utils } from 'vscode-uri';
+import { Utils } from 'vscode-uri';
 
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
-import { Connection, ConnectionManager } from './connectionManager';
+import { ConnectionManager } from './connectionManager';
 
 export type EvaluationParameters = {
   operationArgs: string[] | undefined;
@@ -27,10 +27,10 @@ export function buildParameters(uri: Uri, expression: string | undefined): Evalu
   const testPath = Utils.resolvePath(projectPath, 'input', 'tests');
   const resultPath = Utils.resolvePath(testPath, 'results');
   const outputPath = Utils.resolvePath(resultPath, `${libraryName}.txt`);
+  const connectionManager = new ConnectionManager();
 
   fse.ensureFileSync(outputPath.fsPath);
-  
-  const connectionManager = mockConnectionManager();
+
   let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath,
     libraryDirectory,
     libraryName,
@@ -116,51 +116,4 @@ function getFhirVersion(): string {
   window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
   return 'R4';
 }
-
-const mockConnectionManager = () => {
-  const mockData: Record<string, Connection> = {
-    "Connection1": {
-      name: "Remote Connection",
-      endpoint: new URL("http://localhost:8000").href,
-      contexts: {
-        "Patient/R-3868": {
-          resourceID: "R-3868",
-          resourceType: "Patient",
-          resourceDisplay: "MIPS116_TC_12"
-        },
-        "Patient/R-4726": {
-          resourceID: "R-4726",
-          resourceType: "Patient",
-          resourceDisplay: "MIPS116_TC_14"
-        }
-      }
-    },
-    "Connection2": {
-      name: "Local Connection",
-      endpoint: URI.file("/Users/joshuareynolds/Documents/src/dqm-content-r4/input/tests/measure/CMS165/CMS165-patient-10").toString(),
-      contexts: {
-        "Patient/CMS165-patient-10": {
-          resourceID: "CMS165-patient-10",
-          resourceType: "Patient",
-          resourceDisplay: "John Doe"
-        }, 
-        "Patient/CMS165-patient-11": {
-          resourceID: "CMS165-patient-11",
-          resourceType: "Patient",
-          resourceDisplay: "John Doe"
-        }
-      }
-    }
-  };
-
-  const manager = new ConnectionManager();
-  
-  Object.values(mockData).forEach(connection => {
-    manager.upsertConnection(connection);
-  });
-
-  manager.setCurrentConnection("Local Connection");
-
-  return manager;
-};
 
