@@ -14,12 +14,14 @@ import {
   RevealOutputChannelOn,
 } from 'vscode-languageclient';
 import { Commands } from './commands';
+import { ConnectionManager } from './connectionManager';
 import { CqlLanguageClient } from './cqlLanguageClient';
 import { ClientStatus } from './extension.api';
 import { initializeLogFile, logger } from './log';
 import * as requirements from './requirements';
-import { ColorsViewProvider, ConnectionsViewProvider } from './sideBar';
 import { statusBar } from './statusBar';
+import { ConnectionPanel } from './webview/ConnectionPanel';
+import { ConnectionsViewProvider } from './webview/sideBar';
 import glob = require('glob');
 
 const cqlLanguageClient: CqlLanguageClient = new CqlLanguageClient();
@@ -179,10 +181,13 @@ export function activate(context: ExtensionContext): Promise<void> {
           }),
         );
 
+        // Connection Manager
+        ConnectionManager._initialize(context);
+
         // Views
-        const colorProvider = new ColorsViewProvider(context.extensionUri);
         const connectionsProvider = new ConnectionsViewProvider(context.extensionUri);
-        // const addConnectionsProvider = new AddConnectionViewProvider(context.extensionUri);
+        ConnectionsViewProvider.setContext(context);
+        ConnectionPanel.setContext(context);
 
         // Register commands here to make it available even when the language client fails
         context.subscriptions.push(
@@ -197,54 +202,13 @@ export function activate(context: ExtensionContext): Promise<void> {
           ),
         );
 
-        context.subscriptions.push(
-          commands.registerCommand('calicoColors.addColor', () => {
-            colorProvider.addColor();
-          }),
-        );
-
-        context.subscriptions.push(
-          commands.registerCommand('calicoColors.clearColors', () => {
-            colorProvider.clearColors();
-          }),
-        );
-
-        context.subscriptions.push(
-          commands.registerCommand('calicoColors.showCat', () => {
-            colorProvider.showCat();
-          }),
-        );
-
-        // context.subscriptions.push(
-        //   commands.registerCommand('connections.addConnection', () => {
-        //     connectionsProvider.addConnection();
-        //   }),
-        // );
-
-        // context.subscriptions.push(
-        //   commands.registerCommand('connections.clearConnections', () => {
-        //     connectionsProvider.clearConnections();
-        //   }),
-        // );
-
         context.subscriptions.push(commands.registerCommand(Commands.OPEN_LOGS, () => openLogs()));
 
         context.subscriptions.push(statusBar);
 
         context.subscriptions.push(
-          window.registerWebviewViewProvider(ColorsViewProvider.viewType, colorProvider),
-        );
-
-        context.subscriptions.push(
           window.registerWebviewViewProvider(ConnectionsViewProvider.viewType, connectionsProvider),
         );
-
-        // context.subscriptions.push(
-        //   window.registerWebviewViewProvider(
-        //     AddConnectionViewProvider.viewType,
-        //     addConnectionsProvider,
-        //   ),
-        // );
 
         await startServer(context, requirements, clientOptions, workspacePath);
         resolve();

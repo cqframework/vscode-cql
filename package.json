@@ -92,33 +92,6 @@
         "command": "cql.action.executeCql",
         "title": "Execute CQL",
         "category": "CQL"
-      },
-      {
-        "command": "calicoColors.addColor",
-        "category": "Calico Colors",
-        "title": "Add Color"
-      },
-      {
-        "command": "calicoColors.clearColors",
-        "category": "Calico Colors",
-        "title": "Clear Colors",
-        "icon": "$(clear-all)"
-      },
-      {
-        "command": "calicoColors.showCat",
-        "category": "Calico Colors",
-        "title": "Show Cat"
-      },
-      {
-        "command": "connections.addConnection",
-        "category": "Connections",
-        "title": "Add Connection"
-      },
-      {
-        "command": "connections.clearConnections",
-        "category": "Connections",
-        "title": "Clear Colors",
-        "icon": "$(clear-all)"
       }
     ],
     "viewsContainers": {
@@ -132,11 +105,6 @@
     },
     "views": {
       "connection-manager": [
-        {
-          "id": "calicoColors.colorsView",
-          "type": "webview",
-          "name": "Calico Colors"
-        },
         {
           "id": "connectionManager.connectionsView",
           "type": "webview",
@@ -158,11 +126,6 @@
         }
       ],
       "view/title": [
-        {
-          "command": "calicoColors.clearColors",
-          "group": "navigation",
-          "when": "view == calicoColors.colorsView"
-        },
         {
           "command": "connections.clearConnections",
           "group": "navigation",
@@ -205,6 +168,7 @@
     "typescript": "^5.3.2"
   },
   "dependencies": {
+    "@types/vscode-webview": "^1.57.5",
     "expand-tilde": "^2.0.2",
     "find-java-home": "1.2.2",
     "fs-extra": "^8.1.0",
