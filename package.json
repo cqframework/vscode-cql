@@ -99,6 +99,24 @@
         "category": "CQL"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "connection-manager",
+          "title": "Connection Manager",
+          "icon": "$(database)"
+        }
+      ]
+    },
+    "views": {
+      "connection-manager": [
+        {
+          "id": "connectionManager.connectionsView",
+          "type": "webview",
+          "name": "Manage FHIR Connections"
+        }
+      ]
+    },
     "menus": {
       "editor/context": [
         {
@@ -115,6 +133,13 @@
           "command": "cql.action.viewElm",
           "when": "editorLangId == cql",
           "group": "1_cqlactions"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "connections.clearConnections",
+          "group": "navigation",
+          "when": "view == connectionManager.connectionsView"
         }
       ]
     }
@@ -153,6 +178,7 @@
     "typescript": "^5.3.2"
   },
   "dependencies": {
+    "@types/vscode-webview": "^1.57.5",
     "expand-tilde": "^2.0.2",
     "find-java-home": "1.2.2",
     "fs-extra": "^8.1.0",

@@ -1,7 +1,6 @@
 import { ConnectionManager, Context } from '../../connectionManager';
 
-export function connectionManagerTester(): void {
-  const manager = new ConnectionManager();
+export function connectionManagerTester(manager: ConnectionManager): void {
   console.log('Testing Connection Manager');
 
   console.log('Testing Adding a Connection');
