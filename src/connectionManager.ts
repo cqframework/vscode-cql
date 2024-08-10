@@ -28,22 +28,23 @@ export class ConnectionManager {
   }
 
   public static _initialize(ec: ExtensionContext) {
-    if (ConnectionManager.connectionManager === undefined) {
-      ConnectionManager.connectionManager = new ConnectionManager();
-      ConnectionManager.connectionManager.connections = {};
-      this._extContext = ec;
+    if (ConnectionManager.connectionManager) {
+      return;
+    }
+    ConnectionManager.connectionManager = new ConnectionManager();
+    ConnectionManager.connectionManager.connections = {};
+    this._extContext = ec;
 
-      if (this._extContext.globalState.get(Storage.STORAGE_CONNECTIONS) !== undefined) {
-        this.connectionManager.connections = this._extContext.globalState.get(
-          Storage.STORAGE_CONNECTIONS,
-        ) as Record<string, Connection>;
-      }
+    if (this._extContext.globalState.get(Storage.STORAGE_CONNECTIONS) !== undefined) {
+      this.connectionManager.connections = this._extContext.globalState.get(
+        Storage.STORAGE_CONNECTIONS,
+      ) as Record<string, Connection>;
+    }
 
-      if (this._extContext.globalState.get(Storage.STORAGE_CURRENT_CONNECTION) !== undefined) {
-        ConnectionManager.connectionManager.currentConnection = this._extContext.globalState.get(
-          Storage.STORAGE_CURRENT_CONNECTION,
-        );
-      }
+    if (this._extContext.globalState.get(Storage.STORAGE_CURRENT_CONNECTION) !== undefined) {
+      ConnectionManager.connectionManager.currentConnection = this._extContext.globalState.get(
+        Storage.STORAGE_CURRENT_CONNECTION,
+      );
     }
   }
 

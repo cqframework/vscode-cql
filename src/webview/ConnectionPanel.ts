@@ -152,7 +152,7 @@ export class ConnectionPanel {
   }
 
   public addConnection(name: string, url: string, context: string) {
-    if (name != '') {
+    if (name !== '') {
       let aConnection: Connection = {
         name: name,
         url: new URL(url),
