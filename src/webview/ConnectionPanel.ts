@@ -1,13 +1,11 @@
 import * as vscode from 'vscode';
-import { ExtensionContext, ViewColumn } from 'vscode';
+import { ExtensionContext } from 'vscode';
 import { Connection, ConnectionManager } from '../connectionManager';
+import { Storage } from '../storage';
+import { Messages } from './messages';
 import { ConnectionsViewProvider } from './sideBar';
 
-export enum PanelMode {
-  Uninitialized = 'Uninitialized',
-  Add = 'Add',
-  Edit = 'Edit',
-}
+export type PanelMode = 'Uninitialized' | 'Add' | 'Edit';
 
 export class ConnectionPanel {
   /**
@@ -15,7 +13,7 @@ export class ConnectionPanel {
    */
   public static currentPanel: ConnectionPanel | undefined;
 
-  public static viewType = 'Unitialized';
+  public static viewType = 'Uninitialized';
   private static _extContext: ExtensionContext;
 
   private readonly _panel: vscode.WebviewPanel;
@@ -49,7 +47,7 @@ export class ConnectionPanel {
 
     // Otherwise, create a new panel.
     let panel: vscode.WebviewPanel;
-    if (mode === PanelMode.Add) {
+    if (mode === 'Add') {
       panel = vscode.window.createWebviewPanel(
         ConnectionPanel.viewType,
         'Add Connection',
@@ -71,10 +69,10 @@ export class ConnectionPanel {
     ConnectionPanel.currentPanel._sidebar = sideBar;
 
     let oldConnection =
-      ConnectionManager.connectionManager.getAllConnections()[oldConnectionName as string];
+      ConnectionManager.getManager().getAllConnections()[oldConnectionName as string];
 
     ConnectionPanel.currentPanel._panel.webview.postMessage({
-      type: 'Connection.InitializeView',
+      type: Messages.CONNECTION_INITIALIZE_PANEL,
       connection: oldConnection,
     });
   }
@@ -109,37 +107,21 @@ export class ConnectionPanel {
     this._panel.webview.onDidReceiveMessage(
       message => {
         switch (message.type) {
-          case 'Connection.cancel': {
+          case Messages.CONNECTION_CANCEL: {
             this.dispose();
             break;
           }
-          case 'Connection.testConnection': {
-            const panel = vscode.window.createWebviewPanel(
-              'catCoding',
-              'Cat Coding',
-              ViewColumn.One,
-              {},
-            );
-
-            panel.webview.html = `<!DOCTYPE html>
-              <html lang="en">
-              <head>
-                  <meta charset="UTF-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>Cat Coding</title>
-              </head>
-              <body>
-                  <img src="https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" width="300" />
-              </body>
-              </html>`;
+          // TODO
+          case Messages.CONNECTION_TEST: {
+            console.log('Not Implemented');
 
             break;
           }
-          case 'Connection.add': {
+          case Messages.CONNECTION_ADD: {
             this.addConnection(message.name, message.url, message.context);
             break;
           }
-          case 'Connection.edit': {
+          case Messages.CONNECTION_EDIT: {
             this.editConnection(
               message.name,
               message.url,
@@ -177,25 +159,25 @@ export class ConnectionPanel {
         contexts: {},
       };
 
-      ConnectionManager.connectionManager.upsertConnection(aConnection);
+      ConnectionManager.getManager().upsertConnection(aConnection);
 
       let contexts = context.split(',');
       for (context in contexts) {
         contexts[context] = contexts[context].trim();
       }
       contexts.forEach(element => {
-        ConnectionManager.connectionManager.upsertContext(name, {
+        ConnectionManager.getManager().upsertContext(name, {
           resourceID: element,
           resourceType: 'Patient',
         });
       });
 
       ConnectionPanel.getContext().globalState.update(
-        'ConnectionManager.connections',
-        ConnectionManager.connectionManager.getAllConnections(),
+        Storage.STORAGE_CONNECTIONS,
+        ConnectionManager.getManager().getAllConnections(),
       );
 
-      this._sidebar?.getView()?.webview.postMessage({ type: 'connections.refreshConnections' });
+      this._sidebar?.getView()?.webview.postMessage({ type: Messages.CONNECTION_REFRESH });
     }
 
     if (this._panel) {
@@ -205,7 +187,7 @@ export class ConnectionPanel {
 
   public editConnection(name: string, url: string, context: string, oldName: string) {
     if (oldName !== name) {
-      ConnectionManager.connectionManager.deleteConnection(oldName);
+      ConnectionManager.getManager().deleteConnection(oldName);
     }
     this.addConnection(name, url, context);
   }
@@ -213,10 +195,10 @@ export class ConnectionPanel {
   _update(mode: PanelMode) {
     const webview = this._panel.webview;
 
-    if (mode === PanelMode.Add) {
+    if (mode === 'Add') {
       this._panel.title = 'Add Connection';
       this._panel.webview.html = this._getHtmlForAddWebview(webview, mode);
-    } else if (mode === PanelMode.Edit) {
+    } else if (mode === 'Edit') {
       this._panel.title = 'Edit Connection';
       this._panel.webview.html = this._getHtmlForEditWebview(webview, mode);
     }
@@ -248,7 +230,7 @@ export class ConnectionPanel {
     );
 
     let modeText, modeClass;
-    if (mode === PanelMode.Add) {
+    if (mode === 'Add') {
       modeText = 'Add';
       modeClass = 'add';
     } else {

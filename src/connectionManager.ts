@@ -1,4 +1,5 @@
 import { ExtensionContext } from 'vscode';
+import { Storage } from './storage';
 
 export interface Context {
   resourceID: string;
@@ -13,7 +14,7 @@ export interface Connection {
 }
 
 export class ConnectionManager {
-  public static connectionManager: ConnectionManager;
+  private static connectionManager: ConnectionManager;
   private connections: Record<string, Connection>;
   private currentConnection?: Connection;
   private static _extContext: ExtensionContext;
@@ -22,59 +23,63 @@ export class ConnectionManager {
     this.connections = {};
   }
 
+  public static getManager() {
+    return ConnectionManager.connectionManager;
+  }
+
   public static _initialize(ec: ExtensionContext) {
-    ConnectionManager.connectionManager = new ConnectionManager();
-    ConnectionManager.connectionManager.connections = {};
-    this._extContext = ec;
+    if (ConnectionManager.connectionManager === undefined) {
+      ConnectionManager.connectionManager = new ConnectionManager();
+      ConnectionManager.connectionManager.connections = {};
+      this._extContext = ec;
 
-    if (this._extContext.globalState.get('ConnectionManager.connections') != undefined) {
-      this.connectionManager.connections = this._extContext.globalState.get(
-        'ConnectionManager.connections',
-      ) as Record<string, Connection>;
-    }
+      if (this._extContext.globalState.get(Storage.STORAGE_CONNECTIONS) !== undefined) {
+        this.connectionManager.connections = this._extContext.globalState.get(
+          Storage.STORAGE_CONNECTIONS,
+        ) as Record<string, Connection>;
+      }
 
-    if (this._extContext.globalState.get('ConnectionManager.currentConnection') != undefined) {
-      ConnectionManager.connectionManager.currentConnection = this._extContext.globalState.get(
-        'ConnectionManager.currentConnection',
-      );
+      if (this._extContext.globalState.get(Storage.STORAGE_CURRENT_CONNECTION) !== undefined) {
+        ConnectionManager.connectionManager.currentConnection = this._extContext.globalState.get(
+          Storage.STORAGE_CURRENT_CONNECTION,
+        );
+      }
     }
   }
 
   public getAllConnections(): Record<string, Connection> {
-    return ConnectionManager.connectionManager.connections;
+    return this.connections;
   }
 
   public getCurrentConnection(): Connection | undefined {
-    return ConnectionManager.connectionManager.currentConnection;
+    return this.currentConnection;
   }
 
   public setCurrentConnection(name: string) {
-    ConnectionManager.connectionManager.currentConnection =
-      ConnectionManager.connectionManager.connections[name];
+    this.currentConnection = this.connections[name];
   }
 
   // TODO
   public testConnection(name: string): void {}
 
   public upsertConnection(connection: Connection): void {
-    ConnectionManager.connectionManager.connections[connection.name] = connection;
+    this.connections[connection.name] = connection;
   }
 
   public deleteConnection(name: string): void {
-    delete ConnectionManager.connectionManager.connections[name];
+    delete this.connections[name];
   }
 
   public getCurrentContexts(): Record<string, Context> | undefined {
-    return ConnectionManager.connectionManager.getCurrentConnection()?.contexts;
+    return this.getCurrentConnection()?.contexts;
   }
 
   public upsertContext(connectionName: string, context: Context): void {
-    ConnectionManager.connectionManager.connections[connectionName].contexts[
-      context.resourceType + '/' + context.resourceID
-    ] = context;
+    this.connections[connectionName].contexts[context.resourceType + '/' + context.resourceID] =
+      context;
   }
 
   public deleteContext(connectionName: string, contextID: string): void {
-    delete ConnectionManager.connectionManager.connections[connectionName].contexts[contextID];
+    delete this.connections[connectionName].contexts[contextID];
   }
 }

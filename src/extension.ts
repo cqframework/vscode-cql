@@ -203,7 +203,7 @@ export function activate(context: ExtensionContext): Promise<void> {
         );
 
         context.subscriptions.push(
-          commands.registerCommand('cql.connections.clearConnections', () =>
+          commands.registerCommand(Commands.CONNECTIONS_CLEAR, () =>
             connectionsProvider.ClearConnections(),
           ),
         );

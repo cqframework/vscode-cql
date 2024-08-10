@@ -1,7 +1,10 @@
 import * as vscode from 'vscode';
 import { ExtensionContext } from 'vscode';
+import { Commands } from '../commands';
 import { ConnectionManager } from '../connectionManager';
+import { Storage } from '../storage';
 import { ConnectionPanel, PanelMode } from './ConnectionPanel';
+import { Messages } from './messages';
 
 export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'connectionManager.connectionsView';
@@ -43,44 +46,46 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.onDidReceiveMessage(async data => {
       switch (data.type) {
-        case 'connections.ConnectionPanel': {
-          ConnectionPanel.createOrShow(this._extensionUri, this, PanelMode.Add);
+        case Messages.CONNECTION_ADD_PANEL: {
+          let mode: PanelMode = 'Add';
+          ConnectionPanel.createOrShow(this._extensionUri, this, mode);
           break;
         }
-        case 'connections.deleteConnection': {
-          ConnectionManager.connectionManager.deleteConnection(data.data);
+        case Messages.CONNECTION_DELETE: {
+          ConnectionManager.getManager().deleteConnection(data.data);
           ConnectionsViewProvider.getContext().globalState.update(
-            'ConnectionManager.connections',
-            ConnectionManager.connectionManager.getAllConnections(),
+            Storage.STORAGE_CONNECTIONS,
+            ConnectionManager.getManager().getAllConnections(),
           );
           this.refreshConnections();
           break;
         }
-        case 'connections.connect': {
-          ConnectionManager.connectionManager.setCurrentConnection(data.data);
+        case Messages.CONNECTION_CONNECT: {
+          ConnectionManager.getManager().setCurrentConnection(data.data);
           ConnectionsViewProvider.getContext().globalState.update(
-            'ConnectionManager.currentConnection',
-            ConnectionManager.connectionManager.getCurrentConnection(),
+            Storage.STORAGE_CURRENT_CONNECTION,
+            ConnectionManager.getManager().getCurrentConnection(),
           );
           this.refreshConnections();
           break;
         }
-        case 'connections.updateConnection': {
-          ConnectionPanel.createOrShow(this._extensionUri, this, PanelMode.Edit, data.data);
+        case Messages.CONNECTION_EDIT_PANEL: {
+          let mode: PanelMode = 'Edit';
+          ConnectionPanel.createOrShow(this._extensionUri, this, mode, data.data);
           break;
         }
-        case 'connections.refreshConnections': {
+        case Messages.CONNECTION_REFRESH: {
           this.refreshConnections();
           break;
         }
-        case 'cql.connections.clearConnections': {
-          let connections = ConnectionManager.connectionManager.getAllConnections();
+        case Commands.CONNECTIONS_CLEAR: {
+          let connections = ConnectionManager.getManager().getAllConnections();
           for (const key in connections) {
             delete connections[key];
           }
           ConnectionsViewProvider.getContext().globalState.update(
-            'ConnectionManager.connections',
-            ConnectionManager.connectionManager.getAllConnections(),
+            Storage.STORAGE_CONNECTIONS,
+            ConnectionManager.getManager().getAllConnections(),
           );
           this.refreshConnections();
         }
@@ -93,15 +98,15 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
   public ClearConnections() {
     if (this._view) {
-      for (let connection in ConnectionManager.connectionManager.getAllConnections()) {
+      for (let connection in ConnectionManager.getManager().getAllConnections()) {
         console.log(connection);
-        ConnectionManager.connectionManager.deleteConnection(connection);
+        ConnectionManager.getManager().deleteConnection(connection);
       }
       ConnectionsViewProvider.getContext().globalState.update(
-        'ConnectionManager.connections',
-        ConnectionManager.connectionManager.getAllConnections(),
+        Storage.STORAGE_CONNECTIONS,
+        ConnectionManager.getManager().getAllConnections(),
       );
-      this._view.webview.postMessage({ type: 'clearConnections' });
+      this._view.webview.postMessage({ type: Commands.CONNECTIONS_CLEAR });
     }
   }
 
@@ -150,16 +155,16 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
 				<button class="add-connection-button">Add Connection</button>
 
-				<script nonce="${nonce}" src="${scriptUri}"></script>
+				<script nonce="${nonce}"  src="${scriptUri}"></script>
 			</body>
 			</html>`;
   }
 
   private refreshConnections() {
     this._view?.webview.postMessage({
-      type: 'connections.createConnectionsView',
-      connections: ConnectionManager.connectionManager.getAllConnections(),
-      currentConnection: ConnectionManager.connectionManager.getCurrentConnection(),
+      type: Messages.CONNECTION_INITIALIZE_SIDEBAR,
+      connections: ConnectionManager.getManager().getAllConnections(),
+      currentConnection: ConnectionManager.getManager().getCurrentConnection(),
     });
   }
 }
