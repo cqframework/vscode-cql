@@ -1,4 +1,3 @@
-// @ts-nocheck
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
 (function () {
@@ -13,8 +12,7 @@
     const message = event.data; // The json data that the extension sent
     switch (message.type) {
       case 'cql.connections.clearConnections': {
-        values = [];
-        updateConnectionList(values);
+        updateConnectionList(undefined, undefined);
         break;
       }
       case 'Connections.refreshConnections': {
@@ -28,9 +26,8 @@
     }
   });
 
-  function updateConnectionList(connections, currentConnection) {
-    console.log('Type of connection is ' + typeof connections);
-    const connectionsList = document.querySelector('.connections-list');
+  function updateConnectionList(connections: any, currentConnection: any) {
+    const connectionsList = document.querySelector('.connections-list') as HTMLInputElement;
     connectionsList.textContent = '';
     if (Object.keys(connections).length === 0) {
       connectionsList.textContent = 'You have no saved connections. Add one below.';
@@ -111,15 +108,15 @@
     vscode.postMessage({ type: 'Connections.AddConnectionPanel' });
   }
 
-  function deleteConnection(connectionName) {
+  function deleteConnection(connectionName: any) {
     vscode.postMessage({ type: 'Connections.deleteConnection', data: connectionName });
   }
 
-  function updateConnection(oldConnectionName) {
+  function updateConnection(oldConnectionName: any) {
     vscode.postMessage({ type: 'Connections.EditConnectionPanel', data: oldConnectionName });
   }
 
-  function connect(connectionName) {
+  function connect(connectionName: any) {
     vscode.postMessage({ type: 'Connections.connect', data: connectionName });
   }
 
@@ -127,7 +124,7 @@
     vscode.postMessage({ type: 'Connections.refreshConnections' });
   }
 
-  function createConnectionsView(connections, currentConnection) {
+  function createConnectionsView(connections: any, currentConnection: any) {
     console.log('Connections is ' + connections);
     updateConnectionList(connections, currentConnection);
   }
