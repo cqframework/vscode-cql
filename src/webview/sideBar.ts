@@ -155,7 +155,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
 				<button class="add-connection-button">Add Connection</button>
 
-				<script nonce="${nonce}"  src="${scriptUri}"></script>
+				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>
 			</html>`;
   }

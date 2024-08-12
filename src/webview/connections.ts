@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
 (function () {
@@ -26,8 +28,8 @@
     }
   });
 
-  function updateConnectionList(connections: any, currentConnection: any) {
-    const connectionsList = document.querySelector('.connections-list') as HTMLInputElement;
+  function updateConnectionList(connections, currentConnection) {
+    const connectionsList = document.querySelector('.connections-list');
     connectionsList.textContent = '';
     if (Object.keys(connections).length === 0) {
       connectionsList.textContent = 'You have no saved connections. Add one below.';
@@ -108,15 +110,15 @@
     vscode.postMessage({ type: 'Connections.AddConnectionPanel' });
   }
 
-  function deleteConnection(connectionName: any) {
+  function deleteConnection(connectionName) {
     vscode.postMessage({ type: 'Connections.deleteConnection', data: connectionName });
   }
 
-  function updateConnection(oldConnectionName: any) {
+  function updateConnection(oldConnectionName) {
     vscode.postMessage({ type: 'Connections.EditConnectionPanel', data: oldConnectionName });
   }
 
-  function connect(connectionName: any) {
+  function connect(connectionName) {
     vscode.postMessage({ type: 'Connections.connect', data: connectionName });
   }
 
@@ -124,7 +126,7 @@
     vscode.postMessage({ type: 'Connections.refreshConnections' });
   }
 
-  function createConnectionsView(connections: any, currentConnection: any) {
+  function createConnectionsView(connections, currentConnection) {
     console.log('Connections is ' + connections);
     updateConnectionList(connections, currentConnection);
   }
