@@ -14,11 +14,14 @@ import {
   RevealOutputChannelOn,
 } from 'vscode-languageclient';
 import { Commands } from './commands';
+import { ConnectionManager } from './connectionManager';
 import { CqlLanguageClient } from './cqlLanguageClient';
 import { ClientStatus } from './extension.api';
 import { initializeLogFile, logger } from './log';
 import * as requirements from './requirements';
 import { statusBar } from './statusBar';
+import { ConnectionPanel } from './webview/ConnectionPanel';
+import { ConnectionsViewProvider } from './webview/sideBar';
 import glob = require('glob');
 
 const cqlLanguageClient: CqlLanguageClient = new CqlLanguageClient();
@@ -178,6 +181,14 @@ export function activate(context: ExtensionContext): Promise<void> {
           }),
         );
 
+        // Connection Manager
+        ConnectionManager._initialize(context);
+
+        // Views
+        const connectionsProvider = new ConnectionsViewProvider(context.extensionUri);
+        ConnectionsViewProvider.setContext(context);
+        ConnectionPanel.setContext(context);
+
         // Register commands here to make it available even when the language client fails
         context.subscriptions.push(
           commands.registerCommand(Commands.OPEN_SERVER_LOG, (column: ViewColumn) =>
@@ -191,9 +202,21 @@ export function activate(context: ExtensionContext): Promise<void> {
           ),
         );
 
+        context.subscriptions.push(
+          commands.registerCommand(Commands.CONNECTIONS_CLEAR, () =>
+            connectionsProvider.ClearConnections(),
+          ),
+        );
+
+        context.subscriptions.push();
+
         context.subscriptions.push(commands.registerCommand(Commands.OPEN_LOGS, () => openLogs()));
 
         context.subscriptions.push(statusBar);
+
+        context.subscriptions.push(
+          window.registerWebviewViewProvider(ConnectionsViewProvider.viewType, connectionsProvider),
+        );
 
         await startServer(context, requirements, clientOptions, workspacePath);
         resolve();

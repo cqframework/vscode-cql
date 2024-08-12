@@ -53,4 +53,9 @@ export namespace Commands {
    * Open settings.json
    */
   export const OPEN_JSON_SETTINGS = 'workbench.action.openSettingsJson';
+
+  /*
+   * Remove all existing connections from extension
+   */
+  export const CONNECTIONS_CLEAR = 'cql.connections.clearConnections';
 }
