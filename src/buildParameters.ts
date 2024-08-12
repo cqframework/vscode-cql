@@ -7,16 +7,16 @@ import * as fse from 'fs-extra';
 import path from 'path';
 
 export type EvaluationParameters = {
-  operationArgs: string[] | undefined,
-  outputPath: Uri | undefined,
-  testPath: Uri | undefined
-}
+  operationArgs: string[] | undefined;
+  outputPath: Uri | undefined;
+  testPath: Uri | undefined;
+};
 
 // Should be working with normalized data
 export function buildParameters(uri: Uri): EvaluationParameters {
   if (!fs.existsSync(uri.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
-    return {operationArgs: undefined, outputPath: undefined, testPath: undefined};
+    return { operationArgs: undefined, outputPath: undefined, testPath: undefined };
   }
 
   const libraryDirectory = Utils.dirname(uri);
@@ -66,8 +66,8 @@ export function buildParameters(uri: Uri): EvaluationParameters {
   let evaluationParams: EvaluationParameters = {
     operationArgs,
     outputPath,
-    testPath
-  }
+    testPath,
+  };
   return evaluationParams;
 }
 
