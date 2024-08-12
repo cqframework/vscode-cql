@@ -1,3 +1,4 @@
+// TODO Update implementation to use javadocs
 // @ts-nocheck
 
 // This script will be run within the webview itself
@@ -23,6 +24,7 @@
   window.addEventListener('message', event => {
     const message = event.data; // The json data that the extension sent
     switch (message.type) {
+      // TODO Update implementation to use javadocs
       case 'Connection.InitializeView': {
         InitializeView(message.connection);
         break;
@@ -32,17 +34,20 @@
 
   function Cancel() {
     vscode.postMessage({
+      // TODO Update implementation to use javadocs
       type: 'Connection.cancel',
     });
   }
 
   function TestConnection() {
+    // TODO Update implementation to use javadocs
     vscode.postMessage({ type: 'Connection.testConnection' });
   }
 
   function editConnection() {
     const oldState = vscode.getState() || { oldConnectionName: '' };
     vscode.postMessage({
+      // TODO Update implementation to use javadocs
       type: 'Connection.edit',
       name: document.getElementById('connectionName').value,
       url: document.getElementById('connectionURL').value,

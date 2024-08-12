@@ -1,3 +1,4 @@
+// TODO Update implementation to use javadocs
 // @ts-nocheck
 
 // This script will be run within the webview itself
@@ -13,14 +14,17 @@
   window.addEventListener('message', event => {
     const message = event.data; // The json data that the extension sent
     switch (message.type) {
+      // TODO Update implementation to use javadocs
       case 'cql.connections.clearConnections': {
         updateConnectionList(undefined, undefined);
         break;
       }
+      // TODO Update implementation to use javadocs
       case 'Connections.refreshConnections': {
         refreshConnections();
         break;
       }
+      // TODO Update implementation to use javadocs
       case 'Connections.createConnectionsView': {
         createConnectionsView(message.connections, message.currentConnection);
         break;
