@@ -45,69 +45,81 @@
       let connection = connections[key];
       let connectionName = connection['name'];
       let connectionURL = connection['url'];
-
       let div = document.createElement('div');
       div.className = connectionName;
-      let connectionNameLabel = document.createElement('h3');
-      connectionNameLabel.className = 'ConnectionNameLabel';
-      connectionNameLabel.innerHTML = 'Connection: ' + connectionName;
 
-      div.className = connectionURL;
-      let connectionURLLabel = document.createElement('label');
-      connectionURLLabel.className = 'ConnectionURLLabel';
-      connectionURLLabel.innerHTML = connectionURL;
-
-      div.appendChild(connectionNameLabel);
-      div.appendChild(document.createElement('br'));
-      div.appendChild(connectionURLLabel);
-      div.appendChild(document.createElement('br'));
-      div.appendChild(document.createElement('br'));
-
-      let deleteButton = document.createElement('button');
-      deleteButton.className = 'DeleteButton';
-      deleteButton.id = 'Delete-' + connectionName;
-      deleteButton.innerHTML = 'Delete';
-
-      deleteButton.onclick = function () {
-        deleteConnection(connectionName);
-      };
-      div.appendChild(deleteButton);
-
-      div.appendChild(document.createElement('br'));
-      div.appendChild(document.createElement('br'));
-
-      let updateButton = document.createElement('button');
-      updateButton.className = 'UpdateButton';
-      updateButton.id = 'Update-' + connectionName;
-      updateButton.innerHTML = 'Update';
-
-      updateButton.onclick = function () {
-        updateConnection(connectionName);
-      };
-      div.appendChild(updateButton);
-
-      div.appendChild(document.createElement('br'));
-      div.appendChild(document.createElement('br'));
-
-      let connectButton = document.createElement('button');
-      connectButton.className = 'ConnectButton';
-      connectButton.id = 'Connect-' + connectionName;
-      connectButton.innerHTML = 'Connect';
-
-      if (currentConnection !== undefined) {
-        if (connectionName === currentConnection['name']) {
-          connectButton.innerHTML = 'Connected';
-        }
-      }
-
-      connectButton.onclick = function () {
-        connect(connectionName);
-      };
-      div.appendChild(connectButton);
-      div.appendChild(document.createElement('br'));
-      div.appendChild(document.createElement('br'));
+      AddLabels(connectionName, connectionURL, div);
+      AddDeleteButton(connectionName, div);
+      AddUpdateButton(connectionName, div);
+      AddConnectionButton(connectionName, currentConnection, div);
       connectionsList.appendChild(div);
     }
+  }
+
+  function AddLabels(connectionName, connectionURL, div) {
+    let connectionNameLabel = document.createElement('h3');
+    connectionNameLabel.className = 'ConnectionNameLabel';
+    connectionNameLabel.innerHTML = 'Connection: ' + connectionName;
+
+    let connectionURLLabel = document.createElement('label');
+    connectionURLLabel.className = 'ConnectionURLLabel';
+    connectionURLLabel.innerHTML = connectionURL;
+
+    div.appendChild(connectionNameLabel);
+    div.appendChild(document.createElement('br'));
+    div.appendChild(connectionURLLabel);
+    div.appendChild(document.createElement('br'));
+    div.appendChild(document.createElement('br'));
+  }
+
+  function AddDeleteButton(connectionName, div) {
+    let deleteButton = document.createElement('button');
+    deleteButton.className = 'DeleteButton';
+    deleteButton.id = 'Delete-' + connectionName;
+    deleteButton.innerHTML = 'Delete';
+
+    deleteButton.onclick = function () {
+      deleteConnection(connectionName);
+    };
+    div.appendChild(deleteButton);
+
+    div.appendChild(document.createElement('br'));
+    div.appendChild(document.createElement('br'));
+  }
+
+  function AddUpdateButton(connectionName, div) {
+    let updateButton = document.createElement('button');
+    updateButton.className = 'UpdateButton';
+    updateButton.id = 'Update-' + connectionName;
+    updateButton.innerHTML = 'Update';
+
+    updateButton.onclick = function () {
+      updateConnection(connectionName);
+    };
+    div.appendChild(updateButton);
+
+    div.appendChild(document.createElement('br'));
+    div.appendChild(document.createElement('br'));
+  }
+
+  function AddConnectionButton(connectionName, currentConnection, div) {
+    let connectButton = document.createElement('button');
+    connectButton.className = 'ConnectButton';
+    connectButton.id = 'Connect-' + connectionName;
+    connectButton.innerHTML = 'Connect';
+
+    if (currentConnection !== undefined) {
+      if (connectionName === currentConnection['name']) {
+        connectButton.innerHTML = 'Connected';
+      }
+    }
+
+    connectButton.onclick = function () {
+      connect(connectionName);
+    };
+    div.appendChild(connectButton);
+    div.appendChild(document.createElement('br'));
+    div.appendChild(document.createElement('br'));
   }
 
   function addConnection() {
