@@ -213,7 +213,7 @@ export class ConnectionPanel {
 
   private _getHtmlForEditWebview(webview: vscode.Webview, mode: PanelMode) {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'editConnection.ts'),
+      vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'editConnection.js'),
     );
     return this._getHtmlForWebview(webview, scriptUri, mode);
   }

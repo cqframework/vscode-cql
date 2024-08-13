@@ -9,7 +9,7 @@
     "strict": true,
     "esModuleInterop": true,
     "alwaysStrict": true,
-    "importHelpers": true
+    "checkJs": true
   },
-  "exclude": ["node_modules", ".vscode-test"]
+  "exclude": ["node_modules", ".vscode-test", "dist", "vscode-test.mjs"]
 }
