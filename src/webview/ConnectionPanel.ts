@@ -267,7 +267,7 @@ export class ConnectionPanel {
       <input type="text" id="connectionName" name="connectionName" placeholder="Enter connection name"><br><br>
 
       <label for="connectionURL">URL</label>
-      <input type="text" id="connectionURL" name="connectionURL" placeholder="Enter server url" value="http://smilecdr/fhir"><br><br>
+      <input type="text" id="connectionURL" name="connectionURL" placeholder="Enter server url"><br><br>
 
       <label for="connectionContext">Patient Context</label>
       <input type="text" id="connectionContext" name="connectionContext" placeholder="Enter comma separated Patient IDs"><br><br>

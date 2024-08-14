@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ExtensionContext } from 'vscode';
 import { Commands } from '../commands';
-import { ConnectionManager } from '../connectionManager';
+import { Connection, ConnectionManager } from '../connectionManager';
 import { Storage } from '../storage';
 import { ConnectionPanel, PanelMode } from './ConnectionPanel';
 import { Messages } from './messages';
@@ -57,13 +57,17 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
             Storage.STORAGE_CONNECTIONS,
             ConnectionManager.getManager().getAllConnections(),
           );
+          if (ConnectionManager.getManager().getCurrentConnection()?.name === data.data) {
+            ConnectionManager.getManager().setCurrentConnection('Local');
+          }
+
           this.refreshConnections();
           break;
         }
         case Messages.CONNECTION_CONNECT: {
           let currentConnection = ConnectionManager.getManager().getCurrentConnection();
           if (currentConnection?.name === data.data) {
-            ConnectionManager.getManager().setCurrentConnection(undefined);
+            ConnectionManager.getManager().setCurrentConnection('Local');
           } else {
             ConnectionManager.getManager().setCurrentConnection(data.data);
           }
@@ -105,14 +109,13 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   public ClearConnections() {
     if (this._view) {
       for (let connection in ConnectionManager.getManager().getAllConnections()) {
-        console.log(connection);
         ConnectionManager.getManager().deleteConnection(connection);
       }
       ConnectionsViewProvider.getContext().globalState.update(
         Storage.STORAGE_CONNECTIONS,
         ConnectionManager.getManager().getAllConnections(),
       );
-      this._view.webview.postMessage({ type: Commands.CONNECTIONS_CLEAR });
+      this.refreshConnections();
     }
   }
 
@@ -167,6 +170,26 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   }
 
   private refreshConnections() {
+    let localConnection: Connection = {
+      name: 'Local',
+      url: new URL('http://smilecdr/fhir'),
+      contexts: {},
+    };
+    ConnectionManager.getManager().upsertConnection(localConnection);
+    ConnectionsViewProvider.getContext().globalState.update(
+      Storage.STORAGE_CONNECTIONS,
+      ConnectionManager.getManager().getAllConnections(),
+    );
+
+    // only connection is local
+    if (Object.keys(ConnectionManager.getManager().getAllConnections()).length === 1) {
+      ConnectionManager.getManager().setCurrentConnection('Local');
+      ConnectionsViewProvider.getContext().globalState.update(
+        Storage.STORAGE_CURRENT_CONNECTION,
+        ConnectionManager.getManager().getCurrentConnection(),
+      );
+    }
+
     this._view?.webview.postMessage({
       type: Messages.CONNECTION_INITIALIZE_SIDEBAR,
       connections: ConnectionManager.getManager().getAllConnections(),

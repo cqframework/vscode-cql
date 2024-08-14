@@ -15,11 +15,6 @@
     const message = event.data; // The json data that the extension sent
     switch (message.type) {
       // TODO Update implementation to use javadocs
-      case 'cql.connections.clearConnections': {
-        updateConnectionList(undefined, undefined);
-        break;
-      }
-      // TODO Update implementation to use javadocs
       case 'Connections.refreshConnections': {
         refreshConnections();
         break;
@@ -35,9 +30,6 @@
   function updateConnectionList(connections, currentConnection) {
     const connectionsList = document.querySelector('.connections-list');
     connectionsList.textContent = '';
-    if (Object.keys(connections).length === 0) {
-      connectionsList.textContent = 'You have no saved connections. Add one below.';
-    }
     if (!connectionsList || connections === undefined) {
       return;
     }
@@ -49,8 +41,10 @@
       div.className = connectionName;
 
       AddLabels(connectionName, connectionURL, div);
-      AddDeleteButton(connectionName, div);
-      AddUpdateButton(connectionName, div);
+      if (connectionName !== 'Local') {
+        AddDeleteButton(connectionName, div);
+        AddUpdateButton(connectionName, div);
+      }
       AddConnectionButton(connectionName, currentConnection, div);
       connectionsList.appendChild(div);
     }
