@@ -61,7 +61,13 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
           break;
         }
         case Messages.CONNECTION_CONNECT: {
-          ConnectionManager.getManager().setCurrentConnection(data.data);
+          let currentConnection = ConnectionManager.getManager().getCurrentConnection();
+          if (currentConnection?.name === data.data) {
+            ConnectionManager.getManager().setCurrentConnection(undefined);
+          } else {
+            ConnectionManager.getManager().setCurrentConnection(data.data);
+          }
+
           ConnectionsViewProvider.getContext().globalState.update(
             Storage.STORAGE_CURRENT_CONNECTION,
             ConnectionManager.getManager().getCurrentConnection(),
