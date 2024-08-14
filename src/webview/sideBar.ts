@@ -10,7 +10,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
   private static _extContext: ExtensionContext;
   private _view?: vscode.WebviewView;
-  public static currentPanel?: ConnectionPanel | undefined;
+  private static currentPanel?: ConnectionPanel | undefined;
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
