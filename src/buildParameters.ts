@@ -54,10 +54,16 @@ export function buildParameters(uri: URI, expression: string | undefined): Evalu
     connection,
     // I kind of want to make 'Local' a const that I can share....
     // not sure, but I already ran into an issue debugging when I changed the check below, but not this one
+<<<<<<< HEAD
     contexts:
       contexts != undefined && connection?.name !== 'Local' && Object.values(contexts).length > 0
         ? new Map(Object.entries(contexts).map(([key, context]) => [key, context]))
         : getLocalContexts(testPath, libraryName),
+=======
+    contexts != undefined && connection?.name !== 'Local' && Object.values(contexts).length > 0
+      ? new Map(Object.values(contexts).map(context => ['', context]))
+      : getLocalContexts(testPath, libraryName),
+>>>>>>> eface7d (Add in the local connection check for default behaviour)
     measurementPeriod,
   });
 
