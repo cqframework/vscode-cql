@@ -1,6 +1,0 @@
-{
-  "compilerOptions": {
-    "typeRoots": ["./src/webview"]
-  },
-  "exclude": ["node_modules"]
-}
