@@ -3,17 +3,41 @@
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
 (function () {
+  const $cancelButton = document.querySelector('.cancel-button');
+  const $testConnectionButton = document.querySelector('.test-connection-button');
+  const $addConnectionButton = document.querySelector('.add-connection-button');
+  const $connectionName = /** @type {HTMLInputElement} */ (
+    document.getElementById('connectionName')
+  );
+  const $connectionURL = /** @type {HTMLInputElement} */ (document.getElementById('connectionURL'));
+  const $connectionContext = /** @type {HTMLInputElement} */ (
+    document.getElementById('connectionContext')
+  );
+
+  if (
+    !(
+      $cancelButton &&
+      $testConnectionButton &&
+      $addConnectionButton &&
+      $connectionName &&
+      $connectionURL &&
+      $connectionContext
+    )
+  ) {
+    throw new Error('Missing required element.');
+  }
+
   const vscode = acquireVsCodeApi();
 
-  document.querySelector('.cancel-button').addEventListener('click', () => {
+  $cancelButton.addEventListener('click', () => {
     Cancel();
   });
 
-  document.querySelector('.test-connection-button').addEventListener('click', () => {
+  $testConnectionButton.addEventListener('click', () => {
     TestConnection();
   });
 
-  document.querySelector('.add-connection-button').addEventListener('click', () => {
+  $addConnectionButton.addEventListener('click', () => {
     addConnection();
   });
 
@@ -36,13 +60,13 @@
     vscode.postMessage({ type: 'Connection.testConnection' });
   }
 
-  function addConnection() {
+  const addConnection = () => {
     vscode.postMessage({
       // TODO Update implementation to use javadocs
       type: 'Connection.add',
-      name: document.getElementById('connectionName').value,
-      url: document.getElementById('connectionURL').value,
-      context: document.getElementById('connectionContext').value,
+      name: $connectionName?.value,
+      url: $connectionURL?.value,
+      context: $connectionContext?.value,
     });
-  }
+  };
 })();

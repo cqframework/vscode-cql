@@ -1,8 +1,15 @@
 // TODO Update implementation to use javadocs
 
+/** @typedef {import("../connectionManager").Connection} Connection */
+
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
 (function () {
+  const $connectionsList = document.querySelector('.connections-list');
+  if (!$connectionsList) {
+    throw new Error('Missing required element.');
+  }
+
   const vscode = acquireVsCodeApi();
 
   document.querySelector('.add-connection-button')?.addEventListener('click', () => {
@@ -31,15 +38,19 @@
     }
   });
 
-  function updateConnectionList(connections, currentConnection) {
-    const connectionsList = document.querySelector('.connections-list');
-    connectionsList.textContent = '';
-    if (Object.keys(connections).length === 0) {
-      connectionsList.textContent = 'You have no saved connections. Add one below.';
-    }
-    if (!connectionsList || connections === undefined) {
+  /**
+   * @param {Connection[] | undefined} connections
+   * @param {Connection | undefined} currentConnection
+   */
+  const updateConnectionList = (connections, currentConnection) => {
+    $connectionsList.textContent = '';
+    if (!$connectionsList || connections === undefined) {
       return;
     }
+    if (Object.keys(connections).length === 0) {
+      $connectionsList.textContent = 'You have no saved connections. Add one below.';
+    }
+
     for (let key in connections) {
       let connection = connections[key];
       let connectionName = connection['name'];
@@ -51,10 +62,10 @@
       connectionNameLabel.className = 'ConnectionNameLabel';
       connectionNameLabel.innerHTML = 'Connection: ' + connectionName;
 
-      div.className = connectionURL;
+      div.className = connectionURL.toString();
       let connectionURLLabel = document.createElement('label');
       connectionURLLabel.className = 'ConnectionURLLabel';
-      connectionURLLabel.innerHTML = connectionURL;
+      connectionURLLabel.innerHTML = connectionURL.toString();
 
       div.appendChild(connectionNameLabel);
       div.appendChild(document.createElement('br'));
@@ -105,22 +116,31 @@
       div.appendChild(connectButton);
       div.appendChild(document.createElement('br'));
       div.appendChild(document.createElement('br'));
-      connectionsList.appendChild(div);
+      $connectionsList.appendChild(div);
     }
-  }
+  };
 
   function addConnection() {
     vscode.postMessage({ type: 'Connections.AddConnectionPanel' });
   }
 
+  /**
+   * @param {string} connectionName
+   */
   function deleteConnection(connectionName) {
     vscode.postMessage({ type: 'Connections.deleteConnection', data: connectionName });
   }
 
+  /**
+   * @param {string} oldConnectionName
+   */
   function updateConnection(oldConnectionName) {
     vscode.postMessage({ type: 'Connections.EditConnectionPanel', data: oldConnectionName });
   }
 
+  /**
+   * @param {string} connectionName
+   */
   function connect(connectionName) {
     vscode.postMessage({ type: 'Connections.connect', data: connectionName });
   }
@@ -129,8 +149,11 @@
     vscode.postMessage({ type: 'Connections.refreshConnections' });
   }
 
+  /**
+   * @param {Connection[]} connections
+   * @param {Connection} currentConnection
+   */
   function createConnectionsView(connections, currentConnection) {
-    console.log('Connections is ' + connections);
     updateConnectionList(connections, currentConnection);
   }
 })();

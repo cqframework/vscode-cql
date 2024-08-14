@@ -44,15 +44,15 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    webviewView.webview.onDidReceiveMessage(async data => {
-      switch (data.type) {
+    webviewView.webview.onDidReceiveMessage(async ({ type, data }) => {
+      switch (type) {
         case Messages.CONNECTION_ADD_PANEL: {
           let mode: PanelMode = 'Add';
           ConnectionPanel.createOrShow(this._extensionUri, this, mode);
           break;
         }
         case Messages.CONNECTION_DELETE: {
-          ConnectionManager.getManager().deleteConnection(data.data);
+          ConnectionManager.getManager().deleteConnection(data);
           ConnectionsViewProvider.getContext().globalState.update(
             Storage.STORAGE_CONNECTIONS,
             ConnectionManager.getManager().getAllConnections(),
@@ -61,7 +61,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
           break;
         }
         case Messages.CONNECTION_CONNECT: {
-          ConnectionManager.getManager().setCurrentConnection(data.data);
+          ConnectionManager.getManager().setCurrentConnection(data);
           ConnectionsViewProvider.getContext().globalState.update(
             Storage.STORAGE_CURRENT_CONNECTION,
             ConnectionManager.getManager().getCurrentConnection(),
@@ -71,7 +71,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
         }
         case Messages.CONNECTION_EDIT_PANEL: {
           let mode: PanelMode = 'Edit';
-          ConnectionPanel.createOrShow(this._extensionUri, this, mode, data.data);
+          ConnectionPanel.createOrShow(this._extensionUri, this, mode, data);
           break;
         }
         case Messages.CONNECTION_REFRESH: {

@@ -5,15 +5,39 @@
   const vscode = acquireVsCodeApi();
   const oldState = /** @type {{ oldConnectionName: string} | undefined} */ vscode.getState();
 
-  document.querySelector('.cancel-button').addEventListener('click', () => {
+  const $cancelButton = document.querySelector('.cancel-button');
+  const $testConnectionButton = document.querySelector('.test-connection-button');
+  const $editConnectionButton = document.querySelector('.edit-connection-button');
+  const $connectionName = /** @type {HTMLInputElement} */ (
+    document.getElementById('connectionName')
+  );
+  const $connectionURL = /** @type {HTMLInputElement} */ (document.getElementById('connectionURL'));
+  const $connectionContext = /** @type {HTMLInputElement} */ (
+    document.getElementById('connectionContext')
+  );
+
+  if (
+    !(
+      $cancelButton &&
+      $testConnectionButton &&
+      $editConnectionButton &&
+      $connectionName &&
+      $connectionURL &&
+      $connectionContext
+    )
+  ) {
+    throw new Error('Missing required element.');
+  }
+
+  $cancelButton.addEventListener('click', () => {
     Cancel();
   });
 
-  document.querySelector('.test-connection-button').addEventListener('click', () => {
+  $testConnectionButton.addEventListener('click', () => {
     TestConnection();
   });
 
-  document.querySelector('.edit-connection-button').addEventListener('click', () => {
+  $editConnectionButton.addEventListener('click', () => {
     editConnection();
   });
 
@@ -42,33 +66,35 @@
   }
 
   function editConnection() {
-    const oldState = vscode.getState() || { oldConnectionName: '' };
+    const oldState = /** @type {{ oldConnectionName: string }} */ (vscode.getState()) || {
+      oldConnectionName: '',
+    };
     vscode.postMessage({
       // TODO Update implementation to use javadocs
       type: 'Connection.edit',
-      name: document.getElementById('connectionName').value,
-      url: document.getElementById('connectionURL').value,
-      context: document.getElementById('connectionContext').value,
+      name: $connectionName.value,
+      url: $connectionURL.value,
+      context: $connectionContext.value,
       oldConnectionName: oldState.oldConnectionName,
     });
   }
 
+  /**
+   * @param {import("../connectionManager").Connection} connection
+   */
   function InitializeView(connection) {
     let connectionName = connection['name'];
     let connectionURL = connection['url'];
     let connectionContexts = '';
 
-    for (key in connection['contexts']) {
+    for (let key in connection['contexts']) {
       connectionContexts += connection['contexts'][key]['resourceID'] + ', ';
     }
     connectionContexts = connectionContexts.trim().replace(/,+$/, '');
 
-    let name = document.getElementById('connectionName');
-    name.value = connectionName;
-    let url = document.getElementById('connectionURL');
-    url.value = connectionURL;
-    let contexts = document.getElementById('connectionContext');
-    contexts.value = connectionContexts;
+    $connectionName.value = connectionName;
+    $connectionURL.value = connectionURL.toString();
+    $connectionContext.value = connectionContexts;
 
     vscode.setState({ oldConnectionName: connectionName });
   }
