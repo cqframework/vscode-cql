@@ -44,6 +44,12 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
+    webviewView.onDidChangeVisibility(async data => {
+      if (this.getView()?.visible === true) {
+        this.refreshConnections();
+      }
+    });
+
     webviewView.webview.onDidReceiveMessage(async data => {
       switch (data.type) {
         case Messages.CONNECTION_ADD_PANEL: {
