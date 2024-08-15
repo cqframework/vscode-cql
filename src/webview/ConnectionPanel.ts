@@ -180,7 +180,7 @@ export class ConnectionPanel {
     if (name !== '') {
       let aConnection: Connection = {
         name: name,
-        url: new URL(url),
+        endpoint: url,
         contexts: {},
       };
 
