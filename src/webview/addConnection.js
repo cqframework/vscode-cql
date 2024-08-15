@@ -1,5 +1,3 @@
-// TODO Update implementation to use javadocs
-
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
 (function () {
@@ -50,19 +48,16 @@
 
   function Cancel() {
     vscode.postMessage({
-      // TODO Update implementation to use javadocs
       type: 'Connection.cancel',
     });
   }
 
   function TestConnection() {
-    // TODO Update implementation to use javadocs
     vscode.postMessage({ type: 'Connection.testConnection' });
   }
 
   const addConnection = () => {
     vscode.postMessage({
-      // TODO Update implementation to use javadocs
       type: 'Connection.add',
       name: $connectionName?.value,
       url: $connectionURL?.value,
