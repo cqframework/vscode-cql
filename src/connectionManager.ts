@@ -56,8 +56,12 @@ export class ConnectionManager {
     return this.currentConnection;
   }
 
-  public setCurrentConnection(name: string) {
-    this.currentConnection = this.connections[name];
+  public setCurrentConnection(name: string | undefined) {
+    if (name === undefined) {
+      this.currentConnection = undefined;
+    } else {
+      this.currentConnection = this.connections[name];
+    }
   }
 
   // TODO

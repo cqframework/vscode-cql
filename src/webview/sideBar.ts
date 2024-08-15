@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { ExtensionContext } from 'vscode';
-import { Commands } from '../commands';
-import { ConnectionManager } from '../connectionManager';
+import { Connection, ConnectionManager } from '../connectionManager';
 import { Storage } from '../storage';
 import { ConnectionPanel, PanelMode } from './ConnectionPanel';
 import { Messages } from './messages';
@@ -11,10 +10,17 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
   private static _extContext: ExtensionContext;
   private _view?: vscode.WebviewView;
+  private static currentPanel?: ConnectionPanel | undefined;
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
-  private _update() {}
+  public getPanel() {
+    return ConnectionsViewProvider.currentPanel;
+  }
+
+  public setPanel(panel: ConnectionPanel | undefined) {
+    ConnectionsViewProvider.currentPanel = panel;
+  }
 
   public getView() {
     return this._view;
@@ -44,11 +50,18 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
+    webviewView.onDidChangeVisibility(async data => {
+      if (this.getView()?.visible) {
+        this.refreshConnections();
+      }
+    });
+
     webviewView.webview.onDidReceiveMessage(async data => {
       switch (data.type) {
         case Messages.CONNECTION_ADD_PANEL: {
           let mode: PanelMode = 'Add';
           ConnectionPanel.createOrShow(this._extensionUri, this, mode);
+          this.setPanel(ConnectionPanel.getPanel());
           break;
         }
         case Messages.CONNECTION_DELETE: {
@@ -57,11 +70,22 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
             Storage.STORAGE_CONNECTIONS,
             ConnectionManager.getManager().getAllConnections(),
           );
+          if (ConnectionManager.getManager().getCurrentConnection()?.name === data.data) {
+            ConnectionManager.getManager().setCurrentConnection('Local');
+          }
+
+          this.getPanel()?.dispose();
           this.refreshConnections();
           break;
         }
         case Messages.CONNECTION_CONNECT: {
-          ConnectionManager.getManager().setCurrentConnection(data.data);
+          let currentConnection = ConnectionManager.getManager().getCurrentConnection();
+          if (currentConnection?.name === data.data) {
+            ConnectionManager.getManager().setCurrentConnection('Local');
+          } else {
+            ConnectionManager.getManager().setCurrentConnection(data.data);
+          }
+
           ConnectionsViewProvider.getContext().globalState.update(
             Storage.STORAGE_CURRENT_CONNECTION,
             ConnectionManager.getManager().getCurrentConnection(),
@@ -72,22 +96,12 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
         case Messages.CONNECTION_EDIT_PANEL: {
           let mode: PanelMode = 'Edit';
           ConnectionPanel.createOrShow(this._extensionUri, this, mode, data.data);
+          this.setPanel(ConnectionPanel.getPanel());
           break;
         }
         case Messages.CONNECTION_REFRESH: {
           this.refreshConnections();
           break;
-        }
-        case Commands.CONNECTIONS_CLEAR: {
-          let connections = ConnectionManager.getManager().getAllConnections();
-          for (const key in connections) {
-            delete connections[key];
-          }
-          ConnectionsViewProvider.getContext().globalState.update(
-            Storage.STORAGE_CONNECTIONS,
-            ConnectionManager.getManager().getAllConnections(),
-          );
-          this.refreshConnections();
         }
       }
     });
@@ -99,21 +113,21 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   public ClearConnections() {
     if (this._view) {
       for (let connection in ConnectionManager.getManager().getAllConnections()) {
-        console.log(connection);
         ConnectionManager.getManager().deleteConnection(connection);
       }
       ConnectionsViewProvider.getContext().globalState.update(
         Storage.STORAGE_CONNECTIONS,
         ConnectionManager.getManager().getAllConnections(),
       );
-      this._view.webview.postMessage({ type: Commands.CONNECTIONS_CLEAR });
+      this.getPanel()?.dispose();
+      this.refreshConnections();
     }
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
     // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'connections.ts'),
+      vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'connections.js'),
     );
 
     // Do the same for the stylesheet.
@@ -161,6 +175,26 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   }
 
   private refreshConnections() {
+    let localConnection: Connection = {
+      name: 'Local',
+      url: new URL('http://smilecdr/fhir'),
+      contexts: {},
+    };
+    ConnectionManager.getManager().upsertConnection(localConnection);
+    ConnectionsViewProvider.getContext().globalState.update(
+      Storage.STORAGE_CONNECTIONS,
+      ConnectionManager.getManager().getAllConnections(),
+    );
+
+    // only connection is local
+    if (Object.keys(ConnectionManager.getManager().getAllConnections()).length === 1) {
+      ConnectionManager.getManager().setCurrentConnection('Local');
+      ConnectionsViewProvider.getContext().globalState.update(
+        Storage.STORAGE_CURRENT_CONNECTION,
+        ConnectionManager.getManager().getCurrentConnection(),
+      );
+    }
+
     this._view?.webview.postMessage({
       type: Messages.CONNECTION_INITIALIZE_SIDEBAR,
       connections: ConnectionManager.getManager().getAllConnections(),
