@@ -1,6 +1,6 @@
 import { glob } from 'glob';
 import { window, workspace } from 'vscode';
-import { URI, Utils } from 'vscode-URI';
+import { URI, Utils } from 'vscode-uri';
 
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
@@ -13,15 +13,15 @@ export type EvaluationParameters = {
   testPath: URI | undefined;
 };
 
-export function buildParameters(URI: URI, expression: string | undefined): EvaluationParameters {
-  if (!fs.existsSync(URI.fsPath)) {
+export function buildParameters(uri: URI, expression: string | undefined): EvaluationParameters {
+  if (!fs.existsSync(uri.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
     return { operationArgs: undefined, outputPath: undefined, testPath: undefined };
   }
 
-  const libraryDirectory = Utils.dirname(URI);
-  const libraryName = Utils.basename(URI).replace('.cql', '').split('-')[0];
-  const projectPath = workspace.getWorkspaceFolder(URI)!.uri;
+  const libraryDirectory = Utils.dirname(uri);
+  const libraryName = Utils.basename(uri).replace('.cql', '').split('-')[0];
+  const projectPath = workspace.getWorkspaceFolder(uri)!.uri;
   const terminologyPath: URI = Utils.resolvePath(projectPath, 'input', 'vocabulary', 'valueset');
   const fhirVersion = getFhirVersion();
   const optionsPath = Utils.resolvePath(libraryDirectory, 'cql-options.json');
@@ -144,7 +144,8 @@ function getLocalContexts(testPath: URI, libraryName: string): Map<string, Conte
     let cases = fs.readdirSync(dir).filter(d => fs.statSync(path.join(dir, d)).isDirectory());
     for (let c of cases) {
       // Should really be reading in Patient Resources and getting the ids and everything should be based on a repository like in the evaluator
-      testCases.set(URI.file(path.join(dir, c)).toString(), {
+      const modelPath = URI.file(path.join(dir, c)).toString();
+      testCases.set(modelPath, {
         resourceType: 'Patient',
         resourceID: c,
       });
