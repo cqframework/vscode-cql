@@ -223,6 +223,8 @@ describe('buildParameters - Public API Testing', () => {
     const uri: Uri = URI.file(
       '/Users/joshuareynolds/Documents/src/vscode-cql/src/test/suite/resources/simple-test-ig/input/cql/Test.cql',
     );
+    //Actually not working now.  Need to fix normalizeCqlExecution.ts and add a test like this there as well.
+    // Every step should make it through this check. I'm not actually sure of what the string should look like exactly
     const complexExpression = 'Test & #"SpecialChars"';
     const params = buildParameters(uri, complexExpression);
 
