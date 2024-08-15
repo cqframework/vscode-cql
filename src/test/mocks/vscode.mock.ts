@@ -29,9 +29,7 @@ export const window = {
 export const workspace = {
   getWorkspaceFolder: jest.fn((uri: vscodeUri): WorkspaceFolder | undefined => {
     return {
-      uri: Uri.file(
-        '/Users/joshuareynolds/Documents/src/vscode-cql/src/test/suite/resources/simple-test-ig',
-      ),
+      uri: Uri.file('./src/vscode-cql/src/test/suite/resources/simple-test-ig'),
       name: 'simple-test-ig',
       index: 0,
     } as WorkspaceFolder;

@@ -157,7 +157,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
-    "test": "jest"
+    "clean": "rm -rf ./dist",
+    "test": "jest ./dist/test"
   },
   "javaDependencies": {
     "cql-language-server": {
