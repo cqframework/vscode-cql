@@ -66,6 +66,12 @@
     }
   };
 
+  /**
+   *
+   * @param {string} connectionName
+   * @param {URL} connectionURL
+   * @param {HTMLElement} div
+   */
   function AddLabels(connectionName, connectionURL, div) {
     let connectionNameLabel = document.createElement('h3');
     connectionNameLabel.className = 'ConnectionNameLabel';
@@ -83,6 +89,10 @@
     div.appendChild(document.createElement('br'));
   }
 
+  /**
+   * @param {string} connectionName
+   * @param {HTMLElement} div
+   */
   function AddDeleteButton(connectionName, div) {
     let deleteButton = document.createElement('button');
     deleteButton.className = 'DeleteButton';
@@ -98,6 +108,10 @@
     div.appendChild(document.createElement('br'));
   }
 
+  /**
+   * @param {string} connectionName
+   * @param {HTMLElement} div
+   */
   function AddUpdateButton(connectionName, div) {
     let updateButton = document.createElement('button');
     updateButton.className = 'UpdateButton';
@@ -113,6 +127,11 @@
     div.appendChild(document.createElement('br'));
   }
 
+  /**
+   * @param {string} connectionName
+   * @param {Connection | undefined} currentConnection
+   * @param {HTMLElement} div
+   */
   function AddConnectionButton(connectionName, currentConnection, div) {
     let connectButton = document.createElement('button');
     connectButton.className = 'ConnectButton';
