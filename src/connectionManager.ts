@@ -9,7 +9,7 @@ export interface Context {
 
 export interface Connection {
   name: string;
-  url: URL;
+  endpoint: string;
   contexts: Record<string, Context>;
 }
 

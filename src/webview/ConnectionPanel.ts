@@ -11,15 +11,18 @@ export class ConnectionPanel {
   /**
    * Track the currently panel. Only allow a single panel to exist at a time.
    */
-  public static currentPanel: ConnectionPanel | undefined;
-
-  public static viewType = 'Uninitialized';
+  private static currentPanel: ConnectionPanel | undefined;
+  private static viewType = 'Uninitialized';
   private static _extContext: ExtensionContext;
-
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
   private _sidebar: ConnectionsViewProvider | undefined;
+  private _oldConnectionName?: string;
+
+  public static getPanel(): ConnectionPanel | undefined {
+    return ConnectionPanel.currentPanel;
+  }
 
   public static getContext(): ExtensionContext {
     return this._extContext;
@@ -27,6 +30,10 @@ export class ConnectionPanel {
 
   public static setContext(ec: ExtensionContext) {
     this._extContext = ec;
+  }
+
+  public static getViewType(): string {
+    return this.viewType;
   }
 
   public static createOrShow(
@@ -39,13 +46,17 @@ export class ConnectionPanel {
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
-    // If we already have a panel, show it.
-    if (ConnectionPanel.currentPanel) {
+    // If we already have a panel for this mode, show it.
+    if (ConnectionPanel.currentPanel && mode === ConnectionPanel.getViewType()) {
       ConnectionPanel.currentPanel._panel.reveal(column);
       return;
     }
 
-    // Otherwise, create a new panel.
+    // Otherwise, dispose and create a new panel.
+    if (ConnectionPanel.currentPanel) {
+      ConnectionPanel.currentPanel.dispose();
+    }
+
     let panel: vscode.WebviewPanel;
     if (mode === 'Add') {
       panel = vscode.window.createWebviewPanel(
@@ -54,7 +65,7 @@ export class ConnectionPanel {
         column || vscode.ViewColumn.One,
         getWebviewOptions(extensionUri),
       );
-      ConnectionPanel.viewType = 'addConnection';
+      ConnectionPanel.viewType = 'Add';
     } else {
       panel = vscode.window.createWebviewPanel(
         ConnectionPanel.viewType,
@@ -62,10 +73,15 @@ export class ConnectionPanel {
         column || vscode.ViewColumn.One,
         getWebviewOptions(extensionUri),
       );
-      ConnectionPanel.viewType = 'editConnection';
+      ConnectionPanel.viewType = 'Edit';
     }
 
-    ConnectionPanel.currentPanel = new ConnectionPanel(panel, extensionUri, mode);
+    ConnectionPanel.currentPanel = new ConnectionPanel(
+      panel,
+      extensionUri,
+      mode,
+      oldConnectionName,
+    );
     ConnectionPanel.currentPanel._sidebar = sideBar;
 
     let oldConnection =
@@ -77,13 +93,15 @@ export class ConnectionPanel {
     });
   }
 
-  public static revive(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, mode: PanelMode) {
-    ConnectionPanel.currentPanel = new ConnectionPanel(panel, extensionUri, mode);
-  }
-
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, mode: PanelMode) {
+  private constructor(
+    panel: vscode.WebviewPanel,
+    extensionUri: vscode.Uri,
+    mode: PanelMode,
+    oldConnectionName?: string,
+  ) {
     this._panel = panel;
     this._extensionUri = extensionUri;
+    this._oldConnectionName = oldConnectionName;
 
     // Set the webview's initial html content
     this._update(mode);
@@ -97,6 +115,13 @@ export class ConnectionPanel {
       e => {
         if (this._panel.visible) {
           this._update(mode);
+          let oldConnection =
+            ConnectionManager.getManager().getAllConnections()[this._oldConnectionName as string];
+
+          ConnectionPanel.currentPanel?._panel.webview.postMessage({
+            type: Messages.CONNECTION_INITIALIZE_PANEL,
+            connection: oldConnection,
+          });
         }
       },
       null,
@@ -155,7 +180,7 @@ export class ConnectionPanel {
     if (name !== '') {
       let aConnection: Connection = {
         name: name,
-        url: new URL(url),
+        endpoint: url,
         contexts: {},
       };
 
@@ -267,7 +292,7 @@ export class ConnectionPanel {
       <input type="text" id="connectionName" name="connectionName" placeholder="Enter connection name"><br><br>
 
       <label for="connectionURL">URL</label>
-      <input type="text" id="connectionURL" name="connectionURL" placeholder="Enter server url" value="http://smilecdr/fhir"><br><br>
+      <input type="text" id="connectionURL" name="connectionURL" placeholder="Enter server url"><br><br>
 
       <label for="connectionContext">Patient Context</label>
       <input type="text" id="connectionContext" name="connectionContext" placeholder="Enter comma separated Patient IDs"><br><br>

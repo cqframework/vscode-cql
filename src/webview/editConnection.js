@@ -55,13 +55,11 @@
 
   function Cancel() {
     vscode.postMessage({
-      // TODO Update implementation to use javadocs
       type: 'Connection.cancel',
     });
   }
 
   function TestConnection() {
-    // TODO Update implementation to use javadocs
     vscode.postMessage({ type: 'Connection.testConnection' });
   }
 
@@ -70,7 +68,6 @@
       oldConnectionName: '',
     };
     vscode.postMessage({
-      // TODO Update implementation to use javadocs
       type: 'Connection.edit',
       name: $connectionName.value,
       url: $connectionURL.value,
@@ -84,7 +81,7 @@
    */
   function InitializeView(connection) {
     let connectionName = connection['name'];
-    let connectionURL = connection['url'];
+    let connectionEndpoint = connection['endpoint'];
     let connectionContexts = '';
 
     for (let key in connection['contexts']) {
@@ -93,7 +90,7 @@
     connectionContexts = connectionContexts.trim().replace(/,+$/, '');
 
     $connectionName.value = connectionName;
-    $connectionURL.value = connectionURL.toString();
+    $connectionURL.value = connectionEndpoint;
     $connectionContext.value = connectionContexts;
 
     vscode.setState({ oldConnectionName: connectionName });
