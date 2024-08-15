@@ -35,7 +35,15 @@ export function buildParameters(uri: Uri, expression: string | undefined): Evalu
 
   let contexts = connectionManager.getCurrentContexts();
   let connection = connectionManager.getCurrentConnection();
-  let operationArgs = getCqlCommandArgs(
+
+  if (
+    contexts === undefined ||
+    (contexts != undefined && connection?.name !== 'Local' && Object.values(contexts).length === 0)
+  ) {
+    window.showErrorMessage('Remote connection is selected but no contexts are provided.');
+  }
+
+  let operationArgs = getCqlCommandArgs({
     fhirVersion,
     optionsPath,
     libraryDirectory,
@@ -45,11 +53,12 @@ export function buildParameters(uri: Uri, expression: string | undefined): Evalu
     connection,
     // I kind of want to make 'Local' a const that I can share....
     // not sure, but I already ran into an issue debugging when I changed the check below, but not this one
-    contexts != undefined && connection?.name !== 'Local' && Object.values(contexts).length > 0
-      ? new Map(Object.values(contexts).map(context => ['', context]))
-      : getLocalContexts(testPath, libraryName),
+    contexts:
+      contexts != undefined && connection?.name !== 'Local' && Object.values(contexts).length > 0
+        ? new Map(Object.entries(contexts).map(([key, context]) => [key, context]))
+        : getLocalContexts(testPath, libraryName),
     measurementPeriod,
-  );
+  });
 
   let evaluationParams: EvaluationParameters = {
     operationArgs,
@@ -59,17 +68,27 @@ export function buildParameters(uri: Uri, expression: string | undefined): Evalu
   return evaluationParams;
 }
 
-function getCqlCommandArgs(
-  fhirVersion: string,
-  optionsPath: Uri,
-  libraryDirectory: Uri,
-  libraryName: string,
-  expression: string | undefined,
-  terminologyPath: Uri,
-  connection: Connection | undefined,
-  contexts: Map<string, Context>,
-  measurementPeriod: string,
-): string[] {
+function getCqlCommandArgs({
+  fhirVersion,
+  optionsPath,
+  libraryDirectory,
+  libraryName,
+  expression,
+  terminologyPath,
+  connection,
+  contexts,
+  measurementPeriod,
+}: {
+  fhirVersion: string;
+  optionsPath: URI;
+  libraryDirectory: URI;
+  libraryName: string;
+  expression: string | undefined;
+  terminologyPath: URI;
+  connection: Connection | undefined;
+  contexts: Map<string, Context>;
+  measurementPeriod: string;
+}): string[] {
   const args = ['cql'];
 
   args.push(`-fv=${fhirVersion}`);
@@ -121,9 +140,9 @@ function getLocalContexts(testPath: Uri, libraryName: string): Map<string, Conte
   let directories = glob
     .sync(testPath.fsPath + `/**/${libraryName}`)
     .filter(d => fs.statSync(d).isDirectory());
-  for (var dir of directories) {
+  for (let dir of directories) {
     let cases = fs.readdirSync(dir).filter(d => fs.statSync(path.join(dir, d)).isDirectory());
-    for (var c of cases) {
+    for (let c of cases) {
       // Should really be reading in Patient Resources and getting the ids and everything should be based on a repository like in the evaluator
       testCases.set(Uri.file(path.join(dir, c)).toString(), {
         resourceType: 'Patient',
