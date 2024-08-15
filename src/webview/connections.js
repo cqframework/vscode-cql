@@ -1,9 +1,6 @@
-// TODO Update implementation to use javadocs
-
-/** @typedef {import("../connectionManager").Connection} Connection */
-
 // This script will be run within the webview itself
 // It cannot access the main VS Code APIs directly.
+/** @typedef {import("../connectionManager").Connection} Connection */
 (function () {
   const $connectionsList = document.querySelector('.connections-list');
   if (!$connectionsList) {
@@ -20,12 +17,10 @@
   window.addEventListener('message', event => {
     const message = event.data; // The json data that the extension sent
     switch (message.type) {
-      // TODO Update implementation to use javadocs
       case 'Connections.refreshConnections': {
         refreshConnections();
         break;
       }
-      // TODO Update implementation to use javadocs
       case 'Connections.createConnectionsView': {
         createConnectionsView(message.connections, message.currentConnection);
         break;
@@ -37,15 +32,11 @@
    * @param {Connection[] | undefined} connections
    * @param {Connection | undefined} currentConnection
    */
-  const updateConnectionList = (connections, currentConnection) => {
-    $connectionsList.textContent = '';
+  function updateConnectionList(connections, currentConnection) {
     if (!$connectionsList || connections === undefined) {
       return;
     }
-    if (Object.keys(connections).length === 0) {
-      $connectionsList.textContent = 'You have no saved connections. Add one below.';
-    }
-
+    $connectionsList.textContent = '';
     for (let key in connections) {
       let connection = connections[key];
       let connectionName = connection['name'];
@@ -61,7 +52,7 @@
       AddConnectionButton(connectionName, currentConnection, div);
       $connectionsList.appendChild(div);
     }
-  };
+  }
 
   /**
    *
@@ -74,7 +65,6 @@
     connectionNameLabel.className = 'ConnectionNameLabel';
     connectionNameLabel.innerHTML = 'Connection: ' + connectionName;
 
-    div.className = connectionURL.toString();
     let connectionURLLabel = document.createElement('label');
     connectionURLLabel.className = 'ConnectionURLLabel';
     connectionURLLabel.innerHTML = connectionURL.toString();
@@ -183,6 +173,7 @@
    * @param {Connection} currentConnection
    */
   function createConnectionsView(connections, currentConnection) {
+    console.log('Connections is ' + connections);
     updateConnectionList(connections, currentConnection);
   }
 })();

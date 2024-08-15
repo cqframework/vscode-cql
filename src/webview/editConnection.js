@@ -55,13 +55,11 @@
 
   function Cancel() {
     vscode.postMessage({
-      // TODO Update implementation to use javadocs
       type: 'Connection.cancel',
     });
   }
 
   function TestConnection() {
-    // TODO Update implementation to use javadocs
     vscode.postMessage({ type: 'Connection.testConnection' });
   }
 
@@ -70,7 +68,6 @@
       oldConnectionName: '',
     };
     vscode.postMessage({
-      // TODO Update implementation to use javadocs
       type: 'Connection.edit',
       name: $connectionName.value,
       url: $connectionURL.value,
