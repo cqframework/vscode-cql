@@ -40,11 +40,11 @@
     for (let key in connections) {
       let connection = connections[key];
       let connectionName = connection['name'];
-      let connectionURL = connection['url'];
+      let connectionEndpoint = connection['endpoint'];
       let div = document.createElement('div');
       div.className = connectionName;
 
-      AddLabels(connectionName, connectionURL, div);
+      AddLabels(connectionName, connectionEndpoint, div);
       if (connectionName !== 'Local') {
         AddDeleteButton(connectionName, div);
         AddUpdateButton(connectionName, div);
@@ -57,17 +57,17 @@
   /**
    *
    * @param {string} connectionName
-   * @param {URL} connectionURL
+   * @param {string} connectionEndpoint
    * @param {HTMLElement} div
    */
-  function AddLabels(connectionName, connectionURL, div) {
+  function AddLabels(connectionName, connectionEndpoint, div) {
     let connectionNameLabel = document.createElement('h3');
     connectionNameLabel.className = 'ConnectionNameLabel';
     connectionNameLabel.innerHTML = 'Connection: ' + connectionName;
 
     let connectionURLLabel = document.createElement('label');
     connectionURLLabel.className = 'ConnectionURLLabel';
-    connectionURLLabel.innerHTML = connectionURL.toString();
+    connectionURLLabel.innerHTML = connectionEndpoint;
 
     div.appendChild(connectionNameLabel);
     div.appendChild(document.createElement('br'));

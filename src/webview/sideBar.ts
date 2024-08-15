@@ -177,7 +177,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   private refreshConnections() {
     let localConnection: Connection = {
       name: 'Local',
-      url: new URL('http://smilecdr/fhir'),
+      endpoint: 'http://smilecdr/fhir',
       contexts: {},
     };
     ConnectionManager.getManager().upsertConnection(localConnection);

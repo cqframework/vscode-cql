@@ -81,7 +81,7 @@
    */
   function InitializeView(connection) {
     let connectionName = connection['name'];
-    let connectionURL = connection['url'];
+    let connectionEndpoint = connection['endpoint'];
     let connectionContexts = '';
 
     for (let key in connection['contexts']) {
@@ -90,7 +90,7 @@
     connectionContexts = connectionContexts.trim().replace(/,+$/, '');
 
     $connectionName.value = connectionName;
-    $connectionURL.value = connectionURL.toString();
+    $connectionURL.value = connectionEndpoint;
     $connectionContext.value = connectionContexts;
 
     vscode.setState({ oldConnectionName: connectionName });

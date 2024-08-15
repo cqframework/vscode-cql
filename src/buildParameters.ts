@@ -1,6 +1,6 @@
 import { glob } from 'glob';
-import { Uri, window, workspace } from 'vscode';
-import { Utils } from 'vscode-uri';
+import { window, workspace } from 'vscode';
+import { URI, Utils } from 'vscode-URI';
 
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
@@ -9,20 +9,20 @@ import { Connection, ConnectionManager, Context } from './connectionManager';
 
 export type EvaluationParameters = {
   operationArgs: string[] | undefined;
-  outputPath: Uri | undefined;
-  testPath: Uri | undefined;
+  outputPath: URI | undefined;
+  testPath: URI | undefined;
 };
 
-export function buildParameters(uri: Uri, expression: string | undefined): EvaluationParameters {
-  if (!fs.existsSync(uri.fsPath)) {
+export function buildParameters(URI: URI, expression: string | undefined): EvaluationParameters {
+  if (!fs.existsSync(URI.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
     return { operationArgs: undefined, outputPath: undefined, testPath: undefined };
   }
 
-  const libraryDirectory = Utils.dirname(uri);
-  const libraryName = Utils.basename(uri).replace('.cql', '').split('-')[0];
-  const projectPath = workspace.getWorkspaceFolder(uri)!.uri;
-  const terminologyPath: Uri = Utils.resolvePath(projectPath, 'input', 'vocabulary', 'valueset');
+  const libraryDirectory = Utils.dirname(URI);
+  const libraryName = Utils.basename(URI).replace('.cql', '').split('-')[0];
+  const projectPath = workspace.getWorkspaceFolder(URI)!.uri;
+  const terminologyPath: URI = Utils.resolvePath(projectPath, 'input', 'vocabulary', 'valueset');
   const fhirVersion = getFhirVersion();
   const optionsPath = Utils.resolvePath(libraryDirectory, 'cql-options.json');
   const measurementPeriod = '';
@@ -132,7 +132,7 @@ function getCqlCommandArgs({
   return args;
 }
 
-function getLocalContexts(testPath: Uri, libraryName: string): Map<string, Context> {
+function getLocalContexts(testPath: URI, libraryName: string): Map<string, Context> {
   let testCases: Map<string, Context> = new Map<string, Context>();
   if (!fs.existsSync(testPath.fsPath)) {
     return testCases;
@@ -144,11 +144,11 @@ function getLocalContexts(testPath: Uri, libraryName: string): Map<string, Conte
     let cases = fs.readdirSync(dir).filter(d => fs.statSync(path.join(dir, d)).isDirectory());
     for (let c of cases) {
       // Should really be reading in Patient Resources and getting the ids and everything should be based on a repository like in the evaluator
-      testCases.set(Uri.file(path.join(dir, c)).toString(), {
+      testCases.set(URI.file(path.join(dir, c)).toString(), {
         resourceType: 'Patient',
         resourceID: c,
       });
-      // path: Uri.file(path.join(dir, c))  For Patient specific directory
+      // path: URI.file(path.join(dir, c))  For Patient specific directory
     }
   }
   return testCases;
