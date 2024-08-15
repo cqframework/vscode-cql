@@ -70,3 +70,9 @@ export function connectionManagerTester(manager: ConnectionManager): void {
 
   console.log('End of Connection Manager Testing');
 }
+
+describe('Connection Manager Test Place Holder', () => {
+  test('TBD add connection manager test logic to jest format.', () => {
+    console.log('Test hit');
+  });
+});
