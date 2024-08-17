@@ -222,28 +222,14 @@ export class ConnectionPanel {
 
     if (mode === 'Add') {
       this._panel.title = 'Add Connection';
-      this._panel.webview.html = this._getHtmlForAddWebview(webview, mode);
+      this._panel.webview.html = this._getHtmlForWebview(webview, 'Add');
     } else if (mode === 'Edit') {
       this._panel.title = 'Edit Connection';
-      this._panel.webview.html = this._getHtmlForEditWebview(webview, mode);
+      this._panel.webview.html = this._getHtmlForWebview(webview, 'Edit');
     }
   }
 
-  private _getHtmlForAddWebview(webview: vscode.Webview, mode: PanelMode) {
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'addConnection.js'),
-    );
-    return this._getHtmlForWebview(webview, scriptUri, mode);
-  }
-
-  private _getHtmlForEditWebview(webview: vscode.Webview, mode: PanelMode) {
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'editConnection.js'),
-    );
-    return this._getHtmlForWebview(webview, scriptUri, mode);
-  }
-
-  private _getHtmlForWebview(webview: vscode.Webview, scriptUri: vscode.Uri, mode: PanelMode) {
+  private _getHtmlForWebview(webview: vscode.Webview, mode: PanelMode) {
     const styleResetUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'reset.css'),
     );
@@ -266,8 +252,12 @@ export class ConnectionPanel {
     // Use a nonce to only allow a specific script to be run.
     const nonce = getNonce();
 
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, 'src/webview/connectionPanel.js'),
+    );
+
     return `<!DOCTYPE html>
-			<html lang="en">
+			<html lang="en" data-mode="${modeClass}">
 			<head>
 				<meta charset="UTF-8">
 
