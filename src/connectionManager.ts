@@ -64,9 +64,6 @@ export class ConnectionManager {
     }
   }
 
-  // TODO
-  public testConnection(name: string): void {}
-
   public upsertConnection(connection: Connection): void {
     this.connections[connection.name] = connection;
   }

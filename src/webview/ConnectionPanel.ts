@@ -136,10 +136,6 @@ export class ConnectionPanel {
             this.dispose();
             break;
           }
-          // TODO
-          case Messages.CONNECTION_TEST: {
-            break;
-          }
           case Messages.CONNECTION_ADD: {
             this.addConnection(message.name, message.url, message.context);
             break;
@@ -213,10 +209,6 @@ export class ConnectionPanel {
       ConnectionManager.getManager().deleteConnection(oldName);
     }
     this.addConnection(name, url, context);
-  }
-
-  public testConnection(url: string) {
-    ConnectionManager.getManager().testConnection(url);
   }
 
   _update(mode: PanelMode) {
