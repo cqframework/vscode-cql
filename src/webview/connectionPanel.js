@@ -15,6 +15,7 @@
   const $connectionContext = /** @type {HTMLInputElement} */ (
     document.getElementById('connectionContext')
   );
+  const $testConnectionResult = document.querySelector('.test-connection-result');
 
   if (
     !(
@@ -22,7 +23,8 @@
       $testConnectionButton &&
       $connectionName &&
       $connectionURL &&
-      $connectionContext
+      $connectionContext &&
+      $testConnectionResult
     )
   ) {
     throw new Error('Missing required element.');
@@ -107,10 +109,18 @@
     });
   });
 
-  $testConnectionButton.addEventListener('click', () => {
-    vscode.postMessage({
-      type: 'Connection.testConnection',
-      url: $connectionURL.value,
-    });
+  $testConnectionButton.addEventListener('click', async () => {
+    const url = $connectionURL.value;
+    try {
+      const result = await fetch(url + '/metadata');
+      if (result.ok) {
+        const json = await result.json();
+        $testConnectionResult.innerText = `Connection successful! Server is running FHIR version ${json['fhirVersion']}.`;
+      } else {
+        $testConnectionResult.innerText = 'Connection failed.';
+      }
+    } catch (e) {
+      $testConnectionResult.innerText = 'Connection failed.';
+    }
   });
 })();
