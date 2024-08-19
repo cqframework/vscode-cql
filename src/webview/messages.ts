@@ -45,17 +45,10 @@ export namespace Messages {
    * Disposes of current Connection Panel
    */
   export const CONNECTION_CANCEL = 'Connection.cancel';
-
-  /**
-   * Tests if a Connection can communicate with a remote FHIR server
-   */
-  export const CONNECTION_TEST = 'Connection.testConnection';
-
   /**
    * Add a Connection
    */
   export const CONNECTION_ADD = 'Connection.add';
-
   /**
    * Edit a Connection
    */
