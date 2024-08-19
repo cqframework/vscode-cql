@@ -136,12 +136,6 @@ export class ConnectionPanel {
             this.dispose();
             break;
           }
-          // TODO
-          case Messages.CONNECTION_TEST: {
-            console.log('Not Implemented');
-
-            break;
-          }
           case Messages.CONNECTION_ADD: {
             this.addConnection(message.name, message.url, message.context);
             break;
@@ -222,28 +216,14 @@ export class ConnectionPanel {
 
     if (mode === 'Add') {
       this._panel.title = 'Add Connection';
-      this._panel.webview.html = this._getHtmlForAddWebview(webview, mode);
+      this._panel.webview.html = this._getHtmlForWebview(webview, 'Add');
     } else if (mode === 'Edit') {
       this._panel.title = 'Edit Connection';
-      this._panel.webview.html = this._getHtmlForEditWebview(webview, mode);
+      this._panel.webview.html = this._getHtmlForWebview(webview, 'Edit');
     }
   }
 
-  private _getHtmlForAddWebview(webview: vscode.Webview, mode: PanelMode) {
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'addConnection.js'),
-    );
-    return this._getHtmlForWebview(webview, scriptUri, mode);
-  }
-
-  private _getHtmlForEditWebview(webview: vscode.Webview, mode: PanelMode) {
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'editConnection.js'),
-    );
-    return this._getHtmlForWebview(webview, scriptUri, mode);
-  }
-
-  private _getHtmlForWebview(webview: vscode.Webview, scriptUri: vscode.Uri, mode: PanelMode) {
+  private _getHtmlForWebview(webview: vscode.Webview, mode: PanelMode) {
     const styleResetUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'reset.css'),
     );
@@ -263,20 +243,14 @@ export class ConnectionPanel {
       modeClass = 'edit';
     }
 
-    // Use a nonce to only allow a specific script to be run.
-    const nonce = getNonce();
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, 'src/webview/connectionPanel.js'),
+    );
 
     return `<!DOCTYPE html>
-			<html lang="en">
+			<html lang="en" data-mode="${modeClass}">
 			<head>
 				<meta charset="UTF-8">
-
-				<!--
-					Use a content security policy to only allow loading styles from our extension directory,
-					and only allow scripts that have a specific nonce.
-					(See the 'webview-sample' extension sample for img-src content security policy examples)
-				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -297,25 +271,15 @@ export class ConnectionPanel {
       <label for="connectionContext">Patient Context</label>
       <input type="text" id="connectionContext" name="connectionContext" placeholder="Enter comma separated Patient IDs"><br><br>
 
-
       <button class="cancel-button">Cancel</button>
       <button class="test-connection-button">Test Connection</button>
+      <p class="test-connection-result"></p>
       <button class="${modeClass}-connection-button">${modeText} Connection</button>
-        
 
-				<script nonce="${nonce}" src="${scriptUri}"></script>
+			<script src="${scriptUri}"></script>
 			</body>
 			</html>`;
   }
-}
-
-function getNonce() {
-  let text = '';
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
 }
 
 function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
