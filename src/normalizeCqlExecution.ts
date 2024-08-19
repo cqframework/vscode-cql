@@ -8,32 +8,35 @@ export async function normalizeCqlExecution(uri: Uri, type: 'file' | 'expression
   if (isCqlFile && type === 'file') {
     operationArgs = buildParameters(uri, undefined);
   } else if (isCqlFile && type === 'expression') {
-    let cursorPosition = window.activeTextEditor!.selection.active;
     // For now using parsing the definition here, but ideally should be communicating with the Language Server
     // Could try something like https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_selectionRange after grabbing the start and end positions of a selection
     // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_signatureHelp *Definition Signature???*
-    const definitionStatementRegex = new RegExp('(?<=\\bdefine\\s*"\\s*)([^"]+)(?="\\s*:)');
+    let cursorPosition = window.activeTextEditor!.selection.active;
     let line = window.activeTextEditor!.document.lineAt(cursorPosition).text;
-    // duplicating for some reason, but for now only a single definition anyways
-    let definitionMatch = line.match(definitionStatementRegex);
-    if (!definitionMatch || !definitionMatch.length) {
+
+    let definitionName = '';
+    const defineIndex = line.indexOf('define');
+    if (defineIndex !== -1) {
+      const startIndex = line.indexOf('"', defineIndex) + 1;
+      let endIndex = startIndex;
+      while (endIndex < line.length) {
+        if (line[endIndex] === '"' && line[endIndex - 1] !== '\\') {
+          break;
+        }
+        endIndex++;
+      }
+      if (startIndex !== -1 && endIndex !== -1) {
+        definitionName = line.substring(startIndex, endIndex);
+        definitionName = definitionName.replace(/\\"/g, '"');
+      }
+    }
+    if (!definitionName) {
       window.showErrorMessage(
-        'Null return on selected line, for single line execution please select a definition to execute',
-      );
-      return;
-    } else if (definitionMatch?.length == 1) {
-      operationArgs = buildParameters(uri, definitionMatch.at(0));
-    } else if (definitionMatch?.length > 1) {
-      window.showInformationMessage(
-        'Multiple definitions found on a single line, for single line execution please separate define statements by line.',
-      );
-      operationArgs = buildParameters(uri, definitionMatch.at(0));
-    } else {
-      window.showInformationMessage(
-        'No definition found on selected line, for single line execution please select a definition to execute',
+        'No definition found on the selected line. For single line execution, please select a line containing a definition.',
       );
       return;
     }
+    operationArgs = buildParameters(uri, definitionName);
   } else {
     window.showInformationMessage('Internal error.');
     return;
