@@ -8,6 +8,9 @@ export async function normalizeCqlExecution(uri: Uri, type: 'file' | 'expression
   if (isCqlFile && type === 'file') {
     operationArgs = buildParameters(uri, undefined);
   } else if (isCqlFile && type === 'expression') {
+    // For now using parsing the definition here, but ideally should be communicating with the Language Server
+    // Could try something like https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_selectionRange after grabbing the start and end positions of a selection
+    // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_signatureHelp *Definition Signature???*
     let cursorPosition = window.activeTextEditor!.selection.active;
     let line = window.activeTextEditor!.document.lineAt(cursorPosition).text;
 
