@@ -1,3 +1,4 @@
+/*
 import { Uri as vscodeUri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 
 export const Uri = {
@@ -62,3 +63,4 @@ export default {
   env,
   commands,
 };
+*/
