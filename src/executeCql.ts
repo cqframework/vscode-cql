@@ -16,6 +16,7 @@ export async function executeCQL({ operationArgs, testPath, outputPath }: Evalua
   let terminologyMessage = '';
   let testMessage = `Test cases:\n`;
   let foundTest = false;
+  const contextValues: string[] = [];
   for (let i = 0; i < operationArgs?.length!; i++) {
     if (operationArgs![i].startsWith('-lu=')) {
       cqlMessage = `CQL: ${operationArgs![i].substring(4)}`;
@@ -29,7 +30,9 @@ export async function executeCQL({ operationArgs, testPath, outputPath }: Evalua
       testMessage += `${operationArgs![i].substring(4)}`;
     } else if (operationArgs![i].startsWith('-cv=')) {
       foundTest = true;
-      testMessage += ` - ${operationArgs![i].substring(4)} \n`;
+      const contextValue = operationArgs![i].substring(4);
+      testMessage += ` - ${contextValue} \n`;
+      contextValues.push(contextValue);
     }
   }
 
@@ -52,9 +55,44 @@ export async function executeCQL({ operationArgs, testPath, outputPath }: Evalua
   );
   const endExecution = Date.now();
 
-  await insertLineAtEnd(textEditor, result!);
+  const expression = operationArgs?.find(arg => arg.startsWith('-e='))?.replace('-e=', '');
+  await insertLineAtEnd(textEditor, attemptInterleave(expression, contextValues, result || ''));
+
   await insertLineAtEnd(
     textEditor,
     `elapsed: ${((endExecution - startExecution) / 1000).toString()} seconds`,
   );
 }
+
+// Attempt to interleave test case names with result expressions, for better readability.
+// Returns `result` unmodified if unable to interleave.
+const attemptInterleave = (
+  expression: string | undefined,
+  contextValues: string[],
+  result: string,
+): string => {
+  if (!expression) {
+    return result;
+  }
+
+  const resultLines = result.split('\n');
+  if (resultLines.length < contextValues.length) {
+    return result;
+  }
+
+  try {
+    return contextValues
+      .map((val, i) => {
+        const resultLine = resultLines[i * 2];
+        if (!resultLine?.startsWith(expression)) {
+          console.log(`Line ${i} is ${resultLines[i]}`);
+          throw new Error();
+        }
+
+        return `${val}:\n${resultLine}\n`;
+      })
+      .join('\n');
+  } catch (e) {
+    return result;
+  }
+};
