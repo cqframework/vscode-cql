@@ -1,72 +1,94 @@
+import * as assert from 'assert';
+import * as vscode from 'vscode';
 import { ConnectionManager, Context } from '../../connectionManager';
 
-export function connectionManagerTester(manager: ConnectionManager): void {
-  console.log('Testing Connection Manager');
+suite('Connection Manager Test', () => {
+  test('Connection Manager -- should be present', async function () {
+    this.timeout(50000);
+    const extension = vscode.extensions.getExtension('cqframework.cql'); // as unknown as vscode.ExtensionContext;
+    if (!extension?.isActive) {
+      await extension?.activate();
+    }
+    ConnectionManager._initialize(extension?.activate() as unknown as vscode.ExtensionContext);
 
-  console.log('Testing Adding a Connection');
-  manager.upsertConnection({
-    name: '123-connection',
-    endpoint: 'http://smilecdr/fhir',
-    contexts: {
-      'Patient/test': {
-        resourceID: 'test',
-        resourceType: 'Patient',
-      },
-    },
+    assert.ok(ConnectionManager.getManager() !== undefined);
   });
 
-  console.log('Testing Current Connection');
-  let currentConnection = manager.getCurrentConnection();
-  console.log(currentConnection);
-
-  console.log('Test Setting Current Connection');
-  manager.setCurrentConnection('123-connection');
-  console.log('Testing Current Connection');
-  currentConnection = manager.getCurrentConnection();
-  console.log(currentConnection);
-
-  console.log('Testing Add Context');
-  let newContext: Context = {
-    resourceID: 'test-2',
-    resourceType: 'Patient',
-    resourceDisplay: 'A Test Patient',
-  };
-  manager.upsertContext(manager.getCurrentConnection()?.name as string, newContext);
-
-  console.log('Gathering All Connections');
-  console.log(manager.getAllConnections());
-
-  console.log('Adding Multiple Connections');
-  manager.upsertConnection({
-    name: 'connection-2',
-    endpoint: 'http://smilecdr/fhir',
-    contexts: {
-      'Patient/test-2': {
-        resourceID: 'test-2',
-        resourceType: 'Patient',
+  test('Connection Manager -- Add Test Connection', () => {
+    ConnectionManager.getManager().upsertConnection({
+      name: '123-connection',
+      endpoint: 'http://smilecdr/fhir',
+      contexts: {
+        'Patient/test': {
+          resourceID: 'test',
+          resourceType: 'Patient',
+        },
       },
-    },
+    });
+    assert.ok(ConnectionManager.getManager().getAllConnections()['123-connection'] !== undefined);
   });
 
-  manager.upsertConnection({
-    name: 'connection-3',
-    endpoint: 'http://smilecdr/fhir',
-    contexts: {
-      'Patient/test-3': {
-        resourceID: 'test-3',
-        resourceType: 'Patient',
-      },
-    },
+  test('Connection Manager -- Current Connection', () => {
+    ConnectionManager.getManager().setCurrentConnection('123-connection');
+    assert.ok(ConnectionManager.getManager().getCurrentConnection()?.name === '123-connection');
   });
 
-  console.log('Gathering All Connections');
-  console.log(manager.getAllConnections());
+  test('Connection Manager -- Add Context', () => {
+    let newContext: Context = {
+      resourceID: 'test-add-context',
+      resourceType: 'Patient',
+      resourceDisplay: 'A Test Patient',
+    };
 
-  console.log('Testing Delete Connection');
-  manager.deleteConnection('123-connection');
+    ConnectionManager.getManager().upsertContext(
+      ConnectionManager.getManager().getCurrentConnection()?.name as string,
+      newContext,
+    );
 
-  console.log('Gathering All Connections');
-  console.log(manager.getAllConnections());
+    assert.ok(
+      ConnectionManager.getManager().getCurrentConnection()?.contexts['Patient/test-add-context']
+        .resourceID === 'test-add-context',
+    );
+  });
 
-  console.log('End of Connection Manager Testing');
-}
+  test('Connection Manager -- Multiple Connections', () => {
+    ConnectionManager.getManager().upsertConnection({
+      name: 'connection-2',
+      endpoint: 'http://smilecdr/fhir',
+      contexts: {
+        'Patient/test-2': {
+          resourceID: 'test-2',
+          resourceType: 'Patient',
+        },
+      },
+    });
+
+    ConnectionManager.getManager().upsertConnection({
+      name: 'connection-3',
+      endpoint: 'http://smilecdr/fhir',
+      contexts: {
+        'Patient/test-3': {
+          resourceID: 'test-3',
+          resourceType: 'Patient',
+        },
+      },
+    });
+
+    console.log(ConnectionManager.getManager().getAllConnections());
+
+    assert.ok(ConnectionManager.getManager().getAllConnections()['123-connection'] !== undefined);
+    assert.ok(ConnectionManager.getManager().getAllConnections()['connection-2'] !== undefined);
+    assert.ok(ConnectionManager.getManager().getAllConnections()['connection-3'] !== undefined);
+    assert.ok(
+      ConnectionManager.getManager().getAllConnections()['not-a-real-connection'] === undefined,
+    );
+  });
+
+  test('Connection Manager -- Testing Delete Connection', () => {
+    assert.ok(ConnectionManager.getManager().getAllConnections()['123-connection'] !== undefined);
+
+    ConnectionManager.getManager().deleteConnection('123-connection');
+
+    assert.ok(ConnectionManager.getManager().getAllConnections()['123-connection'] === undefined);
+  });
+});
