@@ -1,0 +1,15 @@
+{
+  "resourceType": "Patient",
+  "id": "simple-test",
+  "active": true,
+  "name": [
+    {
+      "use": "official",
+      "family": "Bottel",
+      "given": ["Blenda"]
+    }
+  ],
+  "gender": "female",
+  "birthDate": "1989-05-12",
+  "deceasedBoolean": false
+}

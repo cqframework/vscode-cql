@@ -1,0 +1,432 @@
+{
+  "resourceType": "ValueSet",
+  "id": "example-v2-0112-valueset",
+  "meta": {
+    "profile": [ "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-shareablevalueset", "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-publishablevalueset", "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-executablevalueset" ]
+  },
+  "extension": [ {
+    "url": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-knowledgeCapability",
+    "valueCode": "shareable"
+  }, {
+    "url": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-knowledgeRepresentationLevel",
+    "valueCode": "narrative"
+  }, {
+    "url": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-knowledgeCapability",
+    "valueCode": "publishable"
+  }, {
+    "url": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-knowledgeCapability",
+    "valueCode": "executable"
+  }, {
+    "url": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-knowledgeRepresentationLevel",
+    "valueCode": "executable"
+  }, {
+    "url": "http://hl7.org/fhir/uv/cpg/StructureDefinition/cpg-usageWarning",
+    "valueString": "This value set contains a point-in-time expansion enumerating the codes that meet the value set intent. As new versions of the code systems used by the value set are released, the contents of this expansion will need to be updated to incorporate newly defined codes that meet the value set intent. Before, and periodically during production use, the value set expansion contents SHOULD be updated. The value set expansion specifies the timestamp when the expansion was produced, SHOULD contain the parameters used for the expansion, and SHALL contain the codes that are obtained by evaluating the value set definition. If this is ONLY an executable value set, a distributable definition of the value set must be obtained to compute the updated expansion."
+  } ],
+  "url": "http://example.org/ValueSet/v2-0112",
+  "version": "20231114",
+  "title": "V2 Discharge Disposition ValueSet",
+  "status": "active",
+  "experimental": false,
+  "publisher": "Vituity",
+  "expansion": {
+    "timestamp": "2023-11-14T16:22:59-05:00",
+    "contains": [ {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "01",
+      "display": "Discharged to home or self-care (routine discharge)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "02",
+      "display": "Discharged/transferred to a short-term general hospital for inpatient care"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "03",
+      "display": "Discharged/transferred to skilled nursing facility (SNF) with Medicare certification"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "04",
+      "display": "Discharged/transferred to a facility that provides custodial or supportive care"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "05",
+      "display": "Discharged/transferred to a designated cancer center or children's hospital"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "06",
+      "display": "Discharged/transferred to home under care of organized home health service organization in anticipation of covered skilled care"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "07",
+      "display": "Left against medical advice or discontinued care"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "08",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "09",
+      "display": "Admitted as an inpatient to this hospital"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "10",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "11",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "12",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "13",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "14",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "15",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "16",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "17",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "18",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "19",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "20",
+      "display": "Expired"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "21",
+      "display": "Discharged/transferred to court/law enforcement"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "22",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "23",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "24",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "25",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "26",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "27",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "28",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "29",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "30",
+      "display": "Still patient"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "31",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "32",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "33",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "34",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "35",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "36",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "37",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "38",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "39",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "40",
+      "display": "Expired at home"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "41",
+      "display": "Expired in a medical facility (e.g., hospital, SNF, ICF, or free-standing hospice)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "42",
+      "display": "Expired - place unknown"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "43",
+      "display": "Discharged/transferred to a federal health care facility"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "44",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "45",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "46",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "47",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "48",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "49",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "50",
+      "display": "Hospice - home"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "51",
+      "display": "Hospice - medical facility (certified) providing hospice level of care"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "52",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "53",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "54",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "55",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "56",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "57",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "58",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "59",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "60",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "61",
+      "display": "Discharged/transferred to a hospital-based Medicare approved swing bed"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "62",
+      "display": "Discharged/transferred to an inpatient rehabilitation facility (IRF) including rehabilitation distinct part units of a hospital"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "63",
+      "display": "Discharged/transferred to a Medicare certified long term care hospital (LTCH)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "64",
+      "display": "Discharged/transferred to a nursing facility certified under Medicaid but not certified under Medicare"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "65",
+      "display": "Discharged/transferred to a psychiatric hospital or psychiatric distinct part unit of a hospital"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "66",
+      "display": "Discharged/transferred to a critical access hospital (CAH)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "67",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "68",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "69",
+      "display": "Discharged/transferred to a designated disaster alternate care site (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "70",
+      "display": "Discharged/transferred to another type of health care institution not defined elsewhere in this code list"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "71",
+      "display": "Discontinued 4/1/03"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "72",
+      "display": "Discontinued 4/1/03"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "73",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "74",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "75",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "76",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "77",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "78",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "79",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "80",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "81",
+      "display": "Discharged to home or self-care with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "82",
+      "display": "Discharged/transferred to a short-term general hospital for inpatient care with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "83",
+      "display": "Discharged/transferred to a skilled nursing facility (SNF) with Medicare certification with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "84",
+      "display": "Discharged/transferred to a facility that provides custodial or supportive care with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "85",
+      "display": "Discharged/transferred to a designated cancer center or children's hospital with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "86",
+      "display": "Discharged/transferred to home under care of organized home health service organization in anticipation of covered skilled care with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "87",
+      "display": "Discharged/transferred to court/law enforcement with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "88",
+      "display": "Discharged/transferred to a federal health care facility with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "89",
+      "display": "Discharged/transferred to a hospital-based Medicare approved swing bed with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "90",
+      "display": "Discharged/transferred to an inpatient rehabilitation facility (IRF) including rehabilitation distinct part units of a hospital with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "91",
+      "display": "Discharged/transferred to a Medicare certified long term care hospital (LTCH) with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "92",
+      "display": "Discharged/transferred to a nursing facility certified under Medicaid but not certified under Medicare with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "93",
+      "display": "Discharged/transferred to a psychiatric hospital or psychiatric distinct part unit of a hospital with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "94",
+      "display": "Discharged/transferred to a critical access hospital (CAH) with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "95",
+      "display": "Discharged/transferred to another type of health care institution not defined elsewhere in this code list with a planned acute care hospital inpatient readmission (effective 10/1/13)"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "96",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "97",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "98",
+      "display": "Reserved for national assignment"
+    }, {
+      "system": "http://example.org/CodeSystem/v2-0112",
+      "code": "99",
+      "display": "Reserved for national assignment"
+    } ]
+  }
+}
