@@ -1,6 +1,11 @@
 {
   "resourceType": "Encounter",
   "id": "simple-test-encounter",
+  "meta" : {
+    "profile" : [
+      "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-encounter"
+    ]
+  },
   "status": "finished",
   "class": {
     "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
@@ -11,19 +16,14 @@
     {
       "coding": [
         {
-          "system": "http://www.ama-assn.org/go/cpt",
-          "version": "2.0.0",
-          "code": "99203",
-          "display": "Office or other outpatient visit for the evaluation and management of a new patient, which requires a medically appropriate history and/or examination and low level of medical decision making. When using time for code selection, 30-44 minutes of total time is spent on the date of the encounter"
+          "system": "http://example.org/CodeSystem/v2-0112",
+          "code": "01",
+          "display": "Discharged to home or self-care (routine discharge)"
         }
       ]
     }
   ],
   "subject": {
     "reference": "Patient/simple-test"
-  },
-  "period": {
-    "start": "2024-01-07T10:00:00-07:00",
-    "end": "2024-01-07T10:30:00-07:00"
   }
 }
