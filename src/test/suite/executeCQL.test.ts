@@ -17,6 +17,10 @@ suite('executeCQL test', () => {
     }
   });
 
+  suiteTeardown(() => {
+    disposable?.dispose();
+  });
+
   let disposable: Disposable | undefined = undefined;
   setup(() => {
     disposable?.dispose();
