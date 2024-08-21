@@ -170,7 +170,7 @@ export class ConnectionPanel {
     }
   }
 
-  public addConnection(name: string, url: string, context: string) {
+  public createConnection(name: string, url: string, context: string) {
     if (name !== '') {
       let aConnection: Connection = {
         name: name,
@@ -190,6 +190,12 @@ export class ConnectionPanel {
           resourceType: 'Patient',
         });
       });
+    }
+  }
+
+  public addConnection(name: string, url: string, context: string) {
+    if (name !== '') {
+      this.createConnection(name, url, context);
 
       ConnectionPanel.getContext().globalState.update(
         Storage.STORAGE_CONNECTIONS,
@@ -208,7 +214,30 @@ export class ConnectionPanel {
     if (oldName !== name) {
       ConnectionManager.getManager().deleteConnection(oldName);
     }
-    this.addConnection(name, url, context);
+
+    if (name !== '') {
+      this.createConnection(name, url, context);
+
+      ConnectionPanel.getContext().globalState.update(
+        Storage.STORAGE_CONNECTIONS,
+        ConnectionManager.getManager().getAllConnections(),
+      );
+
+      if (ConnectionManager.getManager().getCurrentConnection()?.name === oldName) {
+        ConnectionManager.getManager().setCurrentConnection(name);
+
+        ConnectionsViewProvider.getContext().globalState.update(
+          Storage.STORAGE_CURRENT_CONNECTION,
+          ConnectionManager.getManager().getCurrentConnection(),
+        );
+      }
+
+      this._sidebar?.getView()?.webview.postMessage({ type: Messages.CONNECTION_REFRESH });
+    }
+
+    if (this._panel) {
+      this.dispose();
+    }
   }
 
   _update(mode: PanelMode) {

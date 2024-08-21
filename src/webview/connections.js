@@ -173,7 +173,6 @@
    * @param {Connection} currentConnection
    */
   function createConnectionsView(connections, currentConnection) {
-    console.log('Connections is ' + connections);
     updateConnectionList(connections, currentConnection);
   }
 })();
