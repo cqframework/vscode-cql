@@ -1,0 +1,77 @@
+{
+	"info": {
+		"_postman_id": "b9f97516-ca99-45c4-b977-2322267c6a15",
+		"name": "KALM",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7449271"
+	},
+	"item": [
+		{
+			"name": "simple-test-ig",
+			"item": [
+				{
+					"name": "Test bundle (data included)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "file",
+							"file": {
+								"src": "/Users/joshuareynolds/Documents/simple-test-ig/bundles/Test-bundle.json"
+							}
+						},
+						"url": {
+							"raw": "{{localserver}}",
+							"host": [
+								"{{localserver}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patient simple-test",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localserver}}/Patient/simple-test",
+							"host": [
+								"{{localserver}}"
+							],
+							"path": [
+								"Patient",
+								"simple-test"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "simple-test-encounter",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{localserver}}/Encounter/simple-test-encounter",
+							"host": [
+								"{{localserver}}"
+							],
+							"path": [
+								"Encounter",
+								"simple-test-encounter"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "localserver",
+			"value": "http://localhost:8000"
+		}
+	]
+}
