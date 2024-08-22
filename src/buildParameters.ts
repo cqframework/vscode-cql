@@ -161,7 +161,7 @@ function getLocalContexts(testPath: URI, libraryName: string): Map<string, Conte
 
 function getFhirVersion(): string {
   const fhirVersionRegex = /using (FHIR|"FHIR") version '(\d(.|\d)*)'/;
-  const matches = window.activeTextEditor!.document.getText().match(fhirVersionRegex);
+  const matches = window.activeTextEditor?.document.getText().match(fhirVersionRegex);
   if (matches && matches.length > 2) {
     const version = matches[2];
     if (version.startsWith('2')) {

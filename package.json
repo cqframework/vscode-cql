@@ -156,7 +156,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run clean && npm run compile",
+    "pretest": "npm run clean && npm run compile && cp -r src/test/suite/resources dist/test/suite/resources",
     "clean": "rm -rf ./dist",
     "test": "vscode-test"
   },
