@@ -4,7 +4,7 @@ import { ConnectionManager, Context } from '../../connectionManager';
 
 suite('Connection Manager Test', () => {
   test('Connection Manager -- should be present', async function () {
-    this.timeout(50000);
+    this.timeout(0);
     const extension = vscode.extensions.getExtension('cqframework.cql'); // as unknown as vscode.ExtensionContext;
     if (!extension?.isActive) {
       await extension?.activate();

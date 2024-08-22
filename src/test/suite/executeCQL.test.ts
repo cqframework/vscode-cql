@@ -98,7 +98,6 @@ suite('executeCQL test', () => {
 
   test('It reads the terminology file', async () => {
     if (!existsSync(TERMINOLOGY_FILE_PATH)) {
-      console.log('Creating file.');
       createFileSync(TERMINOLOGY_FILE_PATH);
     }
     let called = false;
