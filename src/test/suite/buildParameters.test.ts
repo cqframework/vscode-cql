@@ -1,23 +1,42 @@
 import * as assert from 'assert';
 import path from 'path';
-import { window, workspace } from 'vscode';
+import { ExtensionContext, extensions, window, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import { buildParameters } from '../../buildParameters';
 import { ConnectionManager } from '../../connectionManager';
 
+const libraryUrl = path.resolve(__dirname, '../suite/resources/simple-test-ig/input/cql');
+const terminologyUrl = path.resolve(
+  __dirname,
+  '../suite/resources/simple-test-ig/input/vocabulary/valueset',
+);
 suite('buildParameters - Public API Testing', () => {
-  const testWorkspacePath = path.resolve(__dirname, '../resources/simple-test-ig');
+  const testWorkspacePath = path.resolve(__dirname, '../suite/resources/simple-test-ig');
   const testFilePath = path.join(testWorkspacePath, 'input/cql/Test.cql');
-  const connectionManager = ConnectionManager.getManager();
+  let connectionManager = ConnectionManager.getManager();
 
-  suiteSetup(async () => {
-    // workspace.updateWorkspaceFolders(0, 0, { uri: URI.file(testWorkspacePath) });
-    // assert.ok(workspace.workspaceFolders?.length, 'Workspace folder is not open')
+  suiteSetup(async function () {
+    workspace.updateWorkspaceFolders(0, 0, { uri: URI.file(testWorkspacePath) });
+    assert.ok(workspace.workspaceFolders?.length, 'Workspace folder is not open');
     const document = await workspace.openTextDocument(testFilePath);
     await window.showTextDocument(document);
+
+    this.timeout(0);
+    if (connectionManager === undefined) {
+      const extension = extensions.getExtension('cqframework.cql'); // as unknown as vscode.ExtensionContext;
+      if (!extension?.isActive) {
+        await extension?.activate();
+      }
+      ConnectionManager._initialize(extension?.activate() as unknown as ExtensionContext);
+
+      assert.ok(ConnectionManager.getManager() !== undefined);
+
+      ConnectionManager._initialize;
+      connectionManager = ConnectionManager.getManager();
+    }
   });
 
-  beforeEach(async () => {
+  setup(async () => {
     // resetting connections.
     connectionManager.upsertConnection({
       name: 'Local',
@@ -71,21 +90,13 @@ suite('buildParameters - Public API Testing', () => {
     assert.ok(params.operationArgs?.includes('cql'));
     assert.ok(params.operationArgs?.includes('-fv=R4'));
     assert.ok(params.operationArgs?.includes('-ln=Test'));
-    assert.ok(
-      params.operationArgs?.includes(
-        `-lu=file://${path.resolve(__dirname, '../resources/simple-test-ig/input/cql')}`,
-      ),
-    );
+    assert.ok(params.operationArgs?.includes(`-lu=file://${libraryUrl}`));
     assert.ok(params.operationArgs?.includes('-e=Test'));
-    assert.ok(
-      params.operationArgs?.includes(
-        `-t=file://${path.resolve(__dirname, '../resources/simple-test-ig/input/vocabulary/valueset')}`,
-      ),
-    );
+    assert.ok(params.operationArgs?.includes(`-t=file://${terminologyUrl}`));
     assert.ok(params.operationArgs?.includes('-m=FHIR'));
     assert.ok(
       params.operationArgs?.includes(
-        `-mu=file://${path.resolve(__dirname, '../resources/simple-test-ig/input/tests/Test/simple-test')}`,
+        `-mu=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/tests/Test/simple-test')}`,
       ),
     );
     assert.ok(params.operationArgs?.includes('-cv=simple-test'));
@@ -105,17 +116,17 @@ suite('buildParameters - Public API Testing', () => {
     assert.ok(params.operationArgs?.includes('-ln=Test'));
     assert.ok(
       params.operationArgs?.includes(
-        `-lu=file://${path.resolve(__dirname, '../resources/simple-test-ig/input/cql')}`,
+        `-lu=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/cql')}`,
       ),
     );
     assert.ok(params.operationArgs?.includes('-e=Test'));
     assert.ok(
       params.operationArgs?.includes(
-        `-t=file://${path.resolve(__dirname, '../resources/simple-test-ig/input/vocabulary/valueset')}`,
+        `-t=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/vocabulary/valueset')}`,
       ),
     );
     assert.ok(params.operationArgs?.includes('-m=FHIR'));
-    assert.ok(params.operationArgs?.includes('-mu=http://localhost:8000/'));
+    assert.ok(params.operationArgs?.includes('-mu=http://localhost:8000'));
     assert.ok(params.operationArgs?.includes('-cv=simple-test'));
     assert.ok(params.outputPath?.fsPath.includes('results/Test.txt'));
     assert.ok(params.testPath?.fsPath.includes('input/tests'));
@@ -137,17 +148,17 @@ suite('buildParameters - Public API Testing', () => {
     assert.ok(params.operationArgs?.includes('-ln=Test'));
     assert.ok(
       params.operationArgs?.includes(
-        `-lu=file://${path.resolve(__dirname, '../resources/simple-test-ig/input/cql')}`,
+        `-lu=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/cql')}`,
       ),
     );
     assert.ok(params.operationArgs?.includes('-e=Test'));
     assert.ok(
       params.operationArgs?.includes(
-        `-t=file://${path.resolve(__dirname, '../resources/simple-test-ig/input/vocabulary/valueset')}`,
+        `-t=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/vocabulary/valueset')}`,
       ),
     );
     assert.ok(params.operationArgs?.includes('-m=FHIR'));
-    assert.ok(params.operationArgs?.includes('-mu=http://localhost:8000/'));
+    assert.ok(params.operationArgs?.includes('-mu=http://localhost:8000'));
     assert.ok(params.operationArgs?.includes('-cv=simple-test'));
     assert.ok(params.operationArgs?.includes('-cv=simple-test-2'));
     assert.ok(params.outputPath?.fsPath.includes('results/Test.txt'));
