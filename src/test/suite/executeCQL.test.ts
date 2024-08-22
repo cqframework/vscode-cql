@@ -3,12 +3,13 @@ import type { Disposable } from 'vscode';
 import { commands, Uri, window } from 'vscode';
 
 import { existsSync } from 'fs';
-import { createFileSync } from 'fs-extra';
+import { createFileSync, removeSync } from 'fs-extra';
 import { join } from 'path';
 import { Commands } from '../../commands';
 import { executeCQL } from '../../executeCql';
 
 const OUT_FILE_PATH = join(__dirname, 'out.txt');
+const TERMINOLOGY_FILE_PATH = join(__dirname, 'terminology.txt');
 
 suite('executeCQL test', () => {
   suiteSetup(() => {
@@ -19,6 +20,9 @@ suite('executeCQL test', () => {
 
   suiteTeardown(() => {
     disposable?.dispose();
+    if (existsSync(OUT_FILE_PATH)) {
+      removeSync(OUT_FILE_PATH);
+    }
   });
 
   let disposable: Disposable | undefined = undefined;
@@ -48,7 +52,7 @@ suite('executeCQL test', () => {
       return 'Result=Result';
     });
     await executeCQL({
-      operationArgs: ['cql', '-mu=fake/test/path'],
+      operationArgs: ['cql', '-mu=fake/model/path'],
       outputPath: Uri.file(join(__dirname, 'out.txt')),
       testPath: Uri.file(''),
     });
@@ -72,5 +76,86 @@ suite('executeCQL test', () => {
     assert.ok(resultText);
     assert.ok(resultText.includes('Result=Result'));
     assert.ok(resultText.includes('No data found at path'));
+  });
+
+  test('It prints a message with the library URL', async () => {
+    let called = false;
+    disposable = commands.registerCommand(Commands.EXECUTE_WORKSPACE_COMMAND, (...args) => {
+      called = true;
+      return 'Result=Result';
+    });
+    await executeCQL({
+      operationArgs: ['cql', '-lu=fake/library/path', '-mu=fake/model/path'],
+      outputPath: Uri.file(join(__dirname, 'out.txt')),
+      testPath: Uri.file(''),
+    });
+    assert.ok(called);
+    const resultText = window.activeTextEditor?.document.getText()?.trim();
+    assert.ok(resultText);
+    assert.ok(resultText.includes('Result=Result'));
+    assert.ok(resultText.includes('CQL: fake/library/path'));
+  });
+
+  test('It reads the terminology file', async () => {
+    if (!existsSync(TERMINOLOGY_FILE_PATH)) {
+      console.log('Creating file.');
+      createFileSync(TERMINOLOGY_FILE_PATH);
+    }
+    let called = false;
+    disposable = commands.registerCommand(Commands.EXECUTE_WORKSPACE_COMMAND, (...args) => {
+      called = true;
+      return 'Result=Result';
+    });
+    await executeCQL({
+      operationArgs: ['cql', '-mu=fake/model/path', `-t=${TERMINOLOGY_FILE_PATH}`],
+      outputPath: Uri.file(join(__dirname, 'out.txt')),
+      testPath: Uri.file(''),
+    });
+    assert.ok(called);
+    const resultText = window.activeTextEditor?.document.getText()?.trim();
+    assert.ok(resultText);
+    assert.ok(resultText.includes('Result=Result'));
+    assert.ok(resultText.includes(`Terminology: ${TERMINOLOGY_FILE_PATH}`));
+    removeSync(TERMINOLOGY_FILE_PATH);
+  });
+
+  test('It writes a warning if terminology is not found, but still executes', async () => {
+    console.log(existsSync(TERMINOLOGY_FILE_PATH));
+    let called = false;
+    disposable = commands.registerCommand(Commands.EXECUTE_WORKSPACE_COMMAND, (...args) => {
+      called = true;
+      return 'Result=Result';
+    });
+    await executeCQL({
+      operationArgs: ['cql', '-mu=fake/model/path', `-t=${TERMINOLOGY_FILE_PATH}`],
+      outputPath: Uri.file(join(__dirname, 'out.txt')),
+      testPath: Uri.file(''),
+    });
+    assert.ok(called);
+    const resultText = window.activeTextEditor?.document.getText()?.trim();
+    assert.ok(resultText);
+    assert.ok(resultText.includes('Result=Result'));
+    assert.ok(resultText.includes(`No terminology found at ${TERMINOLOGY_FILE_PATH}`));
+  });
+
+  test('It interleaves context values with results', async () => {
+    let called = false;
+    disposable = commands.registerCommand(Commands.EXECUTE_WORKSPACE_COMMAND, (...args) => {
+      called = true;
+      return 'Result=Result1\n\nResult=Result2\n\nResult=Result3';
+    });
+    await executeCQL({
+      operationArgs: ['cql', '-e=Result', '-cv=Patient-1', '-cv=Patient-2', '-cv=Patient-3'],
+      outputPath: Uri.file(join(__dirname, 'out.txt')),
+      testPath: Uri.file(''),
+    });
+    assert.ok(called);
+    const resultText = window.activeTextEditor?.document.getText()?.trim();
+    assert.ok(resultText);
+    assert.ok(
+      resultText.includes(
+        'Patient-1:\nResult=Result1\n\nPatient-2:\nResult=Result2\n\nPatient-3:\nResult=Result3',
+      ),
+    );
   });
 });
