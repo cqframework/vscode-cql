@@ -3,16 +3,27 @@ import { buildParameters } from './buildParameters';
 import { executeCQL } from './executeCql';
 
 export async function normalizeCqlExecution(uri: Uri, type: 'file' | 'expression') {
-  const isCqlFile = window.activeTextEditor!.document.fileName.endsWith('.cql');
+  const editor = window.activeTextEditor;
+  if (!editor) {
+    window.showInformationMessage('No active text editor found.');
+    return;
+  }
+
+  const isCqlFile = editor.document.fileName.endsWith('.cql');
+  if (!isCqlFile) {
+    window.showInformationMessage('File is not a CQL file, must run execute on a CQL file.');
+    return;
+  }
+
   let operationArgs;
-  if (isCqlFile && type === 'file') {
+  if (type === 'file') {
     operationArgs = buildParameters(uri, undefined);
-  } else if (isCqlFile && type === 'expression') {
+  } else if (type === 'expression') {
     // For now using parsing the definition here, but ideally should be communicating with the Language Server
     // Could try something like https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_selectionRange after grabbing the start and end positions of a selection
     // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_signatureHelp *Definition Signature???*
-    let cursorPosition = window.activeTextEditor!.selection.active;
-    let line = window.activeTextEditor!.document.lineAt(cursorPosition).text;
+    let cursorPosition = editor.selection.active;
+    let line = editor.document.lineAt(cursorPosition).text;
 
     let definitionName = '';
     const defineIndex = line.indexOf('define');
@@ -25,21 +36,23 @@ export async function normalizeCqlExecution(uri: Uri, type: 'file' | 'expression
         }
         endIndex++;
       }
-      if (startIndex !== -1 && endIndex !== -1) {
-        definitionName = line.substring(startIndex, endIndex);
-        definitionName = definitionName.replace(/\\"/g, '"');
+      if (startIndex !== -1 && endIndex > startIndex) {
+        definitionName = line.substring(startIndex, endIndex).replace(/\\"/g, '"');
       }
     }
-    if (!definitionName) {
+
+    if (!definitionName || definitionName === '') {
       window.showErrorMessage(
         'No definition found on the selected line. For single line execution, please select a line containing a definition.',
       );
       return;
     }
+
     operationArgs = buildParameters(uri, definitionName);
   } else {
     window.showInformationMessage('Internal error.');
     return;
   }
+
   executeCQL(operationArgs);
 }
