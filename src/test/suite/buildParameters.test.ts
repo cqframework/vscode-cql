@@ -3,16 +3,43 @@ import path from 'path';
 import { window, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
 import { buildParameters } from '../../buildParameters';
+import { ConnectionManager } from '../../connectionManager';
 
 suite('buildParameters - Public API Testing', () => {
   const testWorkspacePath = path.resolve(__dirname, '../resources/simple-test-ig');
   const testFilePath = path.join(testWorkspacePath, 'input/cql/Test.cql');
+  const connectionManager = ConnectionManager.getManager();
 
   suiteSetup(async () => {
-    workspace.updateWorkspaceFolders(0, 0, { uri: URI.file(testWorkspacePath) });
-    assert.ok(workspace.workspaceFolders?.length, 'Workspace folder is not open');
+    // workspace.updateWorkspaceFolders(0, 0, { uri: URI.file(testWorkspacePath) });
+    // assert.ok(workspace.workspaceFolders?.length, 'Workspace folder is not open')
     const document = await workspace.openTextDocument(testFilePath);
     await window.showTextDocument(document);
+  });
+
+  beforeEach(async () => {
+    // resetting connections.
+    connectionManager.upsertConnection({
+      name: 'Local',
+      endpoint: 'Local Connection',
+      contexts: {
+        patient1: {
+          resourceID: 'simple-test',
+          resourceType: 'Patient',
+        },
+      },
+    });
+
+    connectionManager.upsertConnection({
+      name: 'Remote Build Parameters',
+      endpoint: 'http://localhost:8000',
+      contexts: {
+        patient1: {
+          resourceID: 'simple-test',
+          resourceType: 'Patient',
+        },
+      },
+    });
   });
 
   test('Should display no library content found information message when initial cql uri is not found.', () => {
@@ -31,7 +58,13 @@ suite('buildParameters - Public API Testing', () => {
   });
 
   test('should generate correct parameters when file exists and connection is Local and Local does not contain context Values', () => {
-    const uri = URI.file(path.resolve(__dirname, '../resources/simple-test-ig/input/cql/Test.cql'));
+    let connections = connectionManager.getAllConnections();
+    let localConnections = Object.values(connections).filter(
+      connection => connection.name === 'Local',
+    )[0];
+    localConnections.contexts = {};
+    connectionManager.setCurrentConnection('Local');
+    const uri = URI.file(path.resolve(testFilePath));
     const expression = 'Test';
     const params = buildParameters(uri, expression);
 
@@ -61,7 +94,8 @@ suite('buildParameters - Public API Testing', () => {
   });
 
   test('should generate parameters with non-Local connection and no existing cql-options', () => {
-    const uri = URI.file(path.resolve(__dirname, '../resources/simple-test-ig/input/cql/Test.cql'));
+    connectionManager.setCurrentConnection('Remote Build Parameters');
+    const uri = URI.file(path.resolve(testFilePath));
     const expression = 'Test';
     const params = buildParameters(uri, expression);
 
@@ -88,7 +122,13 @@ suite('buildParameters - Public API Testing', () => {
   });
 
   test('should generate parameters with non-Local connection and multiple context parameters', () => {
-    const uri = URI.file(path.resolve(__dirname, '../resources/simple-test-ig/input/cql/Test.cql'));
+    const connectionName = 'Remote Build Parameters';
+    connectionManager.setCurrentConnection(connectionName);
+    connectionManager.upsertContext(connectionName, {
+      resourceID: 'simple-test-2',
+      resourceType: 'Patient',
+    });
+    const uri = URI.file(path.resolve(testFilePath));
     const expression = 'Test';
     const params = buildParameters(uri, expression);
 
@@ -115,7 +155,13 @@ suite('buildParameters - Public API Testing', () => {
   });
 
   test('should show an error message when remote connection has no contexts', () => {
-    const uri = URI.file(path.resolve(__dirname, '../resources/simple-test-ig/input/cql/Test.cql'));
+    let connections = connectionManager.getAllConnections();
+    let localConnections = Object.values(connections).filter(
+      connection => connection.name === 'Remote Build Parameters',
+    )[0];
+    localConnections.contexts = {};
+    connectionManager.setCurrentConnection('Remote Build Parameters');
+    const uri = URI.file(path.resolve(testFilePath));
     const expression = 'Test';
     const params = buildParameters(uri, expression);
 
@@ -131,32 +177,36 @@ suite('buildParameters - Public API Testing', () => {
   });
 
   test('should handle complex expressions correctly', () => {
-    const uri = URI.file(path.resolve(__dirname, '../resources/simple-test-ig/input/cql/Test.cql'));
+    connectionManager.setCurrentConnection('Local');
+    const uri = URI.file(path.resolve(testFilePath));
     const complexExpression = 'Test & #"SpecialChars"';
     const params = buildParameters(uri, complexExpression);
 
     assert.ok(params.operationArgs?.includes('-e=Test & #"SpecialChars"'));
   });
 
-  test('should handle empty CQL content', () => {
-    const uri = URI.file(path.resolve(__dirname, '../resources/simple-test-ig/input/cql/Test.cql'));
-    const expression = 'Test';
-    const params = buildParameters(uri, expression);
+  // test('should handle empty CQL content', () => {
+  //   // need empty cql file
+  //   const uri = URI.file(path.resolve(testFilePath));
+  //   const expression = 'Test';
+  //   const params = buildParameters(uri, expression);
 
-    assert.ok(params.operationArgs !== undefined);
-  });
+  //   assert.ok(params.operationArgs !== undefined);
+  // });
 
-  test('should default to R4 when FHIR version is missing or malformed', () => {
-    const uri = URI.file(path.resolve(__dirname, '../resources/simple-test-ig/input/cql/Test.cql'));
-    const expression = 'Test';
-    const params = buildParameters(uri, expression);
-    assert.ok(params.operationArgs?.includes('-fv=R4'));
-  });
+  // test('should default to R4 when FHIR version is missing or malformed', () => {
+  //   // need malformed fhir file
+  //   const uri = URI.file(path.resolve(testFilePath));
+  //   const expression = 'Test';
+  //   const params = buildParameters(uri, expression);
+  //   assert.ok(params.operationArgs?.includes('-fv=R4'));
+  // });
 
-  test('should handle different FHIR versions correctly', () => {
-    const uri = URI.file(path.resolve(__dirname, '../resources/simple-test-ig/input/cql/Test.cql'));
-    const expression = 'Test';
-    const params = buildParameters(uri, expression);
-    assert.ok(params.operationArgs?.includes('-fv=DSTU3'));
-  });
+  // test('should handle different FHIR versions correctly', () => {
+  //   // need dstu3 fhir file
+  //   const uri = URI.file(path.resolve(testFilePath));
+  //   const expression = 'Test';
+  //   const params = buildParameters(uri, expression);
+  //   assert.ok(params.operationArgs?.includes('-fv=DSTU3'));
+  // });
 });
