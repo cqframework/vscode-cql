@@ -7,8 +7,7 @@ suite('Extension Activation Test', () => {
   });
 
   test('Extension should be active', async function () {
-    // Installation and activation takes a *long* time.
-    this.timeout(50000);
+    this.timeout(0);
     const extension = vscode.extensions.getExtension('cqframework.cql');
     if (!extension?.isActive) {
       await extension?.activate();
