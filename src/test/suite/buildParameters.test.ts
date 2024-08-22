@@ -10,6 +10,16 @@ const terminologyUrl = path.resolve(
   __dirname,
   '../suite/resources/simple-test-ig/input/vocabulary/valueset',
 );
+const modelUrl = path.resolve(
+  __dirname,
+  '../suite/resources/simple-test-ig/input/tests/Test/simple-test',
+);
+const remoteUrl = 'http://localhost:8000';
+async function showSpecificFile(filePath: string) {
+  const document = await workspace.openTextDocument(filePath);
+  await window.showTextDocument(document);
+}
+
 suite('buildParameters - Public API Testing', () => {
   const testWorkspacePath = path.resolve(__dirname, '../suite/resources/simple-test-ig');
   const testFilePath = path.join(testWorkspacePath, 'input/cql/Test.cql');
@@ -18,8 +28,7 @@ suite('buildParameters - Public API Testing', () => {
   suiteSetup(async function () {
     workspace.updateWorkspaceFolders(0, 0, { uri: URI.file(testWorkspacePath) });
     assert.ok(workspace.workspaceFolders?.length, 'Workspace folder is not open');
-    const document = await workspace.openTextDocument(testFilePath);
-    await window.showTextDocument(document);
+    showSpecificFile(testFilePath);
 
     this.timeout(0);
     if (connectionManager === undefined) {
@@ -51,7 +60,7 @@ suite('buildParameters - Public API Testing', () => {
 
     connectionManager.upsertConnection({
       name: 'Remote Build Parameters',
-      endpoint: 'http://localhost:8000',
+      endpoint: remoteUrl,
       contexts: {
         patient1: {
           resourceID: 'simple-test',
@@ -94,11 +103,7 @@ suite('buildParameters - Public API Testing', () => {
     assert.ok(params.operationArgs?.includes('-e=Test'));
     assert.ok(params.operationArgs?.includes(`-t=file://${terminologyUrl}`));
     assert.ok(params.operationArgs?.includes('-m=FHIR'));
-    assert.ok(
-      params.operationArgs?.includes(
-        `-mu=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/tests/Test/simple-test')}`,
-      ),
-    );
+    assert.ok(params.operationArgs?.includes(`-mu=file://${modelUrl}`));
     assert.ok(params.operationArgs?.includes('-cv=simple-test'));
     assert.ok(params.outputPath?.fsPath.includes('results/Test.txt'));
     assert.ok(params.testPath?.fsPath.includes('input/tests'));
@@ -114,19 +119,11 @@ suite('buildParameters - Public API Testing', () => {
     assert.ok(params.operationArgs?.includes('-fv=R4'));
     assert.ok(!params.operationArgs?.includes('-op='));
     assert.ok(params.operationArgs?.includes('-ln=Test'));
-    assert.ok(
-      params.operationArgs?.includes(
-        `-lu=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/cql')}`,
-      ),
-    );
+    assert.ok(params.operationArgs?.includes(`-lu=file://${libraryUrl}`));
     assert.ok(params.operationArgs?.includes('-e=Test'));
-    assert.ok(
-      params.operationArgs?.includes(
-        `-t=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/vocabulary/valueset')}`,
-      ),
-    );
+    assert.ok(params.operationArgs?.includes(`-t=file://${terminologyUrl}`));
     assert.ok(params.operationArgs?.includes('-m=FHIR'));
-    assert.ok(params.operationArgs?.includes('-mu=http://localhost:8000'));
+    assert.ok(params.operationArgs?.includes(`-mu=${remoteUrl}`));
     assert.ok(params.operationArgs?.includes('-cv=simple-test'));
     assert.ok(params.outputPath?.fsPath.includes('results/Test.txt'));
     assert.ok(params.testPath?.fsPath.includes('input/tests'));
@@ -146,19 +143,11 @@ suite('buildParameters - Public API Testing', () => {
     assert.ok(params.operationArgs?.includes('cql'));
     assert.ok(params.operationArgs?.includes('-fv=R4'));
     assert.ok(params.operationArgs?.includes('-ln=Test'));
-    assert.ok(
-      params.operationArgs?.includes(
-        `-lu=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/cql')}`,
-      ),
-    );
+    assert.ok(params.operationArgs?.includes(`-lu=file://${libraryUrl}`));
     assert.ok(params.operationArgs?.includes('-e=Test'));
-    assert.ok(
-      params.operationArgs?.includes(
-        `-t=file://${path.resolve(__dirname, '../suite/resources/simple-test-ig/input/vocabulary/valueset')}`,
-      ),
-    );
+    assert.ok(params.operationArgs?.includes(`-t=file://${terminologyUrl}`));
     assert.ok(params.operationArgs?.includes('-m=FHIR'));
-    assert.ok(params.operationArgs?.includes('-mu=http://localhost:8000'));
+    assert.ok(params.operationArgs?.includes(`-mu=${remoteUrl}`));
     assert.ok(params.operationArgs?.includes('-cv=simple-test'));
     assert.ok(params.operationArgs?.includes('-cv=simple-test-2'));
     assert.ok(params.outputPath?.fsPath.includes('results/Test.txt'));
@@ -196,28 +185,33 @@ suite('buildParameters - Public API Testing', () => {
     assert.ok(params.operationArgs?.includes('-e=Test & #"SpecialChars"'));
   });
 
-  // test('should handle empty CQL content', () => {
-  //   // need empty cql file
-  //   const uri = URI.file(path.resolve(testFilePath));
-  //   const expression = 'Test';
-  //   const params = buildParameters(uri, expression);
+  test('should handle empty CQL content', () => {
+    // need empty cql file
+    const emptyTestFilePath = path.join(testWorkspacePath, 'input/cql/TestEmpty.cql');
+    const uri = URI.file(path.resolve(emptyTestFilePath));
+    const expression = 'Test';
+    const params = buildParameters(uri, expression);
 
-  //   assert.ok(params.operationArgs !== undefined);
-  // });
+    assert.ok(params.operationArgs !== undefined);
+  });
 
-  // test('should default to R4 when FHIR version is missing or malformed', () => {
-  //   // need malformed fhir file
-  //   const uri = URI.file(path.resolve(testFilePath));
-  //   const expression = 'Test';
-  //   const params = buildParameters(uri, expression);
-  //   assert.ok(params.operationArgs?.includes('-fv=R4'));
-  // });
+  test('should default to R4 when FHIR version is missing or malformed', () => {
+    // need malformed fhir file
+    const fhirMissingTestFilePath = path.join(testWorkspacePath, 'input/cql/TestFhirMissing.cql');
+    const uri = URI.file(path.resolve(fhirMissingTestFilePath));
+    const expression = 'Test';
+    const params = buildParameters(uri, expression);
+    assert.ok(params.operationArgs?.includes('-fv=R4'));
+  });
 
   // test('should handle different FHIR versions correctly', () => {
   //   // need dstu3 fhir file
-  //   const uri = URI.file(path.resolve(testFilePath));
+  //   const dstu3TestFilePath = path.join(testWorkspacePath, 'input/cql/TestDSTU3FHIR.cql');
+  //   const uri = URI.file(path.resolve(dstu3TestFilePath));
   //   const expression = 'Test';
+  //   showSpecificFile(dstu3TestFilePath);
   //   const params = buildParameters(uri, expression);
+  //   assert.equal('blah blah', params.operationArgs);
   //   assert.ok(params.operationArgs?.includes('-fv=DSTU3'));
   // });
 });
