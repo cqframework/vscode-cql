@@ -5,3 +5,5 @@ require('./executeCQL.test');
 require('./extension.test');
 
 require('./connectionManager.test');
+
+require('./buildParameters.test');
