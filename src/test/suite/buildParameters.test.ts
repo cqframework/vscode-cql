@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import path from 'path';
 import { window, workspace } from 'vscode';
-import { URI } from 'vscode-URI';
+import { URI } from 'vscode-uri';
 import { buildParameters } from '../../buildParameters';
 
 suite('buildParameters - Public API Testing', () => {

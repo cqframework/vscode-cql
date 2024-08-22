@@ -60,7 +60,7 @@
     }
   } ],
   "url": "http://hl7.org/fhir/Library/FHIRHelpers",
-  "version": "4.0.1",
+  "version": "1.0.2",
   "name": "FHIRHelpers",
   "type": {
     "coding": [ {

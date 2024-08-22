@@ -2,7 +2,7 @@ library Test version '4.0.1'
 
 using QICore version '4.1.1'
 
-include FHIRHelpers version '4.0.1' called FHIRHelpers
+include FHIRHelpers version '1.0.2' called FHIRHelpers
 
 valueset "V2 Discharge Disposition ValueSet" : 'http://example.org/ValueSet/v2-0112'
 

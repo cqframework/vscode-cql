@@ -86,7 +86,7 @@
           }
         ],
         "url": "http://hl7.org/fhir/Library/FHIRHelpers",
-        "version": "4.0.1",
+        "version": "1.0.2",
         "name": "FHIRHelpers",
         "type": {
           "coding": [
@@ -202,7 +202,7 @@
   }, {
     "type": "depends-on",
     "display": "Library FHIRHelpers",
-    "resource": "http://hl7.org/fhir/Library/FHIRHelpers|4.0.1"
+    "resource": "http://hl7.org/fhir/Library/FHIRHelpers|1.0.2"
   }, {
     "type": "depends-on",
     "display": "Value set V2 Discharge Disposition ValueSet",
