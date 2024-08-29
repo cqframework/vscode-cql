@@ -2,6 +2,7 @@ name: Prettier linting
 
 on:
   pull_request:
+  pull_request_target:
 
 jobs:
   prettier:
