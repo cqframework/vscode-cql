@@ -22,7 +22,7 @@ export type EvaluationParameters = {
  * This function gathers and constructs all the necessary operational arguments for invoking the CQL
  * Language Service CLI. It retrieves and organizes the data points from the local environment,
  * which include CQL files, terminology, and test data, to prepare for evaluation. Currently, only local
- * paths are supported, but the design anticipates potential future support for remote URLs or database
+ * paths are supported(other than remote data), but the design anticipates potential future support for remote URLs or database
  * locations.
  *
  * **Quick Examples:**
