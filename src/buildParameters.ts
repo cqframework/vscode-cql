@@ -1,10 +1,9 @@
-import { glob } from 'glob';
-import { window, workspace } from 'vscode';
-import { URI, Utils } from 'vscode-uri';
-
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
+import { glob } from 'glob';
 import path from 'path';
+import { window, workspace } from 'vscode';
+import { URI, Utils } from 'vscode-uri';
 import { Connection, ConnectionManager, Context } from './connectionManager';
 
 export type EvaluationParameters = {
@@ -13,7 +12,12 @@ export type EvaluationParameters = {
   testPath: URI | undefined;
 };
 
-// Should be working with normalized data
+/**
+ * Builds the parameters required for CQL evaluation.
+ * @param {URI} uri - The URI of the CQL file.
+ * @param {string | undefined} expression - The specific CQL expression to evaluate, if any.
+ * @returns {EvaluationParameters} The parameters required for the CQL evaluation.
+ */
 export function buildParameters(uri: URI, expression: string | undefined): EvaluationParameters {
   if (!fs.existsSync(uri.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
@@ -56,8 +60,6 @@ export function buildParameters(uri: URI, expression: string | undefined): Evalu
     expression,
     terminologyPath,
     connection,
-    // I kind of want to make 'Local' a const that I can share....
-    // not sure, but I already ran into an issue debugging when I changed the check below, but not this one
     contexts:
       contexts != undefined && connection?.name !== 'Local' && Object.values(contexts).length > 0
         ? new Map(Object.entries(contexts).map(([key, context]) => [key, context]))
@@ -73,6 +75,20 @@ export function buildParameters(uri: URI, expression: string | undefined): Evalu
   return evaluationParams;
 }
 
+/**
+ * Generates the command-line arguments required for CQL evaluation.
+ * @param {object} params - The parameters needed to construct the command-line arguments.
+ * @param {string} params.fhirVersion - The FHIR version being used.
+ * @param {URI} params.optionsPath - The path to the CQL options file.
+ * @param {URI} params.libraryDirectory - The directory of the CQL library.
+ * @param {string} params.libraryName - The name of the CQL library.
+ * @param {string | undefined} params.expression - The specific CQL expression to evaluate, if any.
+ * @param {URI} params.terminologyPath - The path to the FHIR terminology.
+ * @param {Connection | undefined} params.connection - The current connection information.
+ * @param {Map<string, Context>} params.contexts - The execution contexts for the evaluation.
+ * @param {string} params.measurementPeriod - The measurement period to be used.
+ * @returns {string[]} The command-line arguments for the CQL evaluation.
+ */
 function getCqlCommandArgs({
   fhirVersion,
   optionsPath,
@@ -117,7 +133,6 @@ function getCqlCommandArgs({
       }
 
       if (connection?.name === 'Local') {
-        // connection.endpoint = projectPath.toString(); Can't use projectPath because Evaluator is not ok with cql-option.json and other files that are not fhir resources.
         modelPath = key;
       }
       if (modelPath) {
@@ -137,6 +152,12 @@ function getCqlCommandArgs({
   return args;
 }
 
+/**
+ * Retrieves the local contexts for CQL evaluation based on the test path.
+ * @param {URI} testPath - The URI of the test directory.
+ * @param {string} libraryName - The name of the CQL library.
+ * @returns {Map<string, Context>} A map of local contexts for CQL evaluation.
+ */
 function getLocalContexts(testPath: URI, libraryName: string): Map<string, Context> {
   let testCases: Map<string, Context> = new Map<string, Context>();
   if (!fs.existsSync(testPath.fsPath)) {
@@ -148,17 +169,19 @@ function getLocalContexts(testPath: URI, libraryName: string): Map<string, Conte
   for (let dir of directories) {
     let cases = fs.readdirSync(dir).filter(d => fs.statSync(path.join(dir, d)).isDirectory());
     for (let c of cases) {
-      // Should really be reading in Patient Resources and getting the ids and everything should be based on a repository like in the evaluator
       testCases.set(URI.file(path.join(dir, c)).toString(), {
         resourceType: 'Patient',
         resourceID: c,
       });
-      // path: URI.file(path.join(dir, c))  For Patient specific directory
     }
   }
   return testCases;
 }
 
+/**
+ * Determines the FHIR version used in the active text editor.
+ * @returns {string} The FHIR version (e.g., 'R4').
+ */
 function getFhirVersion(): string {
   const fhirVersionRegex = /using (FHIR|"FHIR") version '(\d(.|\d)*)'/;
   const matches = window.activeTextEditor?.document.getText().match(fhirVersionRegex);

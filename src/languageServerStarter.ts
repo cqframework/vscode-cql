@@ -1,5 +1,6 @@
 import * as net from 'net';
 import * as path from 'path';
+import { ExtensionContext } from 'vscode';
 import {
   Executable,
   ExecutableOptions,
@@ -9,14 +10,20 @@ import {
 import { logger } from './log';
 import { RequirementsData } from './requirements';
 
-import { ExtensionContext } from 'vscode';
-
 declare const v8debug: any;
 const DEBUG = typeof v8debug === 'object' || startedInDebugMode();
 
 export interface TransportExecutable extends Executable {
   transport: TransportKind;
 }
+
+/**
+ * Prepares the executable command to start the CQL language server.
+ * @param {RequirementsData} requirements - The requirements for the CQL language server, including the Java home and server JAR paths.
+ * @param {ExtensionContext} context - The VS Code extension context.
+ * @param {string} workspacePath - The path to the workspace directory.
+ * @returns {TransportExecutable} The executable configuration, including the command, arguments, and transport method.
+ */
 export function prepareExecutable(
   requirements: RequirementsData,
   context: ExtensionContext,
@@ -34,6 +41,12 @@ export function prepareExecutable(
 
   return executable;
 }
+
+/**
+ * Waits for the server connection on the specified port.
+ * @param {string} port - The port number to listen on for the server connection.
+ * @returns {Thenable<StreamInfo>} A promise that resolves with the StreamInfo when the connection is established.
+ */
 export function awaitServerConnection(port: string): Thenable<StreamInfo> {
   const addr = parseInt(port);
   return new Promise((res, rej) => {
@@ -51,6 +64,13 @@ export function awaitServerConnection(port: string): Thenable<StreamInfo> {
   });
 }
 
+/**
+ * Prepares the command-line arguments to start the CQL language server.
+ * @param {RequirementsData} requirements - The requirements for the CQL language server, including the Java home and server JAR paths.
+ * @param {ExtensionContext} context - The VS Code extension context.
+ * @param {string} workspacePath - The path to the workspace directory.
+ * @returns {string[]} An array of command-line arguments for starting the CQL language server.
+ */
 function prepareParams(
   requirements: RequirementsData,
   context: ExtensionContext,
@@ -75,12 +95,20 @@ function prepareParams(
   return params;
 }
 
+/**
+ * Determines if the process was started in debug mode.
+ * @returns {boolean} `true` if the process was started in debug mode, `false` otherwise.
+ */
 function startedInDebugMode(): boolean {
   const args = (process as any).execArgv as string[];
   return hasDebugFlag(args);
 }
 
-// If vscode is started with a debug flag this enables the java ls debug as well.
+/**
+ * Checks if the provided arguments contain debug flags.
+ * @param {string[]} args - The command-line arguments to check.
+ * @returns {boolean} `true` if the arguments contain debug flags, `false` otherwise.
+ */
 export function hasDebugFlag(args: string[]): boolean {
   if (args) {
     // See https://nodejs.org/en/docs/guides/debugging-getting-started/

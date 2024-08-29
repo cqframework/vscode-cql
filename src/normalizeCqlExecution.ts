@@ -2,7 +2,14 @@ import { Uri, window } from 'vscode';
 import { buildParameters } from './buildParameters';
 import { executeCQL } from './executeCql';
 
-export async function normalizeCqlExecution(uri: Uri, type: 'file' | 'expression') {
+/**
+ * Normalizes the execution of CQL based on the type of operation ('file' or 'expression').
+ *
+ * @param {Uri} uri - The URI of the file or resource.
+ * @param {'file' | 'expression'} type - The type of operation: 'file' for full file execution, 'expression' for single expression execution.
+ * @returns {Promise<void>} A promise that resolves when the execution is complete.
+ */
+export async function normalizeCqlExecution(uri: Uri, type: 'file' | 'expression'): Promise<void> {
   const editor = window.activeTextEditor;
   if (!editor) {
     window.showInformationMessage('No active text editor found.');
@@ -19,9 +26,7 @@ export async function normalizeCqlExecution(uri: Uri, type: 'file' | 'expression
   if (type === 'file') {
     operationArgs = buildParameters(uri, undefined);
   } else if (type === 'expression') {
-    // For now using parsing the definition here, but ideally should be communicating with the Language Server
-    // Could try something like https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_selectionRange after grabbing the start and end positions of a selection
-    // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_signatureHelp *Definition Signature???*
+    // Process the CQL expression based on the cursor position
     let cursorPosition = editor.selection.active;
     let line = editor.document.lineAt(cursorPosition).text;
 

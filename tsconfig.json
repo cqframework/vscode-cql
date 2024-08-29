@@ -12,5 +12,5 @@
     "noImplicitAny": true,
     "checkJs": true
   },
-  "exclude": ["node_modules", ".vscode-test", "dist", "vscode-test.mjs"]
+  "exclude": ["node_modules", ".vscode-test", "dist", "vscode-test.mjs", "docs"]
 }

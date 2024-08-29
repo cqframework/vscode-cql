@@ -1,9 +1,13 @@
+import * as fs from 'fs';
 import { Position, TextEditor, Uri, commands, window, workspace } from 'vscode';
+import { EvaluationParameters } from './buildParameters';
 import { Commands } from './commands';
 
-import * as fs from 'fs';
-import { EvaluationParameters } from './buildParameters';
-
+/**
+ * Inserts a line of text at the end of the document in the given text editor.
+ * @param {TextEditor} textEditor - The text editor where the text should be inserted.
+ * @param {string} text - The text to insert.
+ */
 async function insertLineAtEnd(textEditor: TextEditor, text: string) {
   const document = textEditor.document;
   await textEditor.edit(editBuilder => {
@@ -11,12 +15,18 @@ async function insertLineAtEnd(textEditor: TextEditor, text: string) {
   });
 }
 
+/**
+ * Executes CQL (Clinical Quality Language) based on the provided evaluation parameters.
+ * Outputs results to a text document specified by the evaluation parameters.
+ * @param {EvaluationParameters} evaluationParams - The parameters required for executing CQL.
+ */
 export async function executeCQL({ operationArgs, testPath, outputPath }: EvaluationParameters) {
   let cqlMessage = '';
   let terminologyMessage = '';
   let testMessage = `Test cases:\n`;
   let foundTest = false;
   const contextValues: string[] = [];
+
   for (let i = 0; i < operationArgs?.length!; i++) {
     if (operationArgs![i].startsWith('-lu=')) {
       cqlMessage = `CQL: ${operationArgs![i].substring(4)}`;
@@ -64,8 +74,14 @@ export async function executeCQL({ operationArgs, testPath, outputPath }: Evalua
   );
 }
 
-// Attempt to interleave test case names with result expressions, for better readability.
-// Returns `result` unmodified if unable to interleave.
+/**
+ * Attempts to interleave test case names with result expressions for better readability.
+ * Returns the result unmodified if unable to interleave.
+ * @param {string | undefined} expression - The CQL expression being evaluated.
+ * @param {string[]} contextValues - The context values to interleave with the results.
+ * @param {string} result - The result string to be interleaved.
+ * @returns {string} The interleaved result string, or the original result if interleaving fails.
+ */
 const attemptInterleave = (
   expression: string | undefined,
   contextValues: string[],

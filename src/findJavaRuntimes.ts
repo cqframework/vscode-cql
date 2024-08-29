@@ -2,15 +2,18 @@
 // Licensed under the MIT license.
 
 import * as cp from 'child_process';
+import expandTilde from 'expand-tilde';
 import * as fse from 'fs-extra';
 import _ from 'lodash';
 import * as os from 'os';
 import * as path from 'path';
 import WinReg from 'winreg';
-import expandTilde from 'expand-tilde';
+
+// Platform detection
 const isWindows: boolean = process.platform.indexOf('win') === 0;
 const isMac: boolean = process.platform.indexOf('darwin') === 0;
 const isLinux: boolean = process.platform.indexOf('linux') === 0;
+
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const JAVA_FILENAME = 'java' + (isWindows ? '.exe' : '');
 
@@ -21,7 +24,10 @@ export interface JavaRuntime {
 }
 
 /**
- * return metadata for all installed JDKs.
+ * Return metadata for all installed JDKs.
+ * This function searches for Java installations in common locations,
+ * environment variables, and the Windows Registry (if applicable).
+ * @returns {Promise<JavaRuntime[]>} A promise that resolves with an array of JavaRuntime objects.
  */
 export async function findJavaHomes(): Promise<JavaRuntime[]> {
   const ret: JavaRuntime[] = [];
@@ -50,6 +56,12 @@ export async function findJavaHomes(): Promise<JavaRuntime[]> {
   return ret;
 }
 
+/**
+ * Updates the JDK map with new entries.
+ * @param {Map<string, string[]>} map - The map of JDKs.
+ * @param {string[]} newJdks - The new JDK paths to add.
+ * @param {string} source - The source from which these JDKs were found.
+ */
 function updateJDKs(map: Map<string, string[]>, newJdks: string[], source: string) {
   for (const newJdk of newJdks) {
     const sources = map.get(newJdk);
@@ -61,6 +73,11 @@ function updateJDKs(map: Map<string, string[]>, newJdks: string[], source: strin
   }
 }
 
+/**
+ * Retrieves Java home paths from the specified environment variable.
+ * @param {string} name - The environment variable name.
+ * @returns {Promise<string[]>} A promise that resolves with an array of Java home paths.
+ */
 async function fromEnv(name: string): Promise<string[]> {
   const ret: string[] = [];
   if (process.env[name]) {
@@ -72,6 +89,10 @@ async function fromEnv(name: string): Promise<string[]> {
   return ret;
 }
 
+/**
+ * Retrieves Java home paths from the system PATH.
+ * @returns {Promise<string[]>} A promise that resolves with an array of Java home paths.
+ */
 async function fromPath(): Promise<string[]> {
   const ret: string[] = [];
 
@@ -113,6 +134,10 @@ async function fromPath(): Promise<string[]> {
   }
 }
 
+/**
+ * Retrieves Java home paths from the Windows Registry.
+ * @returns {Promise<string[]>} A promise that resolves with an array of Java home paths.
+ */
 async function fromWindowsRegistry(): Promise<string[]> {
   if (!isWindows) {
     return [];
@@ -190,6 +215,10 @@ async function fromWindowsRegistry(): Promise<string[]> {
   return ret;
 }
 
+/**
+ * Searches for Java installations in common locations on macOS, Windows, and Linux.
+ * @returns {Promise<string[]>} A promise that resolves with an array of Java home paths.
+ */
 async function fromCommonPlaces(): Promise<string[]> {
   const ret: string[] = [];
 
@@ -263,6 +292,12 @@ async function fromCommonPlaces(): Promise<string[]> {
   return ret;
 }
 
+/**
+ * Verifies if the provided path is a valid Java home by checking for the existence of `javac`.
+ * @param {string} raw - The raw path to check.
+ * @param {string} javaFilename - The name of the Java executable (e.g., `javac`).
+ * @returns {Promise<string | undefined>} A promise that resolves with the verified Java home path, or undefined if the path is invalid.
+ */
 export async function verifyJavaHome(
   raw: string,
   javaFilename: string,
@@ -279,7 +314,11 @@ export async function verifyJavaHome(
   return undefined;
 }
 
-// iterate through symbolic links until file is found
+/**
+ * Iterates through symbolic links until the final file is found.
+ * @param {string} file - The file path to check for symbolic links.
+ * @returns {Promise<string>} A promise that resolves with the final file path.
+ */
 async function findLinkedFile(file: string): Promise<string> {
   if (!(await fse.pathExists(file)) || !(await fse.lstat(file)).isSymbolicLink()) {
     return file;
@@ -287,6 +326,11 @@ async function findLinkedFile(file: string): Promise<string> {
   return findLinkedFile(await fse.readlink(file));
 }
 
+/**
+ * Retrieves the Java version from the specified Java home.
+ * @param {string} javaHome - The path to the Java home directory.
+ * @returns {Promise<number | undefined>} A promise that resolves with the Java version number, or undefined if the version could not be determined.
+ */
 export async function getJavaVersion(javaHome: string): Promise<number | undefined> {
   let javaVersion = await checkVersionInReleaseFile(javaHome);
   if (!javaVersion) {
@@ -295,6 +339,11 @@ export async function getJavaVersion(javaHome: string): Promise<number | undefin
   return javaVersion;
 }
 
+/**
+ * Parses the major version number from a Java version string.
+ * @param {string} version - The Java version string.
+ * @returns {number} The major version number.
+ */
 export function parseMajorVersion(version: string): number {
   if (!version) {
     return 0;
@@ -314,7 +363,9 @@ export function parseMajorVersion(version: string): number {
 }
 
 /**
- * Get version by checking file JAVA_HOME/release
+ * Retrieves the Java version by checking the `JAVA_HOME/release` file.
+ * @param {string} javaHome - The path to the Java home directory.
+ * @returns {Promise<number>} A promise that resolves with the Java version number.
  */
 async function checkVersionInReleaseFile(javaHome: string): Promise<number> {
   if (!javaHome) {
@@ -341,7 +392,9 @@ async function checkVersionInReleaseFile(javaHome: string): Promise<number> {
 }
 
 /**
- * Get version by parsing `JAVA_HOME/bin/java -version`
+ * Retrieves the Java version by parsing the output of `JAVA_HOME/bin/java -version`.
+ * @param {string} javaHome - The path to the Java home directory.
+ * @returns {Promise<number>} A promise that resolves with the Java version number.
  */
 async function checkVersionByCLI(javaHome: string): Promise<number> {
   if (!javaHome) {

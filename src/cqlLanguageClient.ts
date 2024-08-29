@@ -21,10 +21,21 @@ import { statusBar } from './statusBar';
 
 const extensionName = 'Language Support for CQL';
 
+/**
+ * Represents a CQL language client, responsible for managing the interaction between the extension and the CQL language server.
+ */
 export class CqlLanguageClient {
   private languageClient: LanguageClient | undefined;
   private status: ClientStatus = ClientStatus.Uninitialized;
 
+  /**
+   * Initializes the CQL language client.
+   * @param {ExtensionContext} context - The VS Code extension context.
+   * @param {RequirementsData} requirements - The requirements for starting the language server.
+   * @param {LanguageClientOptions} clientOptions - The options for configuring the language client.
+   * @param {string} workspacePath - The path of the workspace in which the client operates.
+   * @returns {Promise<void>} A promise that resolves when initialization is complete.
+   */
   public async initialize(
     context: ExtensionContext,
     requirements: RequirementsData,
@@ -36,30 +47,10 @@ export class CqlLanguageClient {
     }
 
     const serverOptions = prepareExecutable(requirements, context, workspacePath);
-    // Create the language client and start the client.
     this.languageClient = new LanguageClient('cql', extensionName, serverOptions, clientOptions);
 
     this.languageClient.onReady().then(() => {
       this.status = ClientStatus.Started;
-      // this.languageClient.onNotification(StatusNotification.type, (report) => {
-      // 	switch (report.type) {
-      // 		case 'ServiceReady':
-      // 			break;
-      // 		case 'Started':
-      // 			this.status = ClientStatus.Started;
-      // 			statusBar.setReady();
-      // 			break;
-      // 		case 'Error':
-      // 			this.status = ClientStatus.Error;
-      // 			statusBar.setError();
-      // 			break;
-      // 		case 'Starting':
-      // 		case 'Message':
-      // 			// message goes to progress report instead
-      // 			break;
-      // 	}
-      // 	statusBar.updateTooltip(report.message);
-      // });
 
       this.languageClient!.onNotification(ProgressReportNotification.type, _progress => {
         // TODO: Support for long-running tasks
@@ -110,7 +101,6 @@ export class CqlLanguageClient {
         return null;
       });
 
-      // TODO: Set this once we have the initialization signal from the LS.
       statusBar.setReady();
     });
 
@@ -118,6 +108,10 @@ export class CqlLanguageClient {
     this.status = ClientStatus.Initialized;
   }
 
+  /**
+   * Registers commands for the extension.
+   * @param {ExtensionContext} context - The VS Code extension context.
+   */
   private registerCommands(context: ExtensionContext): void {
     context.subscriptions.push(
       commands.registerCommand(Commands.OPEN_OUTPUT, () =>
@@ -146,12 +140,6 @@ export class CqlLanguageClient {
       }),
     );
 
-    // I'm not sure if the language server communicates at the start of the command, or only when we pass the arguments at the end.
-    // If we pass some information at the time of the command like the position of the cursor and return something,
-    // it would be better to just return something like a ExpressionDefinition in json.
-    // For now I'm assuming a position is sent from the client first and we need to use that to pass the cql evaluate command to the server
-    // Could try something like https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_selectionRange after grabbing the start and end positions of a selection
-    // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_signatureHelp *Definition Signature???*
     context.subscriptions.push(
       commands.registerCommand(Commands.EXECUTE_CQL_EXPRESSION_COMMAND, async (uri: Uri) => {
         await normalizeCqlExecution(uri, 'expression');
@@ -159,6 +147,9 @@ export class CqlLanguageClient {
     );
   }
 
+  /**
+   * Starts the CQL language client.
+   */
   public start(): void {
     if (this.languageClient && this.status === ClientStatus.Initialized) {
       this.languageClient.start();
@@ -166,23 +157,39 @@ export class CqlLanguageClient {
     }
   }
 
-  public stop() {
+  /**
+   * Stops the CQL language client.
+   */
+  public stop(): void {
     if (this.languageClient) {
       this.languageClient.stop();
       this.status = ClientStatus.Stopping;
     }
   }
 
+  /**
+   * Gets the language client instance.
+   * @returns {LanguageClient} The language client instance.
+   */
   public getClient(): LanguageClient {
     return this.languageClient!;
   }
 
+  /**
+   * Gets the current status of the language client.
+   * @returns {ClientStatus} The current status of the language client.
+   */
   public getClientStatus(): ClientStatus {
     return this.status;
   }
 }
 
-function logNotification(message: string) {
+/**
+ * Logs a notification message.
+ * @param {string} message - The message to log.
+ * @returns {Promise<void>} A promise that resolves when the log operation is complete.
+ */
+function logNotification(message: string): Promise<void> {
   return new Promise(() => {
     logger.verbose(message);
   });
