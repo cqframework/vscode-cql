@@ -1,3 +1,6 @@
+/**
+ * This is a stub description for now.
+ */
 import * as fs from 'fs';
 import * as path from 'path';
 

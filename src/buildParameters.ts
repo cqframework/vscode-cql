@@ -1,3 +1,6 @@
+/**
+ * This is a stub description for now.
+ */
 import * as fs from 'fs';
 import * as fse from 'fs-extra';
 import { glob } from 'glob';
@@ -75,20 +78,6 @@ export function buildParameters(uri: URI, expression: string | undefined): Evalu
   return evaluationParams;
 }
 
-/**
- * Generates the command-line arguments required for CQL evaluation.
- * @param {object} params - The parameters needed to construct the command-line arguments.
- * @param {string} params.fhirVersion - The FHIR version being used.
- * @param {URI} params.optionsPath - The path to the CQL options file.
- * @param {URI} params.libraryDirectory - The directory of the CQL library.
- * @param {string} params.libraryName - The name of the CQL library.
- * @param {string | undefined} params.expression - The specific CQL expression to evaluate, if any.
- * @param {URI} params.terminologyPath - The path to the FHIR terminology.
- * @param {Connection | undefined} params.connection - The current connection information.
- * @param {Map<string, Context>} params.contexts - The execution contexts for the evaluation.
- * @param {string} params.measurementPeriod - The measurement period to be used.
- * @returns {string[]} The command-line arguments for the CQL evaluation.
- */
 function getCqlCommandArgs({
   fhirVersion,
   optionsPath,

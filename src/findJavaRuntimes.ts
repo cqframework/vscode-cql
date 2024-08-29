@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
-
+/**
+ * This is a stub description for now.
+ */
 import * as cp from 'child_process';
 import expandTilde from 'expand-tilde';
 import * as fse from 'fs-extra';

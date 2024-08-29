@@ -1,3 +1,6 @@
+/**
+ * This is a stub description for now.
+ */
 import { ExtensionContext } from 'vscode';
 import { Storage } from './storage';
 

@@ -1,4 +1,7 @@
-import { StatusBarItem, window, StatusBarAlignment } from 'vscode';
+/**
+ * This is a stub description for now.
+ */
+import { StatusBarAlignment, StatusBarItem, window } from 'vscode';
 import { Disposable } from 'vscode-languageclient';
 
 class StatusBar implements Disposable {

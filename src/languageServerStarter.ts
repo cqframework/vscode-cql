@@ -1,3 +1,6 @@
+/**
+ * This is a stub description for now.
+ */
 import * as net from 'net';
 import * as path from 'path';
 import { ExtensionContext } from 'vscode';

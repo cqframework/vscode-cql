@@ -1,3 +1,6 @@
+/**
+ * This is a stub description for now.
+ */
 import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
 import {
   ConfigurationParams,

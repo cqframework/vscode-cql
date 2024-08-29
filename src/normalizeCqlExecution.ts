@@ -1,3 +1,6 @@
+/**
+ * This is a stub description for now.
+ */
 import { Uri, window } from 'vscode';
 import { buildParameters } from './buildParameters';
 import { executeCQL } from './executeCql';
