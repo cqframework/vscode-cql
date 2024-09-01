@@ -5,8 +5,8 @@ import { commands, Uri, window } from 'vscode';
 import { existsSync } from 'fs';
 import { createFileSync, removeSync } from 'fs-extra';
 import { join } from 'path';
-import { Commands } from '../../commands';
-import { executeCQL } from '../../executeCql';
+import { Commands } from '../commands';
+import { executeCQL } from '../executeCql';
 
 const OUT_FILE_PATH = join(__dirname, 'out.txt');
 const TERMINOLOGY_FILE_PATH = join(__dirname, 'terminology.txt');
