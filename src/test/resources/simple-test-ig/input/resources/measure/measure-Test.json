@@ -1,0 +1,194 @@
+{
+  "resourceType": "Measure",
+  "id": "Test",
+  "meta": {
+    "profile": [ "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/computable-measure-cqfm" ]
+  },
+  "contained": [ {
+    "resourceType": "Library",
+    "id": "effective-data-requirements",
+    "extension": [ {
+      "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+      "extension": [ {
+        "url": "libraryName",
+        "valueString": "Test"
+      }, {
+        "url": "name",
+        "valueString": "Numerator"
+      }, {
+        "url": "statement",
+        "valueString": "define \"Numerator\": false"
+      }, {
+        "url": "displaySequence",
+        "valueInteger": 0
+      } ]
+    }, {
+      "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+      "extension": [ {
+        "url": "libraryName",
+        "valueString": "Test"
+      }, {
+        "url": "name",
+        "valueString": "Denominator"
+      }, {
+        "url": "statement",
+        "valueString": "define \"Denominator\": true"
+      }, {
+        "url": "displaySequence",
+        "valueInteger": 1
+      } ]
+    }, {
+      "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+      "extension": [ {
+        "url": "libraryName",
+        "valueString": "Test"
+      }, {
+        "url": "name",
+        "valueString": "Initial Population"
+      }, {
+        "url": "statement",
+        "valueString": "// Test & #\\\\\"SpecialChars\\\\\"\ndefine \"Initial Population\": true"
+      }, {
+        "url": "displaySequence",
+        "valueInteger": 2
+      } ]
+    } ],
+    "name": "EffectiveDataRequirements",
+    "status": "active",
+    "type": {
+      "coding": [ {
+        "system": "http://terminology.hl7.org/CodeSystem/library-type",
+        "code": "module-definition"
+      } ]
+    },
+    "parameter": [ {
+      "name": "Numerator",
+      "use": "out",
+      "min": 0,
+      "max": "1",
+      "type": "boolean"
+    }, {
+      "name": "Denominator",
+      "use": "out",
+      "min": 0,
+      "max": "1",
+      "type": "boolean"
+    }, {
+      "name": "Initial Population",
+      "use": "out",
+      "min": 0,
+      "max": "1",
+      "type": "boolean"
+    } ]
+  } ],
+  "extension": [ {
+    "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-softwaresystem",
+    "valueReference": {
+      "reference": "Device/cqf-tooling"
+    }
+  }, {
+    "id": "effective-data-requirements",
+    "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-effectiveDataRequirements",
+    "valueReference": {
+      "reference": "#effective-data-requirements"
+    }
+  } ],
+  "url": "http://localhost:8000/Measure/Test",
+  "name": "Test",
+  "title": "Simple Test Measure",
+  "status": "active",
+  "experimental": true,
+  "date": "2024-08-21T17:07:28-07:00",
+  "publisher": "Test",
+  "contact": [ {
+    "telecom": [ {
+      "system": "url",
+      "value": "https://Test.com"
+    } ]
+  } ],
+  "description": "Simple Measure to test simply.",
+  "useContext": [ {
+    "code": {
+      "system": "http://terminology.hl7.org/CodeSystem/usage-context-type",
+      "version": "4.0.1",
+      "code": "program",
+      "display": "Program"
+    },
+    "valueCodeableConcept": {
+      "text": "eligible-provider"
+    }
+  } ],
+  "purpose": "Efficiency and Cost Reduction.",
+  "effectivePeriod": {
+    "start": "2020-01-01T00:00:00-07:00",
+    "end": "2020-12-31T23:59:59-07:00"
+  },
+  "library": [ "http://localhost:8000/Library/Test" ],
+  "scoring": {
+    "coding": [ {
+      "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+      "version": "4.0.1",
+      "code": "proportion",
+      "display": "Proportion"
+    } ]
+  },
+  "type": [ {
+    "coding": [ {
+      "system": "http://terminology.hl7.org/CodeSystem/measure-type",
+      "version": "4.2.0",
+      "code": "process",
+      "display": "Process"
+    } ]
+  } ],
+  "improvementNotation": {
+    "coding": [ {
+      "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+      "version": "0.1.0",
+      "code": "increase",
+      "display": "Increased score indicates improvement"
+    } ]
+  },
+  "group": [ {
+    "id": "group-1",
+    "population": [ {
+      "id": "initial-population",
+      "code": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+          "code": "initial-population",
+          "display": "Initial Population"
+        } ]
+      },
+      "criteria": {
+        "language": "text/cql.identifier",
+        "expression": "Initial Population"
+      }
+    }, {
+      "id": "denominator",
+      "code": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+          "code": "denominator",
+          "display": "Denominator"
+        } ]
+      },
+      "criteria": {
+        "language": "text/cql.identifier",
+        "expression": "Denominator"
+      }
+    }, {
+      "id": "numerator",
+      "code": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+          "code": "numerator",
+          "display": "Numerator"
+        } ]
+      },
+      "criteria": {
+        "language": "text/cql.identifier",
+        "expression": "Numerator"
+      }
+    } ]
+  } ]
+}
