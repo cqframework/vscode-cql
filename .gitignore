@@ -7,3 +7,4 @@ target
 dist
 bin
 .vscode-test
+coverage/
