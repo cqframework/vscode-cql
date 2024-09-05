@@ -58,4 +58,29 @@ export namespace Commands {
    * Remove all existing connections from extension
    */
   export const CONNECTIONS_CLEAR = 'cql.connections.clearConnections';
+
+  /*
+   * Export all existing connections from extension
+   */
+  export const CONNECTIONS_EXPORT = 'cql.connections.exportConnections';
+
+  /*
+   * Export all existing connections from extension
+   */
+  export const CONNECTIONS_IMPORT = 'cql.connections.importConnections';
+
+  /**
+   * Create or Display a new Connection Panel for Adding a new Connection
+   */
+  export const CONNECTION_ADD_PANEL = 'cql.connections.addConnection';
+
+  /**
+   * Create or Display a new Connection Panel for Editing a new Connection
+   */
+  export const CONNECTION_EDIT_PANEL = 'cql.connections.editConnection';
+
+  /**
+   * Create or Display a new Connection Panel for Editing a new Connection
+   */
+  export const CONNECTION_DELETE_PANEL = 'cql.connections.deleteConnection';
 }

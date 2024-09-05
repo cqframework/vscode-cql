@@ -22,7 +22,7 @@
         break;
       }
       case 'Connections.createConnectionsView': {
-        createConnectionsView(message.connections, message.currentConnection);
+        createConnectionsView(message.connections, message.currentConnection, message.sortMode);
         break;
       }
     }
@@ -31,14 +31,19 @@
   /**
    * @param {Connection[] | undefined} connections
    * @param {Connection | undefined} currentConnection
+   * @param {string} sortMode
    */
-  function updateConnectionList(connections, currentConnection) {
+  function updateConnectionList(connections, currentConnection, sortMode) {
     if (!$connectionsList || connections === undefined) {
       return;
     }
+
+    // alphabetical sort by connection name
+    const sortedConnections = Object.fromEntries(Object.entries(connections).sort());
     $connectionsList.textContent = '';
-    for (let key in connections) {
-      let connection = connections[key];
+
+    for (let key in sortedConnections) {
+      let connection = sortedConnections[key];
       let connectionName = connection['name'];
       let connectionEndpoint = connection['endpoint'];
       let div = document.createElement('div');
@@ -147,7 +152,7 @@
    * @param {string} connectionName
    */
   function deleteConnection(connectionName) {
-    vscode.postMessage({ type: 'Connections.deleteConnection', data: connectionName });
+    vscode.postMessage({ type: 'Connections.deleteConnectionPanel', data: connectionName });
   }
 
   /**
@@ -171,8 +176,9 @@
   /**
    * @param {Connection[]} connections
    * @param {Connection} currentConnection
+   * @param {string} sortMode
    */
-  function createConnectionsView(connections, currentConnection) {
-    updateConnectionList(connections, currentConnection);
+  function createConnectionsView(connections, currentConnection, sortMode) {
+    updateConnectionList(connections, currentConnection, sortMode);
   }
 })();

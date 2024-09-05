@@ -119,6 +119,21 @@
       } else {
         $testConnectionResult.innerText = 'Connection failed.';
       }
+
+      let context = $connectionContext.value;
+      let contexts = context.split(',');
+      for (context in contexts) {
+        contexts[context] = contexts[context].trim();
+      }
+
+      for (context in contexts) {
+        const result = await fetch(url + '/Patient/' + contexts[context]);
+        if (result.ok) {
+        } else {
+          $testConnectionResult.innerText +=
+            '\nWarning -- Patient Context: ' + contexts[context] + ' not found.';
+        }
+      }
     } catch (e) {
       $testConnectionResult.innerText = 'Connection failed.';
     }

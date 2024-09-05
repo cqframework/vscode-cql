@@ -1,8 +1,11 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { ExtensionContext } from 'vscode';
 import { Connection, ConnectionManager } from '../connectionManager';
 import { Storage } from '../storage';
 import { ConnectionPanel, PanelMode } from './ConnectionPanel';
+import { DeletePanel, DeletePanelMode } from './deletePanel';
 import { Messages } from './messages';
 
 export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
@@ -11,6 +14,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   private static _extContext: ExtensionContext;
   private _view?: vscode.WebviewView;
   private static currentPanel?: ConnectionPanel | undefined;
+  private static deleteConfirmationPanel?: DeletePanel | undefined;
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -20,6 +24,14 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
   public setPanel(panel: ConnectionPanel | undefined) {
     ConnectionsViewProvider.currentPanel = panel;
+  }
+
+  public getDeleteConfirmationPanel() {
+    return ConnectionsViewProvider.deleteConfirmationPanel;
+  }
+
+  public setDeleteConfirmationPanel(panel: DeletePanel | undefined) {
+    ConnectionsViewProvider.deleteConfirmationPanel = panel;
   }
 
   public getView() {
@@ -64,18 +76,9 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
           this.setPanel(ConnectionPanel.getPanel());
           break;
         }
-        case Messages.CONNECTION_DELETE: {
-          ConnectionManager.getManager().deleteConnection(data.data);
-          ConnectionsViewProvider.getContext().globalState.update(
-            Storage.STORAGE_CONNECTIONS,
-            ConnectionManager.getManager().getAllConnections(),
-          );
-          if (ConnectionManager.getManager().getCurrentConnection()?.name === data.data) {
-            ConnectionManager.getManager().setCurrentConnection('Local');
-          }
-
-          this.getPanel()?.dispose();
-          this.refreshConnections();
+        case Messages.CONNECTION_DELETE_PANEL: {
+          let mode: DeletePanelMode = 'Delete';
+          DeletePanel.createOrShow(this._extensionUri, this, mode, data.data);
           break;
         }
         case Messages.CONNECTION_CONNECT: {
@@ -110,6 +113,57 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
     this.refreshConnections();
   }
 
+  public DeleteConnection(connectionName: string) {
+    ConnectionManager.getManager().deleteConnection(connectionName);
+    ConnectionsViewProvider.getContext().globalState.update(
+      Storage.STORAGE_CONNECTIONS,
+      ConnectionManager.getManager().getAllConnections(),
+    );
+    if (ConnectionManager.getManager().getCurrentConnection()?.name === connectionName) {
+      ConnectionManager.getManager().setCurrentConnection('Local');
+    }
+
+    if (
+      ConnectionPanel.getViewType() === 'Edit' &&
+      this.getPanel()?.getOldConnectionName() === connectionName
+    ) {
+      this.getPanel()?.dispose();
+    }
+
+    this.refreshConnections();
+  }
+
+  public AddConnectionPanel() {
+    let mode: PanelMode = 'Add';
+    ConnectionPanel.createOrShow(this._extensionUri, this, mode);
+    this.setPanel(ConnectionPanel.getPanel());
+  }
+
+  public EditConnectionPanel() {
+    vscode.window.showInputBox().then(input => {
+      if (input !== undefined) {
+        let mode: PanelMode = 'Edit';
+        ConnectionPanel.createOrShow(this._extensionUri, this, mode, input);
+        this.setPanel(ConnectionPanel.getPanel());
+      }
+    });
+  }
+
+  public DeleteConnectionPanel() {
+    vscode.window.showInputBox().then(input => {
+      if (input !== undefined) {
+        let mode: DeletePanelMode = 'Delete';
+        DeletePanel.createOrShow(this._extensionUri, this, mode, input);
+        this.setDeleteConfirmationPanel(DeletePanel.getPanel());
+      }
+    });
+  }
+
+  public ClearConnectionsPanel() {
+    let mode: DeletePanelMode = 'ClearAll';
+    DeletePanel.createOrShow(this._extensionUri, this, mode);
+  }
+
   public ClearConnections() {
     if (this._view) {
       for (let connection in ConnectionManager.getManager().getAllConnections()) {
@@ -121,6 +175,69 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
       );
       this.getPanel()?.dispose();
       this.refreshConnections();
+    }
+  }
+
+  public ExportConnections() {
+    let connections = ConnectionManager.getManager().getAllConnections();
+    let currentConnection = ConnectionManager.getManager().getCurrentConnection();
+
+    let serializedExportData = JSON.stringify({
+      connections: connections,
+      currentConnection: currentConnection,
+    });
+
+    const fileName = 'connections-collection.json';
+    const wsEdit = new vscode.WorkspaceEdit();
+    const wsPath = (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri.fsPath;
+    const filePath = path.join(wsPath, fileName);
+    fs.writeFileSync(filePath, serializedExportData), 'utf8';
+    const openPath = vscode.Uri.file(filePath);
+
+    vscode.workspace.openTextDocument(openPath).then(doc => {
+      vscode.window.showTextDocument(doc);
+    });
+  }
+
+  public ImportConnections() {
+    try {
+      vscode.window.showOpenDialog().then(doc => {
+        if (doc !== undefined) {
+          const data = fs.readFileSync(doc[0].path, { encoding: 'utf8' });
+
+          let serializedImportData = JSON.parse(data);
+          let connections: Record<string, Connection> = serializedImportData['connections'];
+          let currentConnection: Connection = serializedImportData['currentConnection'];
+
+          for (let connection in ConnectionManager.getManager().getAllConnections()) {
+            ConnectionManager.getManager().deleteConnection(connection);
+          }
+
+          ConnectionManager.getManager().deleteConnection(
+            ConnectionManager.getManager().getCurrentConnection()?.name as string,
+          );
+
+          for (let connection in connections) {
+            ConnectionManager.getManager().upsertConnection(connections[connection]);
+          }
+
+          ConnectionManager.getManager().setCurrentConnection(currentConnection.name);
+        }
+
+        ConnectionsViewProvider.getContext().globalState.update(
+          Storage.STORAGE_CONNECTIONS,
+          ConnectionManager.getManager().getAllConnections(),
+        );
+
+        ConnectionsViewProvider.getContext().globalState.update(
+          Storage.STORAGE_CURRENT_CONNECTION,
+          ConnectionManager.getManager().getCurrentConnection(),
+        );
+
+        this.refreshConnections();
+      });
+    } catch (e) {
+      console.log(e);
     }
   }
 

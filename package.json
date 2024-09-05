@@ -99,9 +99,34 @@
         "category": "CQL"
       },
       {
+        "command": "cql.connections.importConnections",
+        "title": "Import",
+        "category": "Connection Manager"
+      },
+      {
+        "command": "cql.connections.exportConnections",
+        "title": "Export",
+        "category": "Connection Manager"
+      },
+      {
         "command": "cql.connections.clearConnections",
         "title": "Clear Connections",
-        "category": "connections"
+        "category": "Connection Manager"
+      },
+      {
+        "command": "cql.connections.addConnection",
+        "title": "Add Connection",
+        "category": "Connection Manager"
+      },
+      {
+        "command": "cql.connections.editConnection",
+        "title": "Edit Connection",
+        "category": "Connection Manager"
+      },
+      {
+        "command": "cql.connections.deleteConnection",
+        "title": "Delete Connection",
+        "category": "Connection Manager"
       }
     ],
     "viewsContainers": {
@@ -141,6 +166,16 @@
         }
       ],
       "view/title": [
+        {
+          "command": "cql.connections.importConnections",
+          "group": "navigation",
+          "when": "view == connectionManager.connectionsView"
+        },
+        {
+          "command": "cql.connections.exportConnections",
+          "group": "navigation",
+          "when": "view == connectionManager.connectionsView"
+        },
         {
           "command": "cql.connections.clearConnections",
           "group": "navigation",

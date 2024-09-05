@@ -36,6 +36,10 @@ export class ConnectionPanel {
     return this.viewType;
   }
 
+  public getOldConnectionName(): string | undefined {
+    return this._oldConnectionName;
+  }
+
   public static createOrShow(
     extensionUri: vscode.Uri,
     sideBar: ConnectionsViewProvider,
@@ -46,8 +50,12 @@ export class ConnectionPanel {
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
-    // If we already have a panel for this mode, show it.
-    if (ConnectionPanel.currentPanel && mode === ConnectionPanel.getViewType()) {
+    // If we already have a panel for this mode and connection, show it.
+    if (
+      ConnectionPanel.currentPanel &&
+      mode === ConnectionPanel.getViewType() &&
+      ConnectionPanel.getPanel()?.getOldConnectionName() === oldConnectionName
+    ) {
       ConnectionPanel.currentPanel._panel.reveal(column);
       return;
     }
