@@ -86,7 +86,7 @@
    */
   function AddDeleteButton(connectionName, div) {
     let deleteButton = document.createElement('button');
-    deleteButton.className = 'DeleteButton';
+    deleteButton.className = 'delete-button';
     deleteButton.id = 'Delete-' + connectionName;
     deleteButton.innerHTML = 'Delete';
 
@@ -105,7 +105,7 @@
    */
   function AddUpdateButton(connectionName, div) {
     let updateButton = document.createElement('button');
-    updateButton.className = 'UpdateButton';
+    updateButton.className = 'update-button';
     updateButton.id = 'Update-' + connectionName;
     updateButton.innerHTML = 'Update';
 
@@ -125,7 +125,7 @@
    */
   function AddConnectionButton(connectionName, currentConnection, div) {
     let connectButton = document.createElement('button');
-    connectButton.className = 'ConnectButton';
+    connectButton.className = 'connect-button';
     connectButton.id = 'Connect-' + connectionName;
     connectButton.innerHTML = 'Connect';
 

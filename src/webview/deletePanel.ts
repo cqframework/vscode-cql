@@ -183,8 +183,12 @@ export class DeletePanel {
             </head>
             <body>
                 <label class="delete-confirmation-label"></label>
-                <button class="cancel-button">Cancel</button>
-                <button class="delete-confirmation-button">Yes, Delete</button>
+                <br/>
+                <br/>
+                <div>
+                  <button class="cancel-button">Cancel</button>
+                  <button class="delete-confirmation-button">Yes, Delete</button>
+                </div>
 
                 <script src="${scriptUri}"></script>
             </body>

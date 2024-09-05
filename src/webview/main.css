@@ -39,18 +39,50 @@ body {
   margin: 0 auto;
 }
 
-.DeleteButton {
+.delete-button {
   background-color: rgb(153, 42, 42);
 }
 
-.DeleteButton:hover {
+.delete-button:hover {
   background-color: rgb(153, 42, 42);
 }
 
-.UpdateButton {
+.delete-confirmation-button {
+  background-color: rgb(153, 42, 42);
+}
+
+.delete-confirmation-button:hover {
+  background-color: rgb(153, 42, 42);
+}
+
+.update-button {
   background-color: rgb(80, 77, 77);
 }
 
-.UpdateButton:hover {
+.update-button:hover {
+  background-color: rgb(80, 77, 77);
+}
+
+.update-button {
+  background-color: rgb(80, 77, 77);
+}
+
+.update-button:hover {
+  background-color: rgb(80, 77, 77);
+}
+
+.test-connection-button {
+  background-color: rgb(80, 77, 77);
+}
+
+.test-connection-button:hover {
+  background-color: rgb(80, 77, 77);
+}
+
+.cancel-button {
+  background-color: rgb(80, 77, 77);
+}
+
+.cancel-button:hover {
   background-color: rgb(80, 77, 77);
 }
