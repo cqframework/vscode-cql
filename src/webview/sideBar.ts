@@ -188,7 +188,6 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
     });
 
     const fileName = 'connections-collection.json';
-    const wsEdit = new vscode.WorkspaceEdit();
     const wsPath = (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri.fsPath;
     const filePath = path.join(wsPath, fileName);
     fs.writeFileSync(filePath, serializedExportData), 'utf8';
