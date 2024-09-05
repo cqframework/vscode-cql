@@ -158,6 +158,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run clean && npm run compile && cp -r src/test/suite/resources dist/test/suite/resources",
     "clean": "rm -rf ./dist",
+    "clean-all": "npm run clean && rm -rf ./jars",
     "test": "c8 --check-coverage --lines 80 --functions 80 --branches 80 vscode-test"
   },
   "javaDependencies": {
