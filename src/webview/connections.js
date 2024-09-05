@@ -73,6 +73,7 @@
     let connectionURLLabel = document.createElement('label');
     connectionURLLabel.className = 'ConnectionURLLabel';
     connectionURLLabel.innerHTML = connectionEndpoint;
+    connectionURLLabel.style.color = 'grey';
 
     div.appendChild(connectionNameLabel);
     div.appendChild(document.createElement('br'));
