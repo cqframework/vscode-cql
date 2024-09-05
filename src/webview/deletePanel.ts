@@ -182,10 +182,12 @@ export class DeletePanel {
   				<title>FHIR Server Connection</title>
             </head>
             <body>
-                <label class="delete-confirmation-label"></label>
-                <div>
-                  <button class="cancel-button">Cancel</button>
-                  <button class="delete-confirmation-button">Yes, Delete</button>
+                <label class="delete-confirmation-label">Are you sure you want to delete the connection?</label>
+                <br/>
+                <br/>
+                <div style="width:100%;">
+                  <button class="cancel-button button-secondary">Cancel</button>
+                  <button class="delete-confirmation-button button-destructive">Yes, Delete</button>
                 </div>
 
                 <script src="${scriptUri}"></script>

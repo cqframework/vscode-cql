@@ -47,6 +47,7 @@
       let connectionEndpoint = connection['endpoint'];
       let div = document.createElement('div');
       div.className = connectionName;
+      div.style.width = '100%';
 
       AddLabels(connectionName, connectionEndpoint, div);
       if (connectionName !== 'Local') {
@@ -86,7 +87,7 @@
    */
   function AddDeleteButton(connectionName, div) {
     let deleteButton = document.createElement('button');
-    deleteButton.className = 'delete-button';
+    deleteButton.className = 'delete-button button-destructive';
     deleteButton.id = 'Delete-' + connectionName;
     deleteButton.innerHTML = 'Delete';
 
@@ -95,8 +96,8 @@
     };
     div.appendChild(deleteButton);
 
-    div.appendChild(document.createElement('br'));
-    div.appendChild(document.createElement('br'));
+    // div.appendChild(document.createElement('br'));
+    // div.appendChild(document.createElement('br'));
   }
 
   /**
@@ -105,7 +106,7 @@
    */
   function AddUpdateButton(connectionName, div) {
     let updateButton = document.createElement('button');
-    updateButton.className = 'update-button';
+    updateButton.className = 'update-button button-secondary';
     updateButton.id = 'Update-' + connectionName;
     updateButton.innerHTML = 'Update';
 
@@ -114,8 +115,8 @@
     };
     div.appendChild(updateButton);
 
-    div.appendChild(document.createElement('br'));
-    div.appendChild(document.createElement('br'));
+    // div.appendChild(document.createElement('br'));
+    // div.appendChild(document.createElement('br'));
   }
 
   /**
@@ -125,13 +126,14 @@
    */
   function AddConnectionButton(connectionName, currentConnection, div) {
     let connectButton = document.createElement('button');
-    connectButton.className = 'connect-button';
+    connectButton.className = 'connect-button button-primary';
     connectButton.id = 'Connect-' + connectionName;
     connectButton.innerHTML = 'Connect';
 
     if (currentConnection !== undefined) {
       if (connectionName === currentConnection['name']) {
         connectButton.innerHTML = 'Connected';
+        connectButton.className = 'connect-button button-connected';
       }
     }
 

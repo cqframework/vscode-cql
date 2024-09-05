@@ -283,7 +283,10 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
       <body>
         <div class="connections-list"></div><br/><br/>
 
-        <button class="add-connection-button">Add Connection</button>
+
+        <div style="width:100%;text-align:center;">
+          <button class="add-connection-button button-primary">Add Connection</button>
+        </div>
 
         <script nonce="${nonce}" src="${scriptUri}"></script>
       </body>

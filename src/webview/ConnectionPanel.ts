@@ -308,10 +308,12 @@ export class ConnectionPanel {
         <label for="connectionContext">Patient Context</label>
         <input type="text" id="connectionContext" name="connectionContext" placeholder="Enter comma separated Patient IDs"><br><br>
 
-        <button class="cancel-button">Cancel</button>
-        <button class="test-connection-button">Test Connection</button>
-        <p class="test-connection-result"></p>
-        <button class="${modeClass}-connection-button">${modeText} Connection</button>
+        <div style="width:100%;">
+          <button class="cancel-button button-secondary">Cancel</button>
+          <button class="test-connection-button button-secondary">Test Connection</button>
+          <button class="${modeClass}-connection-button button-primary">${modeText} Connection</button>
+          <p class="test-connection-result"></p>
+        </div>
 
         <script src="${scriptUri}"></script>
       </body>

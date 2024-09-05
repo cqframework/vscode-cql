@@ -33,8 +33,7 @@
     if (mode === 'Delete') {
       let connectionName = connection['name'];
       vscode.setState({ oldConnectionName: connectionName });
-      $deleteText.innerText =
-        'Are you sure you want to delete the connection ' + connectionName + '?';
+      $deleteText.innerText = 'Are you sure you want to delete connection ' + connectionName + '?';
     } else {
       $deleteText.innerText = 'Are you sure you want to delete all connections?';
     }

@@ -36,6 +36,8 @@
       throw new Error('Missing required element.');
     }
 
+    $addConnectionButton.className = 'add-button button-primary';
+
     $addConnectionButton.addEventListener('click', () => {
       vscode.postMessage({
         type: 'Connection.add',
@@ -53,6 +55,7 @@
     });
   } else if (mode === 'edit') {
     const $editConnectionButton = document.querySelector('.edit-connection-button');
+    $editConnectionButton.className = 'update-button button-primary';
     if (!$editConnectionButton) {
       throw new Error('Missing required element.');
     }
