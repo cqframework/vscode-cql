@@ -96,9 +96,6 @@
       deleteConnection(connectionName);
     };
     div.appendChild(deleteButton);
-
-    // div.appendChild(document.createElement('br'));
-    // div.appendChild(document.createElement('br'));
   }
 
   /**
@@ -115,9 +112,6 @@
       updateConnection(connectionName);
     };
     div.appendChild(updateButton);
-
-    // div.appendChild(document.createElement('br'));
-    // div.appendChild(document.createElement('br'));
   }
 
   /**
