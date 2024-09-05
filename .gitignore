@@ -5,6 +5,7 @@ server
 *.vsix
 target
 dist
+jars/
 bin
 .vscode-test
 coverage/

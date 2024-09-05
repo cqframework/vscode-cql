@@ -13,7 +13,7 @@ interface MavenCoords {
 }
 
 function getJarHome(): string {
-  return path.join(__dirname, 'jars');
+  return path.join(__dirname, '../jars');
 }
 
 export function getServicePath(context: ExtensionContext, serviceName: string): string {
