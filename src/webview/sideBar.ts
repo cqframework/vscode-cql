@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { ExtensionContext } from 'vscode';
 import { Connection, ConnectionManager } from '../connectionManager';
 import { Storage } from '../storage';
-import { ConnectionPanel, PanelMode } from './ConnectionPanel';
+import { ConnectionPanel, ConnectionPanelMode } from './ConnectionPanel';
 import { DeletePanel, DeletePanelMode } from './deletePanel';
 import { Messages } from './messages';
 
@@ -71,7 +71,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.onDidReceiveMessage(async data => {
       switch (data.type) {
         case Messages.CONNECTION_ADD_PANEL: {
-          let mode: PanelMode = 'Add';
+          let mode: ConnectionPanelMode = 'Add';
           ConnectionPanel.createOrShow(this._extensionUri, this, mode);
           this.setConnectionPanel(ConnectionPanel.getPanel());
           break;
@@ -97,7 +97,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
           break;
         }
         case Messages.CONNECTION_EDIT_PANEL: {
-          let mode: PanelMode = 'Edit';
+          let mode: ConnectionPanelMode = 'Edit';
           ConnectionPanel.createOrShow(this._extensionUri, this, mode, data.data);
           this.setConnectionPanel(ConnectionPanel.getPanel());
           break;
@@ -134,7 +134,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   }
 
   public AddConnectionPanel() {
-    let mode: PanelMode = 'Add';
+    let mode: ConnectionPanelMode = 'Add';
     ConnectionPanel.createOrShow(this._extensionUri, this, mode);
     this.setConnectionPanel(ConnectionPanel.getPanel());
   }
@@ -142,7 +142,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   public EditConnectionPanel() {
     vscode.window.showInputBox().then(input => {
       if (input !== undefined) {
-        let mode: PanelMode = 'Edit';
+        let mode: ConnectionPanelMode = 'Edit';
         ConnectionPanel.createOrShow(this._extensionUri, this, mode, input);
         this.setConnectionPanel(ConnectionPanel.getPanel());
       }

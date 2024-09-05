@@ -5,7 +5,7 @@ import { Storage } from '../storage';
 import { Messages } from './messages';
 import { ConnectionsViewProvider } from './sideBar';
 
-export type PanelMode = 'Uninitialized' | 'Add' | 'Edit';
+export type ConnectionPanelMode = 'Uninitialized' | 'Add' | 'Edit';
 
 export class ConnectionPanel {
   /**
@@ -43,7 +43,7 @@ export class ConnectionPanel {
   public static createOrShow(
     extensionUri: vscode.Uri,
     sideBar: ConnectionsViewProvider,
-    mode: PanelMode,
+    mode: ConnectionPanelMode,
     oldConnectionName?: string,
   ) {
     const column = vscode.window.activeTextEditor
@@ -104,7 +104,7 @@ export class ConnectionPanel {
   private constructor(
     panel: vscode.WebviewPanel,
     extensionUri: vscode.Uri,
-    mode: PanelMode,
+    mode: ConnectionPanelMode,
     oldConnectionName?: string,
   ) {
     this._panel = panel;
@@ -248,7 +248,7 @@ export class ConnectionPanel {
     }
   }
 
-  _update(mode: PanelMode) {
+  _update(mode: ConnectionPanelMode) {
     const webview = this._panel.webview;
 
     if (mode === 'Add') {
@@ -260,7 +260,7 @@ export class ConnectionPanel {
     }
   }
 
-  private _getHtmlForWebview(webview: vscode.Webview, mode: PanelMode) {
+  private _getHtmlForWebview(webview: vscode.Webview, mode: ConnectionPanelMode) {
     const styleResetUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'reset.css'),
     );
