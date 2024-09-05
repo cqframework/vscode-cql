@@ -22,7 +22,7 @@
         break;
       }
       case 'Connections.createConnectionsView': {
-        createConnectionsView(message.connections, message.currentConnection, message.sortMode);
+        createConnectionsView(message.connections, message.currentConnection);
         break;
       }
     }
@@ -31,9 +31,8 @@
   /**
    * @param {Connection[] | undefined} connections
    * @param {Connection | undefined} currentConnection
-   * @param {string} sortMode
    */
-  function updateConnectionList(connections, currentConnection, sortMode) {
+  function updateConnectionList(connections, currentConnection) {
     if (!$connectionsList || connections === undefined) {
       return;
     }
@@ -176,9 +175,8 @@
   /**
    * @param {Connection[]} connections
    * @param {Connection} currentConnection
-   * @param {string} sortMode
    */
-  function createConnectionsView(connections, currentConnection, sortMode) {
-    updateConnectionList(connections, currentConnection, sortMode);
+  function createConnectionsView(connections, currentConnection) {
+    updateConnectionList(connections, currentConnection);
   }
 })();

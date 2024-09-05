@@ -262,33 +262,33 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
     const nonce = getNonce();
 
     return `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
 
-				<!--
-					Use a content security policy to only allow loading styles from our extension directory,
-					and only allow scripts that have a specific nonce.
-					(See the 'webview-sample' extension sample for img-src content security policy examples)
-				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+        <!--
+          Use a content security policy to only allow loading styles from our extension directory,
+          and only allow scripts that have a specific nonce.
+          (See the 'webview-sample' extension sample for img-src content security policy examples)
+        -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-				<link href="${styleResetUri}" rel="stylesheet">
-				<link href="${styleVSCodeUri}" rel="stylesheet">
-				<link href="${styleMainUri}" rel="stylesheet">
+        <link href="${styleResetUri}" rel="stylesheet">
+        <link href="${styleVSCodeUri}" rel="stylesheet">
+        <link href="${styleMainUri}" rel="stylesheet">
 
-				<title>FHIR Connections</title>
-			</head>
-			<body>
-				<div class="connections-list"></div><br/><br/>
+        <title>FHIR Connections</title>
+      </head>
+      <body>
+        <div class="connections-list"></div><br/><br/>
 
-				<button class="add-connection-button">Add Connection</button>
+        <button class="add-connection-button">Add Connection</button>
 
-				<script nonce="${nonce}" src="${scriptUri}"></script>
-			</body>
-			</html>`;
+        <script nonce="${nonce}" src="${scriptUri}"></script>
+      </body>
+      </html>`;
   }
 
   private refreshConnections() {

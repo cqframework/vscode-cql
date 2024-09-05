@@ -287,35 +287,35 @@ export class ConnectionPanel {
     return `<!DOCTYPE html>
 			<html lang="en" data-mode="${modeClass}">
 			<head>
-				<meta charset="UTF-8">
+        <meta charset="UTF-8">
 
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-				<link href="${styleResetUri}" rel="stylesheet">
-				<link href="${styleVSCodeUri}" rel="stylesheet">
-				<link href="${styleMainUri}" rel="stylesheet">
+        <link href="${styleResetUri}" rel="stylesheet">
+        <link href="${styleVSCodeUri}" rel="stylesheet">
+        <link href="${styleMainUri}" rel="stylesheet">
 
-				<title>FHIR Server Connection</title>
-			</head>
-			<body>
+        <title>FHIR Server Connection</title>
+      </head>
+      <body>
 
-      <label for="connectionName">Name</label>
-      <input type="text" id="connectionName" name="connectionName" placeholder="Enter connection name"><br><br>
+        <label for="connectionName">Name</label>
+        <input type="text" id="connectionName" name="connectionName" placeholder="Enter connection name"><br><br>
 
-      <label for="connectionURL">URL</label>
-      <input type="text" id="connectionURL" name="connectionURL" placeholder="Enter server url"><br><br>
+        <label for="connectionURL">URL</label>
+        <input type="text" id="connectionURL" name="connectionURL" placeholder="Enter server url"><br><br>
 
-      <label for="connectionContext">Patient Context</label>
-      <input type="text" id="connectionContext" name="connectionContext" placeholder="Enter comma separated Patient IDs"><br><br>
+        <label for="connectionContext">Patient Context</label>
+        <input type="text" id="connectionContext" name="connectionContext" placeholder="Enter comma separated Patient IDs"><br><br>
 
-      <button class="cancel-button">Cancel</button>
-      <button class="test-connection-button">Test Connection</button>
-      <p class="test-connection-result"></p>
-      <button class="${modeClass}-connection-button">${modeText} Connection</button>
+        <button class="cancel-button">Cancel</button>
+        <button class="test-connection-button">Test Connection</button>
+        <p class="test-connection-result"></p>
+        <button class="${modeClass}-connection-button">${modeText} Connection</button>
 
-			<script src="${scriptUri}"></script>
-			</body>
-			</html>`;
+        <script src="${scriptUri}"></script>
+      </body>
+      </html>`;
   }
 }
 

@@ -173,21 +173,21 @@ export class DeletePanel {
   			<head>
   				<meta charset="UTF-8">
 
-  				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  				<link href="${styleResetUri}" rel="stylesheet">
-  				<link href="${styleVSCodeUri}" rel="stylesheet">
-  				<link href="${styleMainUri}" rel="stylesheet">
+                <link href="${styleResetUri}" rel="stylesheet">
+                <link href="${styleVSCodeUri}" rel="stylesheet">
+                <link href="${styleMainUri}" rel="stylesheet">
 
   				<title>FHIR Server Connection</title>
-  			</head>
-  			<body>
+            </head>
+            <body>
                 <label class="delete-confirmation-label"></label>
                 <button class="cancel-button">Cancel</button>
                 <button class="delete-confirmation-button">Yes, Delete</button>
 
                 <script src="${scriptUri}"></script>
-  			</body>
+            </body>
           </html>`;
   }
 }

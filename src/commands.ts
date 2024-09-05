@@ -65,7 +65,7 @@ export namespace Commands {
   export const CONNECTIONS_EXPORT = 'cql.connections.exportConnections';
 
   /*
-   * Export all existing connections from extension
+   * Import all existing connections from extension
    */
   export const CONNECTIONS_IMPORT = 'cql.connections.importConnections';
 
