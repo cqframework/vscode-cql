@@ -13,17 +13,17 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
   private static _extContext: ExtensionContext;
   private _view?: vscode.WebviewView;
-  private static currentPanel?: ConnectionPanel | undefined;
+  private static connectionPanel?: ConnectionPanel | undefined;
   private static deleteConfirmationPanel?: DeletePanel | undefined;
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
-  public getPanel() {
-    return ConnectionsViewProvider.currentPanel;
+  public getConnectionPanel() {
+    return ConnectionsViewProvider.connectionPanel;
   }
 
-  public setPanel(panel: ConnectionPanel | undefined) {
-    ConnectionsViewProvider.currentPanel = panel;
+  public setConnectionPanel(panel: ConnectionPanel | undefined) {
+    ConnectionsViewProvider.connectionPanel = panel;
   }
 
   public getDeleteConfirmationPanel() {
@@ -73,7 +73,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
         case Messages.CONNECTION_ADD_PANEL: {
           let mode: PanelMode = 'Add';
           ConnectionPanel.createOrShow(this._extensionUri, this, mode);
-          this.setPanel(ConnectionPanel.getPanel());
+          this.setConnectionPanel(ConnectionPanel.getPanel());
           break;
         }
         case Messages.CONNECTION_DELETE_PANEL: {
@@ -99,7 +99,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
         case Messages.CONNECTION_EDIT_PANEL: {
           let mode: PanelMode = 'Edit';
           ConnectionPanel.createOrShow(this._extensionUri, this, mode, data.data);
-          this.setPanel(ConnectionPanel.getPanel());
+          this.setConnectionPanel(ConnectionPanel.getPanel());
           break;
         }
         case Messages.CONNECTION_REFRESH: {
@@ -125,9 +125,9 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
 
     if (
       ConnectionPanel.getViewType() === 'Edit' &&
-      this.getPanel()?.getOldConnectionName() === connectionName
+      this.getConnectionPanel()?.getOldConnectionName() === connectionName
     ) {
-      this.getPanel()?.dispose();
+      this.getConnectionPanel()?.dispose();
     }
 
     this.refreshConnections();
@@ -136,7 +136,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   public AddConnectionPanel() {
     let mode: PanelMode = 'Add';
     ConnectionPanel.createOrShow(this._extensionUri, this, mode);
-    this.setPanel(ConnectionPanel.getPanel());
+    this.setConnectionPanel(ConnectionPanel.getPanel());
   }
 
   public EditConnectionPanel() {
@@ -144,7 +144,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
       if (input !== undefined) {
         let mode: PanelMode = 'Edit';
         ConnectionPanel.createOrShow(this._extensionUri, this, mode, input);
-        this.setPanel(ConnectionPanel.getPanel());
+        this.setConnectionPanel(ConnectionPanel.getPanel());
       }
     });
   }
@@ -173,7 +173,7 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
         Storage.STORAGE_CONNECTIONS,
         ConnectionManager.getManager().getAllConnections(),
       );
-      this.getPanel()?.dispose();
+      this.getConnectionPanel()?.dispose();
       this.refreshConnections();
     }
   }
