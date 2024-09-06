@@ -140,23 +140,55 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
   }
 
   public EditConnectionPanel() {
-    vscode.window.showInputBox().then(input => {
-      if (input !== undefined) {
-        let mode: ConnectionPanelMode = 'Edit';
-        ConnectionPanel.createOrShow(this._extensionUri, this, mode, input);
-        this.setConnectionPanel(ConnectionPanel.getPanel());
-      }
-    });
+    let modifiableConnections = Object.keys(
+      ConnectionManager.getManager().getAllConnections(),
+    ).filter(key => key !== 'Local');
+
+    vscode.window
+      .showQuickPick(modifiableConnections, {
+        title: 'Connections',
+        placeHolder: 'Select a Connection to Edit',
+      })
+      .then(input => {
+        if (input !== undefined && input !== '') {
+          let mode: ConnectionPanelMode = 'Edit';
+          ConnectionPanel.createOrShow(this._extensionUri, this, mode, input);
+          this.setConnectionPanel(ConnectionPanel.getPanel());
+        }
+      });
   }
 
   public DeleteConnectionPanel() {
-    vscode.window.showInputBox().then(input => {
-      if (input !== undefined) {
-        let mode: DeletePanelMode = 'Delete';
-        DeletePanel.createOrShow(this._extensionUri, this, mode, input);
-        this.setDeleteConfirmationPanel(DeletePanel.getPanel());
-      }
-    });
+    let deletableConnections = Object.keys(
+      ConnectionManager.getManager().getAllConnections(),
+    ).filter(key => key !== 'Local');
+
+    vscode.window
+      .showQuickPick(deletableConnections, {
+        title: 'Connections',
+        placeHolder: 'Select a Connection to Delete',
+      })
+      .then(input => {
+        if (input !== undefined && input !== '') {
+          let mode: DeletePanelMode = 'Delete';
+          DeletePanel.createOrShow(this._extensionUri, this, mode, input);
+          this.setDeleteConfirmationPanel(DeletePanel.getPanel());
+        }
+      });
+
+    // vscode.window.showInputBox().then(input => {
+    //   if (input !== undefined && input !== '') {
+    //     if (input === 'Local') {
+    //       vscode.window.showInformationMessage('Local connection cannot be deleted');
+    //     } else if (ConnectionManager.getManager().getAllConnections()[input] !== undefined) {
+    //       let mode: DeletePanelMode = 'Delete';
+    //       DeletePanel.createOrShow(this._extensionUri, this, mode, input);
+    //       this.setDeleteConfirmationPanel(DeletePanel.getPanel());
+    //     } else {
+    //       vscode.window.showInformationMessage('No connection found with the name ' + input);
+    //     }
+    //   }
+    // });
   }
 
   public ClearConnectionsPanel() {

@@ -40,8 +40,9 @@ body {
 }
 
 .add-connection-button {
-  width: 85%;
+  width: 95%;
   min-width: 100px;
+  max-width: 380px;
   margin: 5px 5px 5px 5px;
   float: center;
 }
@@ -49,49 +50,49 @@ body {
 .add-button {
   width: 25%;
   min-width: 100px;
-  max-width: 200px;
+  max-width: 120px;
   margin: 5px 5px 5px 5px;
 }
 
 .delete-button {
   width: 25%;
   min-width: 100px;
-  max-width: 200px;
+  max-width: 120px;
   margin: 5px 5px 5px 5px;
 }
 
 .update-button {
   width: 25%;
   min-width: 100px;
-  max-width: 200px;
+  max-width: 120px;
   margin: 5px 5px 5px 5px;
 }
 
 .connect-button {
   width: 25%;
   min-width: 100px;
-  max-width: 200px;
+  max-width: 120px;
   margin: 5px 5px 5px 5px;
 }
 
 .test-connection-button {
   width: 25%;
   min-width: 100px;
-  max-width: 200px;
+  max-width: 120px;
   margin: 5px 5px 5px 5px;
 }
 
 .cancel-button {
   width: 25%;
   min-width: 100px;
-  max-width: 200px;
+  max-width: 120px;
   margin: 5px 5px 5px 5px;
 }
 
 .delete-confirmation-button {
   width: 25%;
   min-width: 100px;
-  max-width: 200px;
+  max-width: 120px;
   margin: 5px 5px 5px 5px;
 }
 
