@@ -175,20 +175,6 @@ export class ConnectionsViewProvider implements vscode.WebviewViewProvider {
           this.setDeleteConfirmationPanel(DeletePanel.getPanel());
         }
       });
-
-    // vscode.window.showInputBox().then(input => {
-    //   if (input !== undefined && input !== '') {
-    //     if (input === 'Local') {
-    //       vscode.window.showInformationMessage('Local connection cannot be deleted');
-    //     } else if (ConnectionManager.getManager().getAllConnections()[input] !== undefined) {
-    //       let mode: DeletePanelMode = 'Delete';
-    //       DeletePanel.createOrShow(this._extensionUri, this, mode, input);
-    //       this.setDeleteConfirmationPanel(DeletePanel.getPanel());
-    //     } else {
-    //       vscode.window.showInformationMessage('No connection found with the name ' + input);
-    //     }
-    //   }
-    // });
   }
 
   public ClearConnectionsPanel() {
