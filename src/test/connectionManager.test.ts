@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { ConnectionManager, Context } from '../../connectionManager';
+import { ConnectionManager, Context } from '../connectionManager';
 
 suite('Connection Manager Test', () => {
   test('Connection Manager -- should be present', async function () {

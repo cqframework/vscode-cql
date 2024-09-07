@@ -3,9 +3,9 @@ import path from 'path';
 import * as sinon from 'sinon';
 import { window } from 'vscode';
 import { URI } from 'vscode-uri';
-import * as buildParametersModule from '../../buildParameters';
-import * as executeCQLModule from '../../executeCql';
-import { normalizeCqlExecution } from '../../normalizeCqlExecution';
+import * as buildParametersModule from '../buildParameters';
+import * as executeCQLModule from '../executeCql';
+import { normalizeCqlExecution } from '../normalizeCqlExecution';
 
 suite('normalizeCqlExecution tests', () => {
   let stubShowErrorMessage: sinon.SinonStub;
@@ -13,7 +13,7 @@ suite('normalizeCqlExecution tests', () => {
   let stubBuildParameters: sinon.SinonStub;
   let stubExecuteCQL: sinon.SinonStub;
   let stubActiveTextEditor: sinon.SinonStub;
-  const testWorkspacePath = path.resolve(__dirname, '../suite/resources/simple-test-ig');
+  const testWorkspacePath = path.resolve(__dirname, '../resources/simple-test-ig');
   const testFilePath = path.join(testWorkspacePath, 'input/cql/Test.cql');
   const testFileUri = URI.file(testFilePath);
 
