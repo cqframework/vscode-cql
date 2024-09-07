@@ -17,6 +17,11 @@ export namespace Messages {
   export const CONNECTION_ADD_PANEL = 'Connections.AddConnectionPanel';
 
   /**
+   * Create or Display a new Connection Confirmation Panel for deleting a Connection
+   */
+  export const CONNECTION_DELETE_PANEL = 'Connections.deleteConnectionPanel';
+
+  /**
    * Delete a Connection
    */
   export const CONNECTION_DELETE = 'Connections.deleteConnection';

@@ -203,8 +203,38 @@ export function activate(context: ExtensionContext): Promise<void> {
         );
 
         context.subscriptions.push(
+          commands.registerCommand(Commands.CONNECTIONS_IMPORT, () =>
+            connectionsProvider.ImportConnections(),
+          ),
+        );
+
+        context.subscriptions.push(
+          commands.registerCommand(Commands.CONNECTIONS_EXPORT, () =>
+            connectionsProvider.ExportConnections(),
+          ),
+        );
+
+        context.subscriptions.push(
           commands.registerCommand(Commands.CONNECTIONS_CLEAR, () =>
-            connectionsProvider.ClearConnections(),
+            connectionsProvider.ClearConnectionsPanel(),
+          ),
+        );
+
+        context.subscriptions.push(
+          commands.registerCommand(Commands.CONNECTION_ADD_PANEL, () =>
+            connectionsProvider.AddConnectionPanel(),
+          ),
+        );
+
+        context.subscriptions.push(
+          commands.registerCommand(Commands.CONNECTION_EDIT_PANEL, () =>
+            connectionsProvider.EditConnectionPanel(),
+          ),
+        );
+
+        context.subscriptions.push(
+          commands.registerCommand(Commands.CONNECTION_DELETE_PANEL, () =>
+            connectionsProvider.DeleteConnectionPanel(),
           ),
         );
 

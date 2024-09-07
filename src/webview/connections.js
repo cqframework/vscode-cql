@@ -36,21 +36,55 @@
     if (!$connectionsList || connections === undefined) {
       return;
     }
+
+    // alphabetical sort by connection name
+    const sortedConnections = Object.fromEntries(Object.entries(connections).sort());
     $connectionsList.textContent = '';
-    for (let key in connections) {
-      let connection = connections[key];
+
+    AddLocalConnection(connections, currentConnection);
+
+    for (let key in sortedConnections) {
+      let connection = sortedConnections[key];
       let connectionName = connection['name'];
       let connectionEndpoint = connection['endpoint'];
+
+      if (connectionName === 'Local') {
+        continue;
+      }
+
       let div = document.createElement('div');
       div.className = connectionName;
 
       AddLabels(connectionName, connectionEndpoint, div);
-      if (connectionName !== 'Local') {
-        AddDeleteButton(connectionName, div);
-        AddUpdateButton(connectionName, div);
-      }
+      AddDeleteButton(connectionName, div);
+      AddUpdateButton(connectionName, div);
       AddConnectionButton(connectionName, currentConnection, div);
       $connectionsList.appendChild(div);
+    }
+  }
+
+  /**
+   *
+   * @param {Connection[] | undefined} connections
+   * @param {Connection | undefined} currentConnection
+   */
+
+  function AddLocalConnection(connections, currentConnection) {
+    if (!$connectionsList || connections === undefined) {
+      return;
+    }
+
+    for (let key in connections) {
+      let connection = connections[key];
+      if (connection.name === 'Local') {
+        let connectionName = connection['name'];
+        let connectionEndpoint = connection['endpoint'];
+        let div = document.createElement('div');
+        div.className = connectionName;
+        AddLabels(connectionName, connectionEndpoint, div);
+        AddConnectionButton(connectionName, currentConnection, div);
+        $connectionsList.appendChild(div);
+      }
     }
   }
 
@@ -68,6 +102,7 @@
     let connectionURLLabel = document.createElement('label');
     connectionURLLabel.className = 'ConnectionURLLabel';
     connectionURLLabel.innerHTML = connectionEndpoint;
+    connectionURLLabel.style.color = '#A9A9A9';
 
     div.appendChild(connectionNameLabel);
     div.appendChild(document.createElement('br'));
@@ -82,7 +117,7 @@
    */
   function AddDeleteButton(connectionName, div) {
     let deleteButton = document.createElement('button');
-    deleteButton.className = 'DeleteButton';
+    deleteButton.className = 'delete-button button-destructive';
     deleteButton.id = 'Delete-' + connectionName;
     deleteButton.innerHTML = 'Delete';
 
@@ -90,9 +125,6 @@
       deleteConnection(connectionName);
     };
     div.appendChild(deleteButton);
-
-    div.appendChild(document.createElement('br'));
-    div.appendChild(document.createElement('br'));
   }
 
   /**
@@ -101,7 +133,7 @@
    */
   function AddUpdateButton(connectionName, div) {
     let updateButton = document.createElement('button');
-    updateButton.className = 'UpdateButton';
+    updateButton.className = 'update-button button-secondary';
     updateButton.id = 'Update-' + connectionName;
     updateButton.innerHTML = 'Update';
 
@@ -109,9 +141,6 @@
       updateConnection(connectionName);
     };
     div.appendChild(updateButton);
-
-    div.appendChild(document.createElement('br'));
-    div.appendChild(document.createElement('br'));
   }
 
   /**
@@ -121,13 +150,14 @@
    */
   function AddConnectionButton(connectionName, currentConnection, div) {
     let connectButton = document.createElement('button');
-    connectButton.className = 'ConnectButton';
+    connectButton.className = 'connect-button button-primary';
     connectButton.id = 'Connect-' + connectionName;
     connectButton.innerHTML = 'Connect';
 
     if (currentConnection !== undefined) {
       if (connectionName === currentConnection['name']) {
         connectButton.innerHTML = 'Connected';
+        connectButton.className = 'connect-button button-connected';
       }
     }
 
@@ -147,7 +177,7 @@
    * @param {string} connectionName
    */
   function deleteConnection(connectionName) {
-    vscode.postMessage({ type: 'Connections.deleteConnection', data: connectionName });
+    vscode.postMessage({ type: 'Connections.deleteConnectionPanel', data: connectionName });
   }
 
   /**

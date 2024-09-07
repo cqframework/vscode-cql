@@ -5,7 +5,7 @@ import { Storage } from '../storage';
 import { Messages } from './messages';
 import { ConnectionsViewProvider } from './sideBar';
 
-export type PanelMode = 'Uninitialized' | 'Add' | 'Edit';
+export type ConnectionPanelMode = 'Uninitialized' | 'Add' | 'Edit';
 
 export class ConnectionPanel {
   /**
@@ -36,18 +36,26 @@ export class ConnectionPanel {
     return this.viewType;
   }
 
+  public getOldConnectionName(): string | undefined {
+    return this._oldConnectionName;
+  }
+
   public static createOrShow(
     extensionUri: vscode.Uri,
     sideBar: ConnectionsViewProvider,
-    mode: PanelMode,
+    mode: ConnectionPanelMode,
     oldConnectionName?: string,
   ) {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
 
-    // If we already have a panel for this mode, show it.
-    if (ConnectionPanel.currentPanel && mode === ConnectionPanel.getViewType()) {
+    // If we already have a panel for this mode and connection, show it.
+    if (
+      ConnectionPanel.currentPanel &&
+      mode === ConnectionPanel.getViewType() &&
+      ConnectionPanel.getPanel()?.getOldConnectionName() === oldConnectionName
+    ) {
       ConnectionPanel.currentPanel._panel.reveal(column);
       return;
     }
@@ -96,7 +104,7 @@ export class ConnectionPanel {
   private constructor(
     panel: vscode.WebviewPanel,
     extensionUri: vscode.Uri,
-    mode: PanelMode,
+    mode: ConnectionPanelMode,
     oldConnectionName?: string,
   ) {
     this._panel = panel;
@@ -240,7 +248,7 @@ export class ConnectionPanel {
     }
   }
 
-  _update(mode: PanelMode) {
+  _update(mode: ConnectionPanelMode) {
     const webview = this._panel.webview;
 
     if (mode === 'Add') {
@@ -252,7 +260,7 @@ export class ConnectionPanel {
     }
   }
 
-  private _getHtmlForWebview(webview: vscode.Webview, mode: PanelMode) {
+  private _getHtmlForWebview(webview: vscode.Webview, mode: ConnectionPanelMode) {
     const styleResetUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this._extensionUri, 'src/webview', 'reset.css'),
     );
@@ -279,35 +287,37 @@ export class ConnectionPanel {
     return `<!DOCTYPE html>
 			<html lang="en" data-mode="${modeClass}">
 			<head>
-				<meta charset="UTF-8">
+        <meta charset="UTF-8">
 
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-				<link href="${styleResetUri}" rel="stylesheet">
-				<link href="${styleVSCodeUri}" rel="stylesheet">
-				<link href="${styleMainUri}" rel="stylesheet">
+        <link href="${styleResetUri}" rel="stylesheet">
+        <link href="${styleVSCodeUri}" rel="stylesheet">
+        <link href="${styleMainUri}" rel="stylesheet">
 
-				<title>FHIR Server Connection</title>
-			</head>
-			<body>
+        <title>FHIR Server Connection</title>
+      </head>
+      <body>
 
-      <label for="connectionName">Name</label>
-      <input type="text" id="connectionName" name="connectionName" placeholder="Enter connection name"><br><br>
+        <label for="connectionName">Name</label>
+        <input type="text" id="connectionName" name="connectionName" placeholder="Enter connection name"><br><br>
 
-      <label for="connectionURL">URL</label>
-      <input type="text" id="connectionURL" name="connectionURL" placeholder="Enter server url"><br><br>
+        <label for="connectionURL">URL</label>
+        <input type="text" id="connectionURL" name="connectionURL" placeholder="Enter server url"><br><br>
 
-      <label for="connectionContext">Patient Context</label>
-      <input type="text" id="connectionContext" name="connectionContext" placeholder="Enter comma separated Patient IDs"><br><br>
+        <label for="connectionContext">Patient Context</label>
+        <input type="text" id="connectionContext" name="connectionContext" placeholder="Enter comma separated Patient IDs"><br><br>
 
-      <button class="cancel-button">Cancel</button>
-      <button class="test-connection-button">Test Connection</button>
-      <p class="test-connection-result"></p>
-      <button class="${modeClass}-connection-button">${modeText} Connection</button>
+        <div style="width:100%;">
+          <button class="cancel-button button-secondary">Cancel</button>
+          <button class="test-connection-button button-secondary">Test Connection</button>
+          <button class="${modeClass}-connection-button button-primary">${modeText} Connection</button>
+          <p class="test-connection-result"></p>
+        </div>
 
-			<script src="${scriptUri}"></script>
-			</body>
-			</html>`;
+        <script src="${scriptUri}"></script>
+      </body>
+      </html>`;
   }
 }
 

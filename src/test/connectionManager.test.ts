@@ -74,8 +74,6 @@ suite('Connection Manager Test', () => {
       },
     });
 
-    console.log(ConnectionManager.getManager().getAllConnections());
-
     assert.ok(ConnectionManager.getManager().getAllConnections()['123-connection'] !== undefined);
     assert.ok(ConnectionManager.getManager().getAllConnections()['connection-2'] !== undefined);
     assert.ok(ConnectionManager.getManager().getAllConnections()['connection-3'] !== undefined);

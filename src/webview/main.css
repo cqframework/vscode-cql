@@ -39,18 +39,93 @@ body {
   margin: 0 auto;
 }
 
-.DeleteButton {
-  background-color: rgb(153, 42, 42);
+.add-connection-button {
+  width: 95%;
+  min-width: 100px;
+  max-width: 380px;
+  margin: 5px 5px 5px 5px;
+  float: center;
 }
 
-.DeleteButton:hover {
-  background-color: rgb(153, 42, 42);
+.add-button {
+  width: 25%;
+  min-width: 100px;
+  max-width: 120px;
+  margin: 5px 5px 5px 5px;
 }
 
-.UpdateButton {
-  background-color: rgb(80, 77, 77);
+.delete-button {
+  width: 25%;
+  min-width: 100px;
+  max-width: 120px;
+  margin: 5px 5px 5px 5px;
 }
 
-.UpdateButton:hover {
-  background-color: rgb(80, 77, 77);
+.update-button {
+  width: 25%;
+  min-width: 100px;
+  max-width: 120px;
+  margin: 5px 5px 5px 5px;
+}
+
+.connect-button {
+  width: 25%;
+  min-width: 100px;
+  max-width: 120px;
+  margin: 5px 5px 5px 5px;
+}
+
+.test-connection-button {
+  width: 25%;
+  min-width: 100px;
+  max-width: 120px;
+  margin: 5px 5px 5px 5px;
+}
+
+.cancel-button {
+  width: 25%;
+  min-width: 100px;
+  max-width: 120px;
+  margin: 5px 5px 5px 5px;
+}
+
+.delete-confirmation-button {
+  width: 25%;
+  min-width: 100px;
+  max-width: 120px;
+  margin: 5px 5px 5px 5px;
+}
+
+.button-primary {
+  background-color: #0e6396;
+}
+
+.button-primary:hover {
+  background-color: #007acc;
+}
+
+.button-secondary {
+  background-color: #3a3d41;
+}
+
+.button-secondary:hover {
+  background-color: #424750;
+}
+
+.button-destructive {
+  background-color: #a31515;
+}
+
+.button-destructive:hover {
+  background-color: #f14c4c;
+}
+
+.button-connected {
+  background-color: #28632b;
+  color: white;
+}
+
+.button-connected:hover {
+  background-color: #2e6e2f;
+  color: white;
 }
