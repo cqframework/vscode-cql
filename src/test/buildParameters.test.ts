@@ -2,18 +2,15 @@ import * as assert from 'assert';
 import path from 'path';
 import { ExtensionContext, extensions, window, workspace } from 'vscode';
 import { URI } from 'vscode-uri';
-import { buildParameters } from '../../buildParameters';
-import { ConnectionManager } from '../../connectionManager';
+import { buildParameters } from '../buildParameters';
+import { ConnectionManager } from '../connectionManager';
 
-const libraryUrl = path.resolve(__dirname, '../suite/resources/simple-test-ig/input/cql');
+const libraryUrl = path.resolve(__dirname, './resources/simple-test-ig/input/cql');
 const terminologyUrl = path.resolve(
   __dirname,
-  '../suite/resources/simple-test-ig/input/vocabulary/valueset',
+  './resources/simple-test-ig/input/vocabulary/valueset',
 );
-const modelUrl = path.resolve(
-  __dirname,
-  '../suite/resources/simple-test-ig/input/tests/Test/simple-test',
-);
+const modelUrl = path.resolve(__dirname, './resources/simple-test-ig/input/tests/Test/simple-test');
 const remoteUrl = 'http://localhost:8000';
 async function showSpecificFile(filePath: string) {
   const document = await workspace.openTextDocument(filePath);
@@ -21,7 +18,7 @@ async function showSpecificFile(filePath: string) {
 }
 
 suite('buildParameters - Public API Testing', () => {
-  const testWorkspacePath = path.resolve(__dirname, '../suite/resources/simple-test-ig');
+  const testWorkspacePath = path.resolve(__dirname, './resources/simple-test-ig');
   const testFilePath = path.join(testWorkspacePath, 'input/cql/Test.cql');
   let connectionManager = ConnectionManager.getManager();
 
