@@ -1,3 +1,6 @@
+/**
+ * This is a stub description for now.
+ */
 import expandTilde from 'expand-tilde';
 import * as fse from 'fs-extra';
 import * as path from 'path';

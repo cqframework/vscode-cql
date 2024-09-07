@@ -9,3 +9,4 @@ jars/
 bin
 .vscode-test
 coverage/
+docs

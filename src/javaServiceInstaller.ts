@@ -1,3 +1,6 @@
+/**
+ * This is a stub description for now.
+ */
 import * as fs from 'fs';
 import fetch from 'node-fetch';
 import * as path from 'path';
@@ -12,10 +15,21 @@ interface MavenCoords {
   type?: string;
 }
 
+/**
+ * Returns the directory path where JAR files are stored.
+ * @returns {string} The JAR home directory path.
+ */
 function getJarHome(): string {
   return path.join(__dirname, '../jars');
 }
 
+/**
+ * Retrieves the path of a service JAR file based on the Maven coordinates.
+ * @param {ExtensionContext} context - The VS Code extension context.
+ * @param {string} serviceName - The name of the service.
+ * @returns {string} The path to the service JAR file.
+ * @throws Will throw an error if the Maven coordinates for the service are not found.
+ */
 export function getServicePath(context: ExtensionContext, serviceName: string): string {
   const coords = getCoords(context);
   const serviceCoords = coords[serviceName];
@@ -26,6 +40,11 @@ export function getServicePath(context: ExtensionContext, serviceName: string): 
   return getServicePathFromCoords(serviceCoords);
 }
 
+/**
+ * Retrieves Maven coordinates from the `package.json` file in the extension context.
+ * @param {ExtensionContext} context - The VS Code extension context.
+ * @returns {{ [serviceName: string]: MavenCoords }} An object containing Maven coordinates keyed by service name.
+ */
 function getCoords(context: ExtensionContext): {
   [serviceName: string]: MavenCoords;
 } {
@@ -36,17 +55,32 @@ function getCoords(context: ExtensionContext): {
   return javaDependencies as { [serviceName: string]: MavenCoords };
 }
 
+/**
+ * Generates the path for a service JAR file based on Maven coordinates.
+ * @param {MavenCoords} coords - The Maven coordinates of the service.
+ * @returns {string} The path to the service JAR file.
+ */
 function getServicePathFromCoords(coords: MavenCoords): string {
   const jarHome = getJarHome();
   const jarName = getLocalName(coords);
   return path.join(jarHome, jarName);
 }
 
+/**
+ * Installs Java dependencies specified in the `package.json` file.
+ * @param {ExtensionContext} context - The VS Code extension context.
+ * @returns {Promise<void>} A promise that resolves when all dependencies are installed.
+ */
 export async function installJavaDependencies(context: ExtensionContext): Promise<void> {
   const coords = getCoords(context);
   await installJavaDependenciesFromCoords(coords);
 }
 
+/**
+ * Installs Java dependencies based on the provided Maven coordinates.
+ * @param {{ [serviceName: string]: MavenCoords }} coordsMaps - An object containing Maven coordinates keyed by service name.
+ * @returns {Promise<void>} A promise that resolves when all dependencies are installed.
+ */
 async function installJavaDependenciesFromCoords(coordsMaps: {
   [serviceName: string]: MavenCoords;
 }): Promise<void> {
@@ -55,12 +89,22 @@ async function installJavaDependenciesFromCoords(coordsMaps: {
   }
 }
 
+/**
+ * Generates the local filename for a JAR file based on Maven coordinates.
+ * @param {MavenCoords} coords - The Maven coordinates of the service.
+ * @returns {string} The local filename for the JAR file.
+ */
 function getLocalName(coords: MavenCoords): string {
   return `${coords.artifactId}-${coords.version}${
     coords.classifier ? '-' + coords.classifier : ''
   }${coords.type ? '.' + coords.type : '.jar'}`;
 }
 
+/**
+ * Generates the URL for searching and downloading a JAR file based on Maven coordinates.
+ * @param {MavenCoords} coords - The Maven coordinates of the service.
+ * @returns {string} The URL for searching and downloading the JAR file.
+ */
 function getSearchUrl(coords: MavenCoords): string {
   const repository = coords.version.toLowerCase().endsWith('-snapshot') ? 'snapshots' : 'releases';
   return (
@@ -69,6 +113,12 @@ function getSearchUrl(coords: MavenCoords): string {
   );
 }
 
+/**
+ * Installs a service if its JAR file is missing.
+ * @param {string} serviceName - The name of the service.
+ * @param {MavenCoords} coords - The Maven coordinates of the service.
+ * @returns {Promise<void>} A promise that resolves when the service is installed.
+ */
 async function installServiceIfMissing(serviceName: string, coords: MavenCoords): Promise<void> {
   const doesExist = isServiceInstalled(coords);
   if (!doesExist) {
@@ -85,6 +135,11 @@ async function installServiceIfMissing(serviceName: string, coords: MavenCoords)
   }
 }
 
+/**
+ * Checks if a service JAR file is already installed.
+ * @param {MavenCoords} coords - The Maven coordinates of the service.
+ * @returns {boolean} `true` if the service JAR file is installed, `false` otherwise.
+ */
 function isServiceInstalled(coords: MavenCoords): boolean {
   const jarPath = getServicePathFromCoords(coords);
   try {
@@ -95,7 +150,13 @@ function isServiceInstalled(coords: MavenCoords): boolean {
   }
 }
 
-// Installs a jar using maven coordinates
+/**
+ * Installs a JAR file based on Maven coordinates.
+ * @param {string} serviceName - The name of the service.
+ * @param {MavenCoords} coords - The Maven coordinates of the service.
+ * @param {Progress<{ message?: string; increment?: number }>} [progress] - The progress reporter.
+ * @returns {Promise<void>} A promise that resolves when the JAR file is installed.
+ */
 async function installJar(
   serviceName: string,
   coords: MavenCoords,
@@ -129,6 +190,15 @@ async function installJar(
   }
 }
 
+/**
+ * Downloads a file from a URL to a specified path.
+ * @param {string} url - The URL of the file to download.
+ * @param {string} path - The path to save the downloaded file.
+ * @param {string} _serviceName - The name of the service.
+ * @param {number} [totalBytes] - The total size of the file in bytes.
+ * @param {Progress<{ message?: string; increment?: number }>} [progress] - The progress reporter.
+ * @returns {Promise<void>} A promise that resolves when the file download is complete.
+ */
 async function downloadFile(
   url: string,
   path: string,
@@ -155,6 +225,13 @@ async function downloadFile(
   });
 }
 
+/**
+ * Sets up the download by determining the redirect URL and file size.
+ * @param {string} serviceName - The name of the service.
+ * @param {string} url - The URL to initiate the download.
+ * @returns {Promise<{ serverDownloadUrl: string, serverDownloadSize: number | undefined }>} An object containing the redirect URL and the file size.
+ * @throws Will throw an error if the redirect URL cannot be determined.
+ */
 async function setupDownload(serviceName: string, url: string) {
   let response = await fetch(url, { redirect: 'manual' });
   const redirectUrl = response.headers.get('location');
