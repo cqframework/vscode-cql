@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.7.3 Release
+
+- Update to CQL Language Server 3.2.1
+  - Fixes for external IGs
+
 ## 0.7.1 Release
 
 - Update to CQL Language Server 3.1.0
