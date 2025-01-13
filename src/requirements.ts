@@ -9,7 +9,7 @@ import { getServicePath, installJavaDependencies } from './javaServiceInstaller'
 const isWindows = process.platform.indexOf('win') === 0;
 const JAVAC_FILENAME = 'javac' + (isWindows ? '.exe' : '');
 const JAVA_FILENAME = 'java' + (isWindows ? '.exe' : '');
-const REQUIRED_JDK_VERSION = 11;
+const REQUIRED_JDK_VERSION = 17;
 const JDK_URL = 'https://adoptium.net/temurin/releases/';
 export interface RequirementsData {
   java_requirements: JavaRequirements;
