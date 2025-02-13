@@ -1,10 +1,14 @@
 # Change Log
 
+## 0.7.5 Release
+
+- Update to CQL Language Server 3.4.0
+
 ## 0.7.4 Release
 
 - Update to CQL Language Server 3.3.1
   - This requires Java 17
-- Updated to check for Java 17 pre-requisites
+- Update to check for Java 17 pre-requisites
 - Various bug fixes for CQL evaluation
 
 ## 0.7.3 Release
