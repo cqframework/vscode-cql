@@ -28,6 +28,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
     window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
   }
 
+  const rootDir = Utils.resolvePath(projectPath);
   const optionsPath = Utils.resolvePath(libraryDirectory, 'cql-options.json');
   const measurementPeriod = '';
   const testPath = Utils.resolvePath(projectPath, 'input', 'tests');
@@ -56,6 +57,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
         terminologyPath,
         p.name,
         measurementPeriod,
+        rootDir
       ),
     );
   }
@@ -174,6 +176,7 @@ function getExecArgs(
   terminologyPath: Uri | null,
   contextValue: string | null,
   measurementPeriod: string,
+  rootDir: Uri,
 ): string[] {
   // TODO: One day we might support other models and contexts
   const modelType = 'FHIR';
@@ -200,6 +203,10 @@ function getExecArgs(
   if (measurementPeriod && measurementPeriod !== '') {
     args.push(`-p=${libraryName}."Measurement Period"`);
     args.push(`-pv=${measurementPeriod}`);
+  }
+
+  if (rootDir) {
+    args.push(`-rd=${rootDir}`);
   }
 
   return args;
