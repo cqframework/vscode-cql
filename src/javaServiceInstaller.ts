@@ -62,10 +62,9 @@ function getLocalName(coords: MavenCoords): string {
 }
 
 function getSearchUrl(coords: MavenCoords): string {
-  const repository = coords.version.toLowerCase().endsWith('-snapshot') ? 'snapshots' : 'releases';
+  const groupIdAsDirectory = coords.groupId.replace(/\./gi, '/');
   return (
-    `https://oss.sonatype.org/service/local/artifact/maven/redirect?r=${repository}&g=${coords.groupId}&a=${coords.artifactId}&v=${coords.version}` +
-    (coords.classifier ? `&c=${coords.classifier}` : ``)
+    `https://repo1.maven.org/maven2/${groupIdAsDirectory}/${coords.artifactId}/${coords.version}/${getLocalName(coords)}`
   );
 }
 
@@ -156,14 +155,19 @@ async function downloadFile(
 }
 
 async function setupDownload(serviceName: string, url: string) {
-  let response = await fetch(url, { redirect: 'manual' });
-  const redirectUrl = response.headers.get('location');
+  // BTR: This used to be because the oss service had a redirect in to get the actual location
+  // We're now constructing the download URL directly according to maven2 repo structure:
+  // https://maven.apache.org/repository/layout.html
+  //let response = await fetch(url, { redirect: 'manual' });
+  //const redirectUrl = response.headers.get('location');
+
+  let redirectUrl = url;
 
   if (!redirectUrl || redirectUrl === '') {
     throw new Error(`Unable to locate and/or download files for ${serviceName}`);
   }
 
-  response = await fetch(redirectUrl, { method: 'head' });
+  let response = await fetch(redirectUrl, { method: 'head' });
   const length = response.headers.get('content-length');
 
   return {
