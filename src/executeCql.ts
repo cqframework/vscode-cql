@@ -56,8 +56,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
         p.path,
         terminologyPath,
         p.name,
-        measurementPeriod,
-        rootDir
+        measurementPeriod
       ),
     );
   }
@@ -81,7 +80,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
   await insertLineAtEnd(textEditor, `${terminologyMessage}`);
   await insertLineAtEnd(textEditor, `${testMessage}`);
 
-  let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath);
+  let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath, rootDir);
   operationArgs.push(...testCasesArgs);
   await executeCQL(textEditor, operationArgs);
 }
@@ -157,13 +156,17 @@ async function executeCQL(textEditor: TextEditor, operationArgs: string[]) {
   );
 }
 
-function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri): string[] {
+function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri, rootDir: Uri): string[] {
   const args = ['cql'];
 
   args.push(`-fv=${fhirVersion}`);
 
   if (optionsPath && fs.existsSync(optionsPath.fsPath)) {
     args.push(`-op=${optionsPath}`);
+  }
+
+  if (rootDir) {
+    args.push(`-rd=${rootDir}`);
   }
 
   return args;
@@ -175,8 +178,7 @@ function getExecArgs(
   modelPath: Uri | null,
   terminologyPath: Uri | null,
   contextValue: string | null,
-  measurementPeriod: string,
-  rootDir: Uri,
+  measurementPeriod: string
 ): string[] {
   // TODO: One day we might support other models and contexts
   const modelType = 'FHIR';
@@ -203,10 +205,6 @@ function getExecArgs(
   if (measurementPeriod && measurementPeriod !== '') {
     args.push(`-p=${libraryName}."Measurement Period"`);
     args.push(`-pv=${measurementPeriod}`);
-  }
-
-  if (rootDir) {
-    args.push(`-rd=${rootDir}`);
   }
 
   return args;
