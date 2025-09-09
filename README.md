@@ -58,6 +58,18 @@ Set your repo home directory and update the versions as needed.
 
 This project follows the guidance given by Microsoft for the VS Code marketplace [here](https://code.visualstudio.com/updates/v1_63#_publishing-prerelease-extensions) and publishes prereleases to the VS Code marketplace using odd minor version numbers. Full releases are published using even minor version numbers.
 
+## Release Process
+
+1. Update master to be a release version (and all the reviews, bug fixes, etc. that that requires)
+    1. Update package.json - version to X.X.X (e.g. `0.7.7`)
+2. Passed CI Build = ready for release
+3. Follow the instructions here [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) to publish the extension.
+4. Create a github release (specify a tag of `vX.X.X` (e.g. `v0.7.7`) pointing at master to be created on release)
+    1. Choose the "Auto-generate release notes" option
+    2. Provide any additional detail/cleanup on the release notes
+5. Update masster version to the next snapshot version `X.X.X-SNAPSHOT` (e.g. 0.7.8-SNAPSHOT)
+6. Close all issues included in the release
+
 ## Acknowledgements
 
 This plugin is a reimplementation of much of the functionality in the [atom_cql_support](https://github.com/cqframework/atom_cql_support) plugin for the Atom editor. Additionally, the Red Hat [vscode-java](https://github.com/redhat-developer/vscode-java) plugin was referenced extensively in developing this plugin.
