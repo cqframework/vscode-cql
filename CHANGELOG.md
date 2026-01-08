@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.7.9 Release
+
+- Update to CQL Language Server 4.0.0
+
 ## 0.7.5 Release
 
 - Update to CQL Language Server 3.4.0
