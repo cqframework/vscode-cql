@@ -1,6 +1,6 @@
 {
   "name": "cql",
-  "version": "0.7.10-SNAPSHOT",
+  "version": "0.7.10",
   "displayName": "Clinical Quality Language (CQL)",
   "description": "Syntax highlighting, linting, and execution for the HL7 Clinical Quality Language (CQL) for VS Code",
   "publisher": "cqframework",
