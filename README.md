@@ -52,6 +52,9 @@ TIP: The cql-language-server that provides error highlighting is a Java project.
 On linux:
 `vscode-cql/dist/jars$ ln -s your-repo-home/cql-language-server/ls/service/target/cql-ls-service-1.5.8.jar cql-ls-service-1.5.8.jar`
 
+For [asdf](https://asdf-vm.com/) Runtime Version Manager users:
+`add ~/.asdf/plugins/java/set-java-home.zsh to ~/.zshrc` (You might need to add this to ~/.bashrc if using bash or the same with other shells)
+
 Set your repo home directory and update the versions as needed.
 
 ## Versioning
