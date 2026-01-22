@@ -35,7 +35,7 @@ Inquires for commercial support can be directed to info at alphora.com
 This project is being used by multiple groups as part of CQL-based artifact knowledge engineering pipelines. To support
 development and maintenance of the VS Code plugin as part of those pipelines, several of these stakeholders meet regularly 
 to manage issues, discuss features, and coordinate development. All the work performed by this group is managed on the 
-[VSCode Plugin Project Board](). Anyone with an interest in development and maintenance of the plugin is welcome to join these 
+[VSCode Plugin Project Board](https://github.com/orgs/cqframework/projects/6). Anyone with an interest in development and maintenance of the plugin is welcome to join these 
 meetings. Email bryn at alphora.com to be added to the invite list.
 
 ## Related Projects
