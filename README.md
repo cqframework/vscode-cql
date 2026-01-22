@@ -28,7 +28,15 @@ Bugs and feature requests can be filed with [Github Issues](https://github.com/c
 
 The implementers are active on the official FHIR [Zulip chat for CQL](https://chat.fhir.org/#narrow/stream/179220-cql).
 
-Inquires for commercial support can be directed to [info@alphora.com](info@alphora.com).
+Inquires for commercial support can be directed to info at alphora.com
+
+## Community
+
+This project is being used by multiple groups as part of CQL-based artifact knowledge engineering pipelines. To support
+development and maintenance of the VS Code plugin as part of those pipelines, several of these stakeholders meet regularly 
+to manage issues, discuss features, and coordinate development. All the work performed by this group is managed on the 
+[VSCode Plugin Project Board](). Anyone with an interest in development and maintenance of the plugin is welcome to join these 
+meetings. Email bryn at alphora.com to be added to the invite list.
 
 ## Related Projects
 
