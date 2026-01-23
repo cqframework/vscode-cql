@@ -4,8 +4,38 @@ import { Utils } from 'vscode-uri';
 import { Commands } from './commands';
 
 import * as fs from 'fs';
-import * as fse from 'fs-extra';
 import path from 'path';
+
+interface TestCase {
+  name: string | null;
+  path: Uri | null;
+}
+
+interface TestCaseExclusion {
+  library: string;
+  testCase: string;
+  reason: string;
+}
+
+interface TestConfig {
+  testCasesToExclude: TestCaseExclusion[];
+}
+
+async function executeCQL(textEditor: TextEditor, operationArgs: string[]) {
+  const startExecution = Date.now();
+  const result: string | undefined = await commands.executeCommand(
+    Commands.EXECUTE_WORKSPACE_COMMAND,
+    Commands.EXECUTE_CQL,
+    ...operationArgs,
+  );
+  const endExecution = Date.now();
+
+  await insertLineAtEnd(textEditor, result!);
+  await insertLineAtEnd(
+    textEditor,
+    `elapsed: ${((endExecution - startExecution) / 1000).toString()} seconds`,
+  );
+}
 
 // NOTE: This is not the intended future state of executing CQL.
 // There's a CQL debug server under development that will replace this.
@@ -34,21 +64,23 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
   const testPath = Utils.resolvePath(projectPath, 'input', 'tests');
   const resultPath = Utils.resolvePath(testPath, 'results');
   const outputPath = Utils.resolvePath(resultPath, `${libraryName}.txt`);
-
-  fse.ensureFileSync(outputPath.fsPath);
+  const testConfigPath = Utils.resolvePath(testPath, 'config.json');
 
   const textDocument = await workspace.openTextDocument(outputPath);
   const textEditor = await window.showTextDocument(textDocument);
 
-  var testCasesArgs: string[] = [];
-  var testPaths = getTestPaths(testPath, libraryName);
+  const testConfig = loadTestConfig(testConfigPath);
+  const excludedTestCases = getExcludedTestCases(libraryName, testConfig.testCasesToExclude);
+
+  let testCasesArgs: string[] = [];
+  let testPaths = getTestPaths(testPath, libraryName, Array.from(excludedTestCases.keys()));
 
   // We didn't find any test cases, so we'll just execute an empty one
   if (testPaths.length === 0) {
     testPaths.push({ name: null, path: null });
   }
 
-  for (var p of testPaths) {
+  for (let p of testPaths) {
     testCasesArgs.push(
       ...getExecArgs(
         libraryDirectory,
@@ -56,7 +88,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
         p.path,
         terminologyPath,
         p.name,
-        measurementPeriod
+        measurementPeriod,
       ),
     );
   }
@@ -66,23 +98,95 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
     ? `Terminology: ${terminologyPath.fsPath}`
     : `No terminology found at ${terminologyPath.fsPath}. Evaluation may fail if terminology is required.`;
 
-  let testMessage = '';
+  let testMessage = [];
   if (testPaths.length == 1 && testPaths[0].name === null) {
-    testMessage = `No data found at ${testPath.fsPath}. Evaluation may fail if data is required.`;
+    testMessage.push(
+      `No data found at ${testPath.fsPath}. Evaluation may fail if data is required.`,
+    );
   } else {
-    testMessage = `Test cases:\n`;
-    for (var p of testPaths) {
-      testMessage += `${p.name} - ${p.path?.fsPath}\n`;
+    testMessage.push(`Test cases:`);
+    for (let p of testPaths) {
+      testMessage.push(`${p.name} - ${p.path?.fsPath}`);
+    }
+  }
+
+  if (excludedTestCases.size > 0) {
+    testMessage.push('\nExcluded test cases:');
+    for (const [testCase, reason] of excludedTestCases.entries()) {
+      testMessage.push(`${testCase} - ${reason}`);
     }
   }
 
   await insertLineAtEnd(textEditor, `${cqlMessage}`);
   await insertLineAtEnd(textEditor, `${terminologyMessage}`);
-  await insertLineAtEnd(textEditor, `${testMessage}`);
+  await insertLineAtEnd(textEditor, `${testMessage.join('\n')}\n`);
 
   let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath, rootDir);
   operationArgs.push(...testCasesArgs);
   await executeCQL(textEditor, operationArgs);
+}
+
+function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri, rootDir: Uri): string[] {
+  const args = ['cql'];
+
+  args.push(`-fv=${fhirVersion}`);
+
+  if (optionsPath && fs.existsSync(optionsPath.fsPath)) {
+    args.push(`-op=${optionsPath}`);
+  }
+
+  if (rootDir) {
+    args.push(`-rd=${rootDir}`);
+  }
+
+  return args;
+}
+
+function getExcludedTestCases(
+  libraryName: string,
+  testCasesToExclude: TestCaseExclusion[],
+): Map<string, string> {
+  let excludedTestCases = new Map<string, string>();
+  for (let excludedTestCase of testCasesToExclude) {
+    if (excludedTestCase.library == libraryName) {
+      excludedTestCases.set(excludedTestCase.testCase, excludedTestCase.reason);
+    }
+  }
+  return excludedTestCases;
+}
+
+function getExecArgs(
+  libraryDirectory: Uri,
+  libraryName: string,
+  modelPath: Uri | null,
+  terminologyPath: Uri | null,
+  contextValue: string | null,
+  measurementPeriod: string,
+): string[] {
+  // TODO: One day we might support other models and contexts
+  const modelType = 'FHIR';
+  const contextType = 'Patient';
+
+  let args: string[] = [];
+  args.push(`-ln=${libraryName}`, `-lu=${libraryDirectory}`);
+
+  if (modelPath) {
+    args.push(`-m=${modelType}`, `-mu=${modelPath}`);
+  }
+
+  if (terminologyPath) {
+    args.push(`-t=${terminologyPath}`);
+  }
+
+  if (contextValue) {
+    args.push(`-c=${contextType}`, `-cv=${contextValue}`);
+  }
+
+  if (measurementPeriod && measurementPeriod !== '') {
+    args.push(`-p=${libraryName}."Measurement Period"`, `-pv=${measurementPeriod}`);
+  }
+
+  return args;
 }
 
 function getFhirVersion(): string | null {
@@ -104,17 +208,16 @@ function getFhirVersion(): string | null {
   return null;
 }
 
-interface TestCase {
-  name: string | null;
-  path: Uri | null;
-}
-
 /**
  * Get the test cases to execute
  * @param testPath the root path to look for test cases
  * @returns a list of test cases to execute
  */
-function getTestPaths(testPath: Uri, libraryName: string): TestCase[] {
+function getTestPaths(
+  testPath: Uri,
+  libraryName: string,
+  testCasesToExclude: string[],
+): TestCase[] {
   if (!fs.existsSync(testPath.fsPath)) {
     return [];
   }
@@ -123,9 +226,11 @@ function getTestPaths(testPath: Uri, libraryName: string): TestCase[] {
   let directories = glob
     .sync(testPath.fsPath + `/**/${libraryName}`)
     .filter(d => fs.statSync(d).isDirectory());
-  for (var dir of directories) {
-    let cases = fs.readdirSync(dir).filter(d => fs.statSync(path.join(dir, d)).isDirectory());
-    for (var c of cases) {
+  for (let dir of directories) {
+    let cases = fs
+      .readdirSync(dir)
+      .filter(d => fs.statSync(path.join(dir, d)).isDirectory() && !testCasesToExclude.includes(d));
+    for (let c of cases) {
       testCases.push({ name: c, path: Uri.file(path.join(dir, c)) });
     }
   }
@@ -136,76 +241,17 @@ function getTestPaths(testPath: Uri, libraryName: string): TestCase[] {
 async function insertLineAtEnd(textEditor: TextEditor, text: string) {
   const document = textEditor.document;
   await textEditor.edit(editBuilder => {
-    editBuilder.insert(new Position(textEditor.document.lineCount, 0), text + '\n');
+    editBuilder.insert(new Position(document.lineCount, 0), text + '\n');
   });
 }
 
-async function executeCQL(textEditor: TextEditor, operationArgs: string[]) {
-  const startExecution = Date.now();
-  const result: string | undefined = await commands.executeCommand(
-    Commands.EXECUTE_WORKSPACE_COMMAND,
-    Commands.EXECUTE_CQL,
-    ...operationArgs,
-  );
-  const endExecution = Date.now();
-
-  await insertLineAtEnd(textEditor, result!);
-  await insertLineAtEnd(
-    textEditor,
-    `elapsed: ${((endExecution - startExecution) / 1000).toString()} seconds`,
-  );
-}
-
-function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri, rootDir: Uri): string[] {
-  const args = ['cql'];
-
-  args.push(`-fv=${fhirVersion}`);
-
-  if (optionsPath && fs.existsSync(optionsPath.fsPath)) {
-    args.push(`-op=${optionsPath}`);
+function loadTestConfig(testConfigPath: Uri): TestConfig {
+  try {
+    const jsonString = fs.readFileSync(testConfigPath.fsPath, 'utf-8');
+    // Cast the parsed object to the User interface
+    return JSON.parse(jsonString) as TestConfig;
+  } catch (error) {
+    console.error('Error reading or parsing JSON file:', error);
+    return { testCasesToExclude: [] };
   }
-
-  if (rootDir) {
-    args.push(`-rd=${rootDir}`);
-  }
-
-  return args;
-}
-
-function getExecArgs(
-  libraryDirectory: Uri,
-  libraryName: string,
-  modelPath: Uri | null,
-  terminologyPath: Uri | null,
-  contextValue: string | null,
-  measurementPeriod: string
-): string[] {
-  // TODO: One day we might support other models and contexts
-  const modelType = 'FHIR';
-  const contextType = 'Patient';
-
-  let args: string[] = [];
-  args.push(`-ln=${libraryName}`);
-  args.push(`-lu=${libraryDirectory}`);
-
-  if (modelPath) {
-    args.push(`-m=${modelType}`);
-    args.push(`-mu=${modelPath}`);
-  }
-
-  if (terminologyPath) {
-    args.push(`-t=${terminologyPath}`);
-  }
-
-  if (contextValue) {
-    args.push(`-c=${contextType}`);
-    args.push(`-cv=${contextValue}`);
-  }
-
-  if (measurementPeriod && measurementPeriod !== '') {
-    args.push(`-p=${libraryName}."Measurement Period"`);
-    args.push(`-pv=${measurementPeriod}`);
-  }
-
-  return args;
 }
