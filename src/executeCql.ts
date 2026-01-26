@@ -1,10 +1,10 @@
+import * as fs from 'fs';
+import * as fse from 'fs-extra';
 import { glob } from 'glob';
+import path from 'path';
 import { Position, TextEditor, Uri, commands, window, workspace } from 'vscode';
 import { Utils } from 'vscode-uri';
 import { Commands } from './commands';
-
-import * as fs from 'fs';
-import path from 'path';
 
 interface TestCase {
   name: string | null;
@@ -60,15 +60,15 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
 
   const rootDir = Utils.resolvePath(projectPath);
   const optionsPath = Utils.resolvePath(libraryDirectory, 'cql-options.json');
-  const measurementPeriod = '';
   const testPath = Utils.resolvePath(projectPath, 'input', 'tests');
   const resultPath = Utils.resolvePath(testPath, 'results');
-  const outputPath = Utils.resolvePath(resultPath, `${libraryName}.txt`);
-  const testConfigPath = Utils.resolvePath(testPath, 'config.json');
 
+  const outputPath = Utils.resolvePath(resultPath, `${libraryName}.txt`);
+  fse.ensureFileSync(outputPath.fsPath);
   const textDocument = await workspace.openTextDocument(outputPath);
   const textEditor = await window.showTextDocument(textDocument);
 
+  const testConfigPath = Utils.resolvePath(testPath, 'config.json');
   const testConfig = loadTestConfig(testConfigPath);
   const excludedTestCases = getExcludedTestCases(libraryName, testConfig.testCasesToExclude);
 
@@ -80,6 +80,7 @@ export async function executeCQLFile(uri: Uri): Promise<void> {
     testPaths.push({ name: null, path: null });
   }
 
+  const measurementPeriod = '';
   for (let p of testPaths) {
     testCasesArgs.push(
       ...getExecArgs(
