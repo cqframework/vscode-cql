@@ -14,20 +14,5 @@
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "npm: watch"
     }
-    // ,{
-    //   "name": "Extension Tests",
-    //   "type": "extensionHost",
-    //   "request": "launch",
-    //   "args": [
-    //     "${workspaceFolder}/tests/empty",
-    //     "--extensionDevelopmentPath=${workspaceFolder}",
-    //     "--extensionTestsPath=${workspaceFolder}/dist/__test__/suite/index.js",
-    //     "--disable-extensions",
-    //     "--new-window"
-    //   ],
-    //   "outFiles": ["${workspaceFolder}/dist/__test__/**/*.js"],
-    //   "preLaunchTask": "npm: pretest",
-    //   "outputCapture": "std"
-    // }
   ]
 }
