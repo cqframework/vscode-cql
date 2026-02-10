@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import fetch from 'node-fetch';
 import * as path from 'path';
 import { ExtensionContext, Progress, ProgressLocation, window } from 'vscode';
-import { ensureExists } from './utils';
+import { ensureExists } from './helpers/file-helpers';
 
 interface MavenCoords {
   groupId: string;
