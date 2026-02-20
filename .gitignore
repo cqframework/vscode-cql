@@ -7,3 +7,4 @@ target
 dist
 bin
 .vscode-test
+src/__test__/resources/test-workspace/input/tests/results
