@@ -134,6 +134,24 @@
           "when": "editorLangId == cql",
           "group": "1_cqlactions@2.elm@2"
         }
+      ],
+      "commandPalette": [
+        {
+          "command": "cql.action.executeCql",
+          "when": "false"
+        },
+        {
+          "command": "cql.action.executeCql.selectTestCases",
+          "when": "false"
+        },
+        {
+          "command": "cql.action.viewElm.xml",
+          "when": "false"
+        },
+        {
+          "command": "cql.action.viewElm.json",
+          "when": "false"
+        }
       ]
     }
   },
