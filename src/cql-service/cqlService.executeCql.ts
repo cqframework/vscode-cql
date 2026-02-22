@@ -3,21 +3,7 @@ import path from 'node:path';
 import { Uri } from 'vscode';
 import { Commands } from '../commands/commands';
 import { sendRequest } from '../cql-language-server/cqlLanguageClient';
-
-export interface TestCase {
-  name?: string;
-  path?: Uri;
-}
-
-export interface TestCaseExclusion {
-  library: string;
-  testCase: string;
-  reason: string;
-}
-
-export interface TestConfig {
-  testCasesToExclude: TestCaseExclusion[];
-}
+import { TestCase } from '../model/testCase';
 
 export async function executeCql(
   cqlFileUri: Uri,
