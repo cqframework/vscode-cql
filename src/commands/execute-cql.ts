@@ -1,17 +1,21 @@
 import * as fse from 'fs-extra';
 import { glob } from 'glob';
 import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { commands, ExtensionContext, Position, ProgressLocation, TextEditor, Uri, window, workspace } from 'vscode';
+import {
+  commands,
+  ExtensionContext,
+  Position,
+  ProgressLocation,
+  TextEditor,
+  Uri,
+  window,
+  workspace,
+} from 'vscode';
 import { Utils } from 'vscode-uri';
 import { Commands } from '../commands/commands';
-import {
-  executeCql,
-  TestCase,
-  TestCaseExclusion,
-  TestConfig,
-} from '../cql-service/cqlService.executeCql';
+import { executeCql } from '../cql-service/cqlService.executeCql';
 import * as log from '../log-services/logger';
+import { getTestCases, TestCase, TestCaseExclusion } from '../model/testCase';
 
 interface CqlPaths {
   libraryDirectoryPath: Uri;
@@ -21,6 +25,10 @@ interface CqlPaths {
   terminologyDirectoryPath: Uri;
   testConfigPath: Uri;
   testDirectoryPath: Uri;
+}
+
+interface TestConfig {
+  testCasesToExclude: TestCaseExclusion[];
 }
 
 export function register(context: ExtensionContext): void {
@@ -107,7 +115,10 @@ export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
   const namedTestCases = testCases.filter(
     (testCase): testCase is Required<TestCase> => testCase.name !== undefined,
   );
-  const quickPickItems = namedTestCases.map(testCase => ({ label: testCase.name }));
+  const quickPickItems = namedTestCases.map(testCase => ({
+    label: testCase.name,
+    detail: testCase.description, // use quickpick detail to get description on 2nd line of quickpick
+  }));
 
   if (quickPickItems.length > 0) {
     quickPick.items = quickPickItems;
@@ -252,40 +263,6 @@ function getExcludedTestCases(
   return excludedTestCases;
 }
 
-function getExecArgs(
-  libraryDirectory: Uri,
-  libraryName: string,
-  modelPath: Uri | null,
-  terminologyPath: Uri | null,
-  contextValue: string | null,
-  measurementPeriod: string,
-): string[] {
-  // TODO: One day we might support other models and contexts
-  const modelType = 'FHIR';
-  const contextType = 'Patient';
-
-  let args: string[] = [];
-  args.push(`-ln=${libraryName}`, `-lu=${libraryDirectory}`);
-
-  if (modelPath) {
-    args.push(`-m=${modelType}`, `-mu=${modelPath}`);
-  }
-
-  if (terminologyPath) {
-    args.push(`-t=${terminologyPath}`);
-  }
-
-  if (contextValue) {
-    args.push(`-c=${contextType}`, `-cv=${contextValue}`);
-  }
-
-  if (measurementPeriod && measurementPeriod !== '') {
-    args.push(`-p=${libraryName}."Measurement Period"`, `-pv=${measurementPeriod}`);
-  }
-
-  return args;
-}
-
 function getFhirVersion(): string | null {
   const fhirVersionRegex = /using (FHIR|"FHIR") version '(\d(.|\d)*)'/;
   const matches = window.activeTextEditor!.document.getText().match(fhirVersionRegex);
@@ -314,36 +291,6 @@ function getLibraries(libraryPath: Uri): Array<Uri> {
     .sync(libraryPath.fsPath + `/**/*.cql`)
     .filter(f => fs.statSync(f).isFile())
     .map(f => Uri.file(f));
-}
-
-/**
- * Get the test cases to execute
- * @param testPath the root path to look for test cases
- * @returns a list of test cases to execute
- */
-function getTestCases(
-  testPath: Uri,
-  libraryName: string,
-  testCasesToExclude: string[],
-): Array<TestCase> {
-  if (!fs.existsSync(testPath.fsPath)) {
-    return [];
-  }
-
-  let testCases: TestCase[] = [];
-  let directories = glob
-    .sync(testPath.fsPath + `/**/${libraryName}`)
-    .filter(d => fs.statSync(d).isDirectory());
-  for (let dir of directories) {
-    let cases = fs
-      .readdirSync(dir)
-      .filter(d => fs.statSync(path.join(dir, d)).isDirectory() && !testCasesToExclude.includes(d));
-    for (let c of cases) {
-      testCases.push({ name: c, path: Uri.file(path.join(dir, c)) });
-    }
-  }
-
-  return testCases;
 }
 
 function getWorkspacePath(): Uri | undefined {
