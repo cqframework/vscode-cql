@@ -2,6 +2,7 @@ import { glob } from 'glob';
 import * as fs from 'node:fs';
 import path from 'node:path';
 import { Uri } from 'vscode';
+import * as log from '../log-services/logger';
 
 export interface TestCase {
   name?: string;
@@ -53,24 +54,32 @@ const TEST_CASE_DESCRIPTION_URL =
   'http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription';
 
 export function getMeasureReportDescription(testCaseFolderPath: Uri): string | undefined {
-  if (!fs.existsSync(testCaseFolderPath.fsPath)) {
-    return undefined;
+  try {
+    if (!fs.existsSync(testCaseFolderPath.fsPath)) {
+      return undefined;
+    }
+
+    const measureReportFile = fs
+      .readdirSync(testCaseFolderPath.fsPath)
+      .find(f => f.startsWith('MeasureReport'));
+
+    if (!measureReportFile) {
+      return undefined;
+    }
+
+    const content = fs.readFileSync(
+      path.join(testCaseFolderPath.fsPath, measureReportFile),
+      'utf-8',
+    );
+    const report = JSON.parse(content);
+
+    const extension = (
+      report.extension as { url: string; valueMarkdown?: string }[] | undefined
+    )?.find(e => e.url === TEST_CASE_DESCRIPTION_URL);
+
+    return extension?.valueMarkdown;
+  } catch (error) {
+    log.error('Error while attempting to getMeasureReport Description', error);
   }
-
-  const measureReportFile = fs
-    .readdirSync(testCaseFolderPath.fsPath)
-    .find(f => f.startsWith('MeasureReport'));
-
-  if (!measureReportFile) {
-    return undefined;
-  }
-
-  const content = fs.readFileSync(path.join(testCaseFolderPath.fsPath, measureReportFile), 'utf-8');
-  const report = JSON.parse(content);
-
-  const extension = (
-    report.extension as { url: string; valueMarkdown?: string }[] | undefined
-  )?.find(e => e.url === TEST_CASE_DESCRIPTION_URL);
-
-  return extension?.valueMarkdown;
+  return undefined;
 }
