@@ -6,6 +6,13 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Extension Tests",
+      "type": "extensionHost",
+      "request": "launch",
+      "testConfiguration": "${workspaceFolder}/.vscode-test.js",
+      "preLaunchTask": "npm: compile"
+    },
+    {
       "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
