@@ -18,6 +18,8 @@ import { executeCql } from '../cql-service/cqlService.executeCql';
 import * as log from '../log-services/logger';
 import { getTestCases, TestCase, TestCaseExclusion } from '../model/testCase';
 
+let _context: ExtensionContext | undefined;
+
 interface CqlPaths {
   libraryDirectoryPath: Uri;
   projectDirectoryPath: Uri;
@@ -33,6 +35,7 @@ interface TestConfig {
 }
 
 export function register(context: ExtensionContext): void {
+  _context = context;
   context.subscriptions.push(
     commands.registerCommand(Commands.EXECUTE_CQL_COMMAND, async (uri: Uri) => {
       executeCQLFile(uri);
@@ -62,10 +65,20 @@ export async function selectLibraries(): Promise<void> {
   if (quickPickItems.length > 0) {
     quickPick.items = quickPickItems;
     quickPick.canSelectMany = true;
+
+    const stateKey = 'selectLibraries.selections';
+    const savedSelections = _context?.workspaceState.get<string[]>(stateKey) ?? [];
+    if (savedSelections.length > 0) {
+      quickPick.selectedItems = quickPick.items.filter(item =>
+        savedSelections.includes(item.label),
+      );
+    }
+
     quickPick.show();
 
     quickPick.onDidAccept(async () => {
       const selected = [...quickPick.selectedItems];
+      _context?.workspaceState.update(stateKey, selected.map(item => item.label));
       quickPick.hide();
 
       await window.withProgress(
@@ -92,27 +105,27 @@ export async function selectLibraries(): Promise<void> {
 }
 
 export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
+  const cqlPaths = getCqlPaths();
+  if (!cqlPaths) {
+    const msg = 'Unable to resolve needed CQL project paths.';
+    log.error(msg);
+    window.showErrorMessage(msg);
+    return;
+  }
+
   const quickPick = window.createQuickPick();
-
-  const libraryDirectory = Utils.dirname(cqlFileUri);
   const libraryName = Utils.basename(cqlFileUri).replace('.cql', '').split('-')[0];
-  const projectPath = workspace.getWorkspaceFolder(cqlFileUri)!.uri;
-
-  const rootDir = Utils.resolvePath(projectPath);
-  const optionsPath = Utils.resolvePath(libraryDirectory, 'cql-options.json');
-  const testPath = Utils.resolvePath(projectPath, 'input', 'tests');
-  const resultPath = Utils.resolvePath(testPath, 'results');
-
-  const outputPath = Utils.resolvePath(resultPath, `${libraryName}.txt`);
+  const outputPath = Utils.resolvePath(cqlPaths.resultDirectoryPath, `${libraryName}.txt`);
   fse.ensureFileSync(outputPath.fsPath);
   const textDocument = await workspace.openTextDocument(outputPath);
-  const textEditor = await window.showTextDocument(textDocument);
-
-  const testConfigPath = Utils.resolvePath(testPath, 'config.json');
-  const testConfig = loadTestConfig(testConfigPath);
+  await window.showTextDocument(textDocument);
+  const testConfig = loadTestConfig(cqlPaths.testConfigPath);
   const excludedTestCases = getExcludedTestCases(libraryName, testConfig.testCasesToExclude);
-
-  const testCases = getTestCases(testPath, libraryName, Array.from(excludedTestCases.keys()));
+  const testCases = getTestCases(
+    cqlPaths.testDirectoryPath,
+    libraryName,
+    Array.from(excludedTestCases.keys()),
+  );
   const namedTestCases = testCases.filter(
     (testCase): testCase is Required<TestCase> => testCase.name !== undefined,
   );
@@ -124,11 +137,23 @@ export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
   if (quickPickItems.length > 0) {
     quickPick.items = quickPickItems;
     quickPick.canSelectMany = true;
+
+    const stateKey = `selectTestCases.selections.${libraryName}`;
+    const savedSelections = _context?.workspaceState.get<string[]>(stateKey) ?? [];
+    if (savedSelections.length > 0) {
+      quickPick.selectedItems = quickPick.items.filter(item =>
+        savedSelections.includes(item.label),
+      );
+    }
+
     quickPick.show();
 
     quickPick.onDidAccept(() => {
+      const selectedLabels = quickPick.selectedItems.map(item => item.label);
+      _context?.workspaceState.update(stateKey, selectedLabels);
+
       const selected = namedTestCases.filter(testCase =>
-        quickPick.selectedItems.some(item => item.label === testCase.name),
+        selectedLabels.some(label => label === testCase.name),
       );
       quickPick.hide();
       executeCQLFile(cqlFileUri, selected);
