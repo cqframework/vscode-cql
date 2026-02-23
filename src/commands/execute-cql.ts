@@ -1,5 +1,6 @@
 import * as fse from 'fs-extra';
 import { glob } from 'glob';
+import markdownToText from 'markdown-to-text';
 import * as fs from 'node:fs';
 import {
   commands,
@@ -117,7 +118,7 @@ export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
   );
   const quickPickItems = namedTestCases.map(testCase => ({
     label: testCase.name,
-    detail: testCase.description, // use quickpick detail to get description on 2nd line of quickpick
+    detail: markdownToText(testCase.description), // use quickpick detail to get description on 2nd line of quickpick
   }));
 
   if (quickPickItems.length > 0) {
