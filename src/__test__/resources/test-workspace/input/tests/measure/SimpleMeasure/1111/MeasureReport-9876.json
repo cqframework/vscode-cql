@@ -1,0 +1,45 @@
+{
+    "resourceType": "MeasureReport",
+    "id": "9876",
+    "meta": {
+        "profile": [
+            "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/test-case-cqfm"
+        ]
+    },
+    "contained": [
+        {
+            "resourceType": "Parameters",
+            "id": "6b356ec3-e349-4b6d-8281-10186194ec3c-parameters",
+            "parameter": [
+                {
+                    "name": "subject",
+                    "valueString": "0c76341a-34f1-4d1b-9bbe-5915e00a0818"
+                }
+            ]
+        }
+    ],
+    "extension": [
+        {
+            "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription",
+            "valueMarkdown": "SimpleMeasure"
+        }
+    ],
+    "modifierExtension": [
+        {
+            "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-isTestCase",
+            "valueBoolean": true
+        }
+    ],
+    "status": "complete",
+    "type": "individual",
+    "measure": "https://vscode-cql/tests/measure/SimpleMeasure",
+    "period": {
+        "start": "2026-01-01",
+        "end": "2026-12-31"
+    },
+    "evaluatedResource": [
+        {
+            "reference": "Patient/1111"
+        }
+    ]
+}
