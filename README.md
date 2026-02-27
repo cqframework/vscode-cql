@@ -61,11 +61,9 @@ On linux:
 `vscode-cql/dist/jars$ ln -s your-repo-home/cql-language-server/ls/service/target/cql-ls-service-1.5.8.jar cql-ls-service-1.5.8.jar`
 
 Java version managers are often used. These include:
-
-      [SDKMAN!](https://sdkman.io/)
-      [jenv](https://github.com/jenv/jenv)
-      [asdf](https://asdf-vm.com/)
-
+[SDKMAN!](https://sdkman.io/)
+[jenv](https://github.com/jenv/jenv)
+[asdf](https://asdf-vm.com/)
 If you are seeing something similar to:
 
       Starting client failed.
