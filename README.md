@@ -60,8 +60,25 @@ TIP: The cql-language-server that provides error highlighting is a Java project.
 On linux:
 `vscode-cql/dist/jars$ ln -s your-repo-home/cql-language-server/ls/service/target/cql-ls-service-1.5.8.jar cql-ls-service-1.5.8.jar`
 
+Java version managers are often used. These include:
+
+      [SDKMAN!](https://sdkman.io/)
+      [jenv](https://github.com/jenv/jenv)
+      [asdf](https://asdf-vm.com/)
+
+If you are seeing something similar to:
+
+      Starting client failed.
+      Launching server using command /undefined/bin/java failed.
+      Error: spawn /undefined/bin/java ENOENT
+
+Then you will need to add the following to your shell startup file (either .zshrc or .bashrc).
+
+For [jenv](https://github.com/jenv/jenv) users:
+   `jenv add ~/.jenv/plugins/java/set-java-home.zsh`
 For [asdf](https://asdf-vm.com/) Runtime Version Manager users:
-`add ~/.asdf/plugins/java/set-java-home.zsh to ~/.zshrc` (You might need to add this to ~/.bashrc if using bash or the same with other shells)
+   `add ~/.asdf/plugins/java/set-java-home.zsh to ~/.zshrc` (You might need to add this to ~/.bashrc if using bash or the same with other shells).
+   SDKMAN! should automatically manage JAVA_HOME for you.
 
 Set your repo home directory and update the versions as needed.
 
