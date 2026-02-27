@@ -81,6 +81,7 @@ Then you will need to add the following to your shell startup file (either .zshr
          `jenv add ~/.jenv/plugins/java/set-java-home.zsh`
       For asdf users:
          `add ~/.asdf/plugins/java/set-java-home.zsh to ~/.zshrc` (You might need to add this to ~/.bashrc if using bash or the same with other shells).
+
    SDKMAN! should automatically manage JAVA_HOME for you.
 
 Set your repo home directory and update the versions as needed.
