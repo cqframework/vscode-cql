@@ -77,10 +77,10 @@ If you are seeing something similar to:
 
 Then you will need to add the following to your shell startup file (either .zshrc or .bashrc).
 
-For [jenv](https://github.com/jenv/jenv) users:
-   `jenv add ~/.jenv/plugins/java/set-java-home.zsh`
-For [asdf](https://asdf-vm.com/) Runtime Version Manager users:
-   `add ~/.asdf/plugins/java/set-java-home.zsh to ~/.zshrc` (You might need to add this to ~/.bashrc if using bash or the same with other shells).
+      For jenv users:
+         `jenv add ~/.jenv/plugins/java/set-java-home.zsh`
+      For asdf users:
+         `add ~/.asdf/plugins/java/set-java-home.zsh to ~/.zshrc` (You might need to add this to ~/.bashrc if using bash or the same with other shells).
    SDKMAN! should automatically manage JAVA_HOME for you.
 
 Set your repo home directory and update the versions as needed.
