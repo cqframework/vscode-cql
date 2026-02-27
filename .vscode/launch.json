@@ -13,20 +13,6 @@
       "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--disable-extensions"],
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "npm: watch"
-    },
-    {
-      "name": "Extension Tests",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": [
-        "${workspaceFolder}/tests/empty",
-        "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/dist/test/suite/index",
-        "--disable-extensions",
-        "--new-window"
-      ],
-      "outFiles": ["${workspaceFolder}/dist/test/**/*.js"],
-      "preLaunchTask": "npm: pretest"
     }
   ]
 }

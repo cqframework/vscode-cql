@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { glob } from 'glob';
 import * as os from 'os';
 import * as path from 'path';
 import { ExtensionContext, OutputChannel, ViewColumn, commands, window, workspace } from 'vscode';
@@ -19,7 +20,6 @@ import { ClientStatus } from './extension.api';
 import { initializeLogFile, logger } from './log';
 import * as requirements from './requirements';
 import { statusBar } from './statusBar';
-import glob = require('glob');
 
 const cqlLanguageClient: CqlLanguageClient = new CqlLanguageClient();
 const extensionName = 'Language Support for CQL';
@@ -228,26 +228,29 @@ function openServerLogFile(
   return openLogFile(serverLogFile, 'Could not open CQL Language Server log file', column);
 }
 
-function openClientLogFile(
+async function openClientLogFile(
   logFile: string,
   column: ViewColumn = ViewColumn.Active,
-): Thenable<boolean> {
-  return new Promise(resolve => {
-    const filename = path.basename(logFile);
-    const dirname = path.dirname(logFile);
+): Promise<boolean> {
+  const filename = path.basename(logFile);
+  const dirname = path.dirname(logFile);
 
-    // find out the newest one
-    glob(filename + '.*', { cwd: dirname }, (err, files) => {
-      if (!err && files.length > 0) {
-        files.sort();
-        logFile = path.join(dirname, files[files.length - 1]);
-      }
-
-      openLogFile(logFile, 'Could not open CQL extension log file', column).then(result =>
-        resolve(result),
-      );
+  try {
+    const files = await glob(`${filename}.*`, { 
+      cwd: dirname,
+      posix: true 
     });
-  });
+
+    if (files && files.length > 0) {
+      files.sort();
+      const newestFile = files[files.length - 1];
+      logFile = path.resolve(dirname, newestFile.toString());
+    }
+  } catch (err) {
+    logger.error('Glob error while looking for client logs:', err);
+  }
+
+  return await openLogFile(logFile, 'Could not open CQL extension log file', column);
 }
 
 async function openLogs() {

@@ -1,25 +1,25 @@
-import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
+import { commands, ExtensionContext, Uri, window, workspace } from "vscode";
 import {
   ConfigurationParams,
   ConfigurationRequest,
   LanguageClientOptions,
   MessageType,
-} from 'vscode-languageclient';
-import { LanguageClient } from 'vscode-languageclient/node';
-import { Commands } from './commands';
-import { executeCQLFile } from './executeCql';
-import { ClientStatus } from './extension.api';
-import { prepareExecutable } from './languageServerStarter';
-import { logger } from './log';
+} from "vscode-languageclient";
+import { LanguageClient } from "vscode-languageclient/node";
+import { Commands } from "./commands";
+import { executeCQLFile } from "./executeCql";
+import { ClientStatus } from "./extension.api";
+import { prepareExecutable } from "./languageServerStarter";
+import { logger } from "./log";
 import {
   ActionableNotification,
   ExecuteClientCommandRequest,
   ProgressReportNotification,
-} from './protocol';
-import { RequirementsData } from './requirements';
-import { statusBar } from './statusBar';
+} from "./protocol";
+import { RequirementsData } from "./requirements";
+import { statusBar } from "./statusBar";
 
-const extensionName = 'Language Support for CQL';
+const extensionName = "Language Support for CQL";
 
 export class CqlLanguageClient {
   private languageClient: LanguageClient | undefined;
@@ -35,9 +35,18 @@ export class CqlLanguageClient {
       return;
     }
 
-    const serverOptions = prepareExecutable(requirements, context, workspacePath);
+    const serverOptions = prepareExecutable(
+      requirements,
+      context,
+      workspacePath,
+    );
     // Create the language client and start the client.
-    this.languageClient = new LanguageClient('cql', extensionName, serverOptions, clientOptions);
+    this.languageClient = new LanguageClient(
+      "cql",
+      extensionName,
+      serverOptions,
+      clientOptions,
+    );
 
     this.languageClient.onReady().then(() => {
       this.status = ClientStatus.Started;
@@ -61,54 +70,68 @@ export class CqlLanguageClient {
       // 	statusBar.updateTooltip(report.message);
       // });
 
-      this.languageClient!.onNotification(ProgressReportNotification.type, _progress => {
-        // TODO: Support for long-running tasks
-      });
+      this.languageClient!.onNotification(
+        ProgressReportNotification.type,
+        (_progress) => {
+          // TODO: Support for long-running tasks
+        },
+      );
 
-      this.languageClient!.onNotification(ActionableNotification.type, notification => {
-        const titles = notification.commands!.map(a => a.title);
-        let show = null;
-        switch (notification.severity) {
-          case MessageType.Log:
-            logNotification(notification.message);
-            break;
-          case MessageType.Info:
-            show = window.showInformationMessage;
-            break;
-          case MessageType.Warning:
-            show = window.showWarningMessage;
-            break;
-          case MessageType.Error:
-            show = window.showErrorMessage;
-            break;
-        }
-        if (!show) {
-          return;
-        }
-
-        show(notification.message, ...titles).then((selection: string | undefined) => {
-          for (const action of notification.commands!) {
-            if (action.title === selection) {
-              const args: any[] = action.arguments ? action.arguments : [];
-              commands.executeCommand(action.command, ...args);
+      this.languageClient!.onNotification(
+        ActionableNotification.type,
+        (notification) => {
+          const titles = notification.commands!.map((a) => a.title);
+          let show = null;
+          switch (notification.severity) {
+            case MessageType.Log:
+              logNotification(notification.message);
               break;
-            }
+            case MessageType.Info:
+              show = window.showInformationMessage;
+              break;
+            case MessageType.Warning:
+              show = window.showWarningMessage;
+              break;
+            case MessageType.Error:
+              show = window.showErrorMessage;
+              break;
+          }
+          if (!show) {
+            return;
           }
 
+          show(notification.message, ...titles).then(
+            (selection: string | undefined) => {
+              for (const action of notification.commands!) {
+                if (action.title === selection) {
+                  const args: any[] = action.arguments ? action.arguments : [];
+                  commands.executeCommand(action.command, ...args);
+                  break;
+                }
+              }
+
+              return null;
+            },
+          );
+        },
+      );
+
+      this.languageClient!.onRequest(
+        ExecuteClientCommandRequest.type,
+        (params) => {
+          return commands.executeCommand(params.command, ...params.arguments!);
+        },
+      );
+
+      this.languageClient!.onRequest(
+        ConfigurationRequest.type,
+        (_params: ConfigurationParams) => {
+          // TODO: This is a request for workspace configuration. In the context of the IG
+          // this ought to be the cql-options file at least.
+
           return null;
-        });
-      });
-
-      this.languageClient!.onRequest(ExecuteClientCommandRequest.type, params => {
-        return commands.executeCommand(params.command, ...params.arguments!);
-      });
-
-      this.languageClient!.onRequest(ConfigurationRequest.type, (_params: ConfigurationParams) => {
-        // TODO: This is a request for workspace configuration. In the context of the IG
-        // this ought to be the cql-options file at least.
-
-        return null;
-      });
+        },
+      );
 
       // TODO: Set this once we have the initialization signal from the LS.
       statusBar.setReady();
@@ -126,24 +149,47 @@ export class CqlLanguageClient {
     );
 
     context.subscriptions.push(
-      commands.registerCommand(Commands.VIEW_ELM_COMMAND, async (uri: Uri) => {
-        const xml: string = await (<any>(
-          commands.executeCommand(
-            Commands.EXECUTE_WORKSPACE_COMMAND,
-            Commands.VIEW_ELM,
-            uri.toString(),
-          )
-        ));
-        workspace
-          .openTextDocument({ language: 'xml', content: xml })
-          .then(t => window.showTextDocument(t));
-      }),
+      commands.registerCommand(
+        Commands.VIEW_ELM_COMMAND_XML,
+        async (uri: Uri) => {
+          const elmAsXml: string = await (<any>(
+            commands.executeCommand(
+              Commands.EXECUTE_WORKSPACE_COMMAND,
+              Commands.VIEW_ELM,
+              uri.toString(),
+              "xml",
+            )
+          ));
+          workspace
+            .openTextDocument({ language: "xml", content: elmAsXml })
+            .then((t) => window.showTextDocument(t));
+        },
+      ),
+      commands.registerCommand(
+        Commands.VIEW_ELM_COMMAND_JSON,
+        async (uri: Uri) => {
+          const elmAsJson: string = await (<any>(
+            commands.executeCommand(
+              Commands.EXECUTE_WORKSPACE_COMMAND,
+              Commands.VIEW_ELM,
+              uri.toString(),
+              "json",
+            )
+          ));
+          workspace
+            .openTextDocument({ language: "json", content: elmAsJson })
+            .then((t) => window.showTextDocument(t));
+        },
+      ),
     );
 
     context.subscriptions.push(
-      commands.registerCommand(Commands.EXECUTE_CQL_COMMAND, async (uri: Uri) => {
-        await executeCQLFile(uri);
-      }),
+      commands.registerCommand(
+        Commands.EXECUTE_CQL_COMMAND,
+        async (uri: Uri) => {
+          await executeCQLFile(uri);
+        },
+      ),
     );
   }
 

@@ -5,12 +5,12 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 // import * as myExtension from '../../extension';
 
-suite('Extension Activation Test', () => {
-  test('Extension should be present', () => {
+suite('extension activation tests', () => {
+  test('extension should be present', () => {
     assert.ok(vscode.extensions.getExtension('cqframework.cql'));
   });
 
-  test('Extension should be active', async () => {
+  test('extension should be active', async () => {
     const extension = vscode.extensions.getExtension('cqframework.cql');
     if (!extension?.isActive) {
       await extension?.activate();
