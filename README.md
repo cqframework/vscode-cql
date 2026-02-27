@@ -64,7 +64,9 @@ Java version managers are often used. These include:
 
 
 [SDKMAN!](https://sdkman.io/)
+
 [jenv](https://github.com/jenv/jenv)
+
 [asdf](https://asdf-vm.com/)
 
 If you are seeing something similar to:
