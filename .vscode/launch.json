@@ -6,11 +6,28 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Extension Tests",
+      "type": "extensionHost",
+      "request": "launch",
+      "testConfiguration": "${workspaceFolder}/.vscode-test.js",
+      "preLaunchTask": "npm: compile"
+    },
+    {
       "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--disable-extensions"],
+      "args": [
+        "${workspaceFolder}/src/__test__/resources/test-workspace",
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--disable-extensions",
+        "--new-window",
+        "--disable-extensions",
+        "--disable-updates",
+        "--skip-welcome",
+        "--skip-release-notes",
+        "--disable-workspace-trust"
+      ],
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "npm: watch"
     }

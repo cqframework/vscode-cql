@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import fetch from 'node-fetch';
 import * as path from 'path';
 import { ExtensionContext, Progress, ProgressLocation, window } from 'vscode';
-import { ensureExists } from './helpers/file-helpers';
+import { ensureExists } from '../utils/file-utils';
 
 interface MavenCoords {
   groupId: string;
@@ -63,9 +63,7 @@ function getLocalName(coords: MavenCoords): string {
 
 function getSearchUrl(coords: MavenCoords): string {
   const groupIdAsDirectory = coords.groupId.replace(/\./gi, '/');
-  return (
-    `https://repo1.maven.org/maven2/${groupIdAsDirectory}/${coords.artifactId}/${coords.version}/${getLocalName(coords)}`
-  );
+  return `https://repo1.maven.org/maven2/${groupIdAsDirectory}/${coords.artifactId}/${coords.version}/${getLocalName(coords)}`;
 }
 
 async function installServiceIfMissing(serviceName: string, coords: MavenCoords): Promise<void> {

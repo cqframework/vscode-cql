@@ -2,7 +2,7 @@ import expandTilde from 'expand-tilde';
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import { ExtensionContext, Uri, env } from 'vscode';
-import { Commands } from './commands';
+import { Commands } from '../commands/commands';
 import { JavaRuntime, findJavaHomes, getJavaVersion } from './findJavaRuntimes';
 import { getServicePath, installJavaDependencies } from './javaServiceInstaller';
 
