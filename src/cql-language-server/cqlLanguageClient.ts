@@ -58,6 +58,8 @@ export class CqlLanguageClient {
     this.languageClient.onReady().then(() => {
       //log.info('language client is ready');
       this.status = ClientStatus.Started;
+      commands.executeCommand('setContext', 'cql.languageServerReady', true);
+      const version = requirements.cql_ls_info.cql_ls_jar.match(/(\d+\.\d+\.\d+)/)?.[1];
       // this.languageClient.onNotification(StatusNotification.type, (report) => {
       // 	switch (report.type) {
       // 		case 'ServiceReady':
@@ -128,7 +130,7 @@ export class CqlLanguageClient {
       });
 
       // TODO: Set this once we have the initialization signal from the LS.
-      statusBar.setReady();
+      statusBar.setReady(version);
     });
 
     //this.registerCommands(context);

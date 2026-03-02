@@ -116,22 +116,22 @@
       "editor/context": [
         {
           "command": "cql.action.executeCql",
-          "when": "editorLangId == cql",
+          "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions@1.execute@1"
         },
         {
           "command": "cql.action.executeCql.selectTestCases",
-          "when": "editorLangId == cql",
+          "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions@1.execute@3"
         },
         {
           "command": "cql.action.viewElm.xml",
-          "when": "editorLangId == cql",
+          "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions@2.elm@1"
         },
         {
           "command": "cql.action.viewElm.json",
-          "when": "editorLangId == cql",
+          "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions@2.elm@2"
         }
       ],
@@ -151,6 +151,10 @@
         {
           "command": "cql.action.viewElm.json",
           "when": "false"
+        },
+        {
+          "command": "cql.action.executeCql.selectLibraries",
+          "when": "cql.languageServerReady"
         }
       ]
     }

@@ -34,14 +34,6 @@
   "active": true,
   "name": [
     {
-      "use": "official",
-      "family": "Chalmers",
-      "given": [
-        "Peter",
-        "James"
-      ]
-    },
-    {
       "use": "usual",
       "family": "Chalmers",
       "given": [
