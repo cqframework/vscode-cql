@@ -93,13 +93,14 @@ This project follows the guidance given by Microsoft for the VS Code marketplace
 ## Release Process
 
 1. Update master to be a release version (and all the reviews, bug fixes, etc. that that requires)
-    1. Update package.json - version to X.X.X (e.g. `0.7.7`)
+    1. Update `package.json` - version to X.X.X (e.g. `0.7.7`)
+    2. Update `CHANGELOG.md` - add a new section at the top for the release version with a summary of changes (see existing entries for format)
 2. Passed CI Build = ready for release
-3. Follow the instructions here [Publishing Extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) to publish the extension.
+3. Run `vsce login cqframework` to authenticate, then `vsce publish` to publish to the VS Code Marketplace
 4. Create a github release (specify a tag of `vX.X.X` (e.g. `v0.7.7`) pointing at master to be created on release)
     1. Choose the "Auto-generate release notes" option
     2. Provide any additional detail/cleanup on the release notes
-5. Update masster version to the next snapshot version `X.X.X-SNAPSHOT` (e.g. 0.7.8-SNAPSHOT)
+5. Update master version to the next snapshot version `X.X.X-SNAPSHOT` (e.g. `0.7.8-SNAPSHOT`)
 6. Close all issues included in the release
 
 ## Acknowledgements
