@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.7.11 Release
+
+- Added support for viewing ELM as JSON
+- Added support for selective CQL execution from the context menu
+- Added quick-pick test case selector with saved selections across sessions
+- CQL commands are now only available once the language server is ready
+
+## 0.7.10 Release
+
+- Update to CQL Language Server 4.1.2
+- Added support for excluding individual test cases from execution
+- Updated README with setup instructions for asdf and other shell version managers
+
 ## 0.7.9 Release
 
 - Update to CQL Language Server 4.0.0
