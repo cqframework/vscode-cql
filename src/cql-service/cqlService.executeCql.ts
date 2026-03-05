@@ -67,7 +67,7 @@ function getExecArgs(
   );
 
   if (testCaseUri) {
-    args.push(`-m=${modelType}`, `-mu=${testCaseUri}`);
+    args.push(`-m=${modelType}`, `-mu=${Uri.file(testCaseUri.fsPath)}`);
   }
 
   if (terminologyUri) {
