@@ -313,8 +313,9 @@ function getLibraries(libraryPath: Uri): Array<Uri> {
     log.warn(`unable to find libraries @ ${libraryPath.fsPath}`);
     return [];
   }
+  const libraryPathPosix = libraryPath.fsPath.replace(/\\/g, '/');
   return glob
-    .sync(libraryPath.fsPath + `/**/*.cql`)
+    .sync(`${libraryPathPosix}/**/*.cql`)
     .filter(f => fs.statSync(f).isFile())
     .map(f => Uri.file(f));
 }
