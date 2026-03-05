@@ -31,8 +31,9 @@ export function getTestCases(
   }
 
   let testCases: TestCase[] = [];
+  const testPathPosix = testPath.fsPath.replace(/\\/g, '/');
   let directories = glob
-    .sync(testPath.fsPath + `/**/${libraryName}`)
+    .sync(`${testPathPosix}/**/${libraryName}`)
     .filter(d => fs.statSync(d).isDirectory());
   for (let dir of directories) {
     let cases = fs
