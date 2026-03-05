@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.7.12 Release
+
+- Fixed Windows path issues with model library paths, test case paths, and select libraries paths affecting CQL execution
+
 ## 0.7.11 Release
 
 - Added support for viewing ELM as JSON
