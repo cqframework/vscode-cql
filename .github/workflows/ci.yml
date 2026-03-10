@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: vscode-cql/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: vscode-cql
+
+      - name: Run tests (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm test
+        working-directory: vscode-cql
+
+      - name: Run tests (macOS / Windows)
+        if: runner.os != 'Linux'
+        run: npm test
+        working-directory: vscode-cql
