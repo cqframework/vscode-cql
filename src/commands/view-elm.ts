@@ -14,13 +14,16 @@ export function register(context: ExtensionContext): void {
   );
 }
 
-export async function viewElm(cqlFileUri: Uri, elmType: 'xml' | 'json' = 'xml') {
+export async function viewElm(
+  cqlFileUri: Uri,
+  elmType: 'xml' | 'json' = 'xml',
+  elmFetcher: (uri: Uri, type: 'xml' | 'json') => Promise<string> = getElm,
+) {
   try {
     log.debug(`attempting to get ELM from [${cqlFileUri}] as ${elmType}`);
-    const elm: string = await getElm(cqlFileUri, elmType);
-    workspace
-      .openTextDocument({ language: elmType, content: elm })
-      .then(t => window.showTextDocument(t));
+    const elm: string = await elmFetcher(cqlFileUri, elmType);
+    const doc = await workspace.openTextDocument({ language: elmType, content: elm });
+    await window.showTextDocument(doc);
   } catch (error) {
     window.showErrorMessage(`Error while converting ${cqlFileUri.fsPath} to ELM. err: ${error}`);
   }

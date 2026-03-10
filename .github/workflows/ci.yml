@@ -26,10 +26,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Coverage is reported but not enforced. To add a threshold that fails the
+      # build, append one or more of these flags to both test commands below:
+      #   --coverage-lines <0-100>      fail if line coverage drops below N%
+      #   --coverage-statements <0-100> fail if statement coverage drops below N%
+      #   --coverage-branches <0-100>   fail if branch coverage drops below N%
+      #   --coverage-functions <0-100>  fail if function coverage drops below N%
+      # Example (80% line + branch gate):
+      #   npm test -- --coverage ... --coverage-lines 80 --coverage-branches 80
       - name: Run tests (Linux)
         if: runner.os == 'Linux'
-        run: xvfb-run -a npm test
+        run: xvfb-run -a npm test -- --coverage --coverage-reporter text --coverage-reporter lcov
 
       - name: Run tests (macOS / Windows)
         if: runner.os != 'Linux'
-        run: npm test
+        run: npm test -- --coverage --coverage-reporter text --coverage-reporter lcov
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.os }}
+          path: coverage/
+          if-no-files-found: ignore

@@ -98,7 +98,7 @@ export async function resolveRequirements(context: ExtensionContext): Promise<Re
   };
 }
 
-function sortJdksBySource(jdks: JavaRuntime[]) {
+export function sortJdksBySource(jdks: JavaRuntime[]) {
   const rankedJdks = jdks as Array<JavaRuntime & { rank: number }>;
   const sources = ['env.JDK_HOME', 'env.JAVA_HOME', 'env.PATH'];
   for (const [index, source] of sources.entries()) {
