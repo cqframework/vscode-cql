@@ -14,6 +14,10 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    permissions:
+      contents: read
+      pull-requests: write  # required to post the coverage comment
+
     steps:
       - uses: actions/checkout@v4
 
@@ -36,11 +40,44 @@ jobs:
       #   npm test -- --coverage ... --coverage-lines 80 --coverage-branches 80
       - name: Run tests (Linux)
         if: runner.os == 'Linux'
-        run: xvfb-run -a npm test -- --coverage --coverage-reporter text --coverage-reporter lcov
+        run: xvfb-run -a npm test -- --coverage --coverage-reporter text --coverage-reporter lcov --coverage-reporter json-summary
 
       - name: Run tests (macOS / Windows)
         if: runner.os != 'Linux'
-        run: npm test -- --coverage --coverage-reporter text --coverage-reporter lcov
+        run: npm test -- --coverage --coverage-reporter text --coverage-reporter lcov --coverage-reporter json-summary
+
+      # Writes a coverage table to the Actions "Summary" tab — visible for every
+      # run (push and PR) without downloading any artifact.
+      - name: Write coverage to job summary
+        if: always()
+        shell: node {0}
+        run: |
+          const fs = require('fs');
+          try {
+            const total = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf-8')).total;
+            const pct  = d => `${d.pct}%`;
+            const frac = d => `${d.covered} / ${d.total}`;
+            const rows = [
+              ['Statements', total.statements],
+              ['Branches',   total.branches],
+              ['Functions',  total.functions],
+              ['Lines',      total.lines],
+            ].map(([label, d]) => `| ${label} | ${pct(d)} | ${frac(d)} |`).join('\n');
+            const md = `## Code Coverage\n\n| Metric | Coverage | Covered / Total |\n|--------|:--------:|:---------------:|\n${rows}\n`;
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          } catch (e) {
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '## Code Coverage\n\nNo coverage data available.\n');
+          }
+
+      # Posts a per-file coverage breakdown as a PR comment. Runs once (Linux
+      # only) to avoid posting three identical comments from the OS matrix.
+      - name: Post coverage comment on PR
+        if: github.event_name == 'pull_request' && runner.os == 'Linux'
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: ./coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          delete-old-comments: true
 
       - name: Upload coverage report
         if: always()
