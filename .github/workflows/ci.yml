@@ -21,18 +21,15 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: vscode-cql/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: vscode-cql
 
       - name: Run tests (Linux)
         if: runner.os == 'Linux'
         run: xvfb-run -a npm test
-        working-directory: vscode-cql
 
       - name: Run tests (macOS / Windows)
         if: runner.os != 'Linux'
         run: npm test
-        working-directory: vscode-cql
