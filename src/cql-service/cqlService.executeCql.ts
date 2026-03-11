@@ -33,7 +33,7 @@ export async function executeCql(
   return await sendRequest(Commands.EXECUTE_CQL, operationArgs);
 }
 
-function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri, rootDir: Uri): string[] {
+export function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri, rootDir: Uri): string[] {
   const args = ['cql'];
 
   args.push(`-fv=${fhirVersion}`);
@@ -49,7 +49,7 @@ function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri, rootDir: Uri):
   return args;
 }
 
-function getExecArgs(
+export function getExecArgs(
   cqlFileUri: Uri,
   testCaseUri?: Uri,
   terminologyUri?: Uri,

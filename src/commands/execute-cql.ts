@@ -30,7 +30,7 @@ interface CqlPaths {
   testDirectoryPath: Uri;
 }
 
-interface TestConfig {
+export interface TestConfig {
   testCasesToExclude: TestCaseExclusion[];
 }
 
@@ -228,7 +228,7 @@ export async function executeCQLFile(
 
   const startExecution = Date.now();
 
-  let fhirVersion = getFhirVersion();
+  let fhirVersion = getFhirVersion(fs.readFileSync(cqlFileUri.fsPath, 'utf-8'));
   if (!fhirVersion) {
     fhirVersion = 'R4';
     window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
@@ -276,7 +276,7 @@ function getCqlPaths(): CqlPaths | undefined {
   };
 }
 
-function getExcludedTestCases(
+export function getExcludedTestCases(
   libraryName: string,
   testCasesToExclude: TestCaseExclusion[],
 ): Map<string, string> {
@@ -289,9 +289,9 @@ function getExcludedTestCases(
   return excludedTestCases;
 }
 
-function getFhirVersion(): string | null {
+export function getFhirVersion(cqlContent: string): string | null {
   const fhirVersionRegex = /using (FHIR|"FHIR") version '(\d(.|\d)*)'/;
-  const matches = window.activeTextEditor!.document.getText().match(fhirVersionRegex);
+  const matches = cqlContent.match(fhirVersionRegex);
   if (matches && matches.length > 2) {
     const version = matches[2];
     if (version.startsWith('2')) {
@@ -308,7 +308,7 @@ function getFhirVersion(): string | null {
   return null;
 }
 
-function getLibraries(libraryPath: Uri): Array<Uri> {
+export function getLibraries(libraryPath: Uri): Array<Uri> {
   if (!fs.existsSync(libraryPath.fsPath)) {
     log.warn(`unable to find libraries @ ${libraryPath.fsPath}`);
     return [];
@@ -334,7 +334,7 @@ async function insertLineAtEnd(textEditor: TextEditor, text: string) {
   });
 }
 
-function loadTestConfig(testConfigPath: Uri): TestConfig {
+export function loadTestConfig(testConfigPath: Uri): TestConfig {
   try {
     const jsonString = fs.readFileSync(testConfigPath.fsPath, 'utf-8');
     // Cast the parsed object to the User interface
