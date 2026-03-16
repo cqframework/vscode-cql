@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import * as vscode from 'vscode';
 import { statusBar } from '../../statusBar';
 
 suite('statusBar', () => {
@@ -6,41 +7,66 @@ suite('statusBar', () => {
     statusBar.setReady();
   });
 
-  test('showStatusBar() does not throw', () => {
-    expect(() => statusBar.showStatusBar()).to.not.throw();
+  test('showStatusBar() sets busy icon', () => {
+    statusBar.showStatusBar();
+    expect(statusBar.text).to.equal('$(sync~spin) CQL');
+    expect(statusBar.tooltip).to.equal('Server Busy');
   });
 
-  test('setBusy() does not throw', () => {
-    expect(() => statusBar.setBusy()).to.not.throw();
+  test('setBusy() sets spinning icon', () => {
+    statusBar.setBusy();
+    expect(statusBar.text).to.equal('$(sync~spin) CQL');
+    expect(statusBar.tooltip).to.equal('Server Busy');
   });
 
-  test('setReady() does not throw', () => {
-    expect(() => statusBar.setReady()).to.not.throw();
+  test('setReady() sets check icon', () => {
+    statusBar.setReady();
+    expect(statusBar.text).to.equal('$(check) CQL');
   });
 
-  test('setReady(version) does not throw', () => {
-    expect(() => statusBar.setReady('4.2.0')).to.not.throw();
+  test('setReady() sets Server Ready tooltip', () => {
+    statusBar.setReady();
+    const tooltip = statusBar.tooltip as vscode.MarkdownString;
+    expect(tooltip.value).to.include('Server Ready');
   });
 
-  test('setError() does not throw', () => {
-    expect(() => statusBar.setError()).to.not.throw();
+  test('setReady(version) includes version in tooltip', () => {
+    statusBar.setReady('4.2.0');
+    expect(statusBar.text).to.equal('$(check) CQL');
+    const tooltip = statusBar.tooltip as vscode.MarkdownString;
+    expect(tooltip.value).to.include('4.2.0');
   });
 
-  test('updateText() does not throw', () => {
-    expect(() => statusBar.updateText('custom text')).to.not.throw();
+  test('setError() sets error icon', () => {
+    statusBar.setError();
+    expect(statusBar.text).to.equal('$(error) CQL');
+    expect(statusBar.tooltip).to.equal('Server Error');
   });
 
-  test('updateTooltip() does not throw', () => {
-    expect(() => statusBar.updateTooltip('my tooltip')).to.not.throw();
+  test('updateText() sets custom text', () => {
+    statusBar.updateText('custom text');
+    expect(statusBar.text).to.equal('custom text');
   });
 
-  test('can transition between states without throwing', () => {
-    expect(() => {
-      statusBar.setBusy();
-      statusBar.setError();
-      statusBar.setReady('1.0.0');
-      statusBar.setBusy();
-      statusBar.setReady();
-    }).to.not.throw();
+  test('updateTooltip() sets custom tooltip', () => {
+    statusBar.updateTooltip('my tooltip');
+    expect(statusBar.tooltip).to.equal('my tooltip');
+  });
+
+  test('can transition between states', () => {
+    statusBar.setBusy();
+    expect(statusBar.text).to.equal('$(sync~spin) CQL');
+
+    statusBar.setError();
+    expect(statusBar.text).to.equal('$(error) CQL');
+
+    statusBar.setReady('1.0.0');
+    expect(statusBar.text).to.equal('$(check) CQL');
+
+    statusBar.setBusy();
+    expect(statusBar.text).to.equal('$(sync~spin) CQL');
+
+    statusBar.setReady();
+    expect(statusBar.text).to.equal('$(check) CQL');
   });
 });
