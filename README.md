@@ -88,20 +88,25 @@ Set your repo home directory and update the versions as needed.
 
 ## Versioning
 
-This project follows the guidance given by Microsoft for the VS Code marketplace [here](https://code.visualstudio.com/updates/v1_63#_publishing-prerelease-extensions) and publishes prereleases to the VS Code marketplace using odd minor version numbers. Full releases are published using even minor version numbers.
+Pre-releases are published to the VS Code Marketplace using
+`vsce publish --pre-release`. No special version number scheme is required.
+Pre-release builds reference the `<version>-SNAPSHOT` language server artifact;
+stable releases reference a tagged release artifact.
 
-## Release Process
+**To publish a pre-release:**
 
-1. Update master to be a release version (and all the reviews, bug fixes, etc. that that requires)
-    1. Update `package.json` - version to X.X.X (e.g. `0.7.7`)
-    2. Update `CHANGELOG.md` - add a new section at the top for the release version with a summary of changes (see existing entries for format)
-2. Passed CI Build = ready for release
-3. Run `vsce login cqframework` to authenticate, then `vsce publish` to publish to the VS Code Marketplace
-4. Create a github release (specify a tag of `vX.X.X` (e.g. `v0.7.7`) pointing at master to be created on release)
-    1. Choose the "Auto-generate release notes" option
-    2. Provide any additional detail/cleanup on the release notes
-5. Update master version to the next snapshot version `X.X.X-SNAPSHOT` (e.g. `0.7.8-SNAPSHOT`)
-6. Close all issues included in the release
+```sh
+vsce login cqframework
+npm run publish:prerelease
+```
+
+**To publish a stable release:**
+
+1. Set `javaDependencies.cql-language-server.version` in `package.json` to the released LS version
+2. Update `CHANGELOG.md`
+3. `vsce login cqframework && npm run publish`
+4. Create a GitHub release tag `vX.X.X`
+5. Bump version in `package.json` for next dev cycle
 
 ## Acknowledgements
 

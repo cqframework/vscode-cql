@@ -61,13 +61,49 @@ function getLocalName(coords: MavenCoords): string {
   }${coords.type ? '.' + coords.type : '.jar'}`;
 }
 
-function getSearchUrl(coords: MavenCoords): string {
+const SNAPSHOT_REPO = 'https://central.sonatype.com/repository/maven-snapshots/';
+
+function isSnapshot(version: string): boolean {
+  return version.endsWith('-SNAPSHOT');
+}
+
+async function resolveSnapshotUrl(coords: MavenCoords): Promise<string> {
+  const groupPath = coords.groupId.replace(/\./g, '/');
+  const metaUrl = `${SNAPSHOT_REPO}${groupPath}/${coords.artifactId}/${coords.version}/maven-metadata.xml`;
+
+  const response = await fetch(metaUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch snapshot metadata: ${metaUrl}`);
+  }
+
+  const xml = await response.text();
+
+  const jarBlock = xml.match(
+    /<snapshotVersion>[\s\S]*?<extension>jar<\/extension>[\s\S]*?<\/snapshotVersion>/,
+  );
+  if (!jarBlock) {
+    throw new Error('No jar snapshotVersion found in metadata');
+  }
+
+  const valueMatch = jarBlock[0].match(/<value>(.*?)<\/value>/);
+  if (!valueMatch) {
+    throw new Error('No value in jar snapshotVersion');
+  }
+
+  const timestampedVersion = valueMatch[1];
+  return `${SNAPSHOT_REPO}${groupPath}/${coords.artifactId}/${coords.version}/${coords.artifactId}-${timestampedVersion}.jar`;
+}
+
+async function getSearchUrl(coords: MavenCoords): Promise<string> {
+  if (isSnapshot(coords.version)) {
+    return resolveSnapshotUrl(coords);
+  }
   const groupIdAsDirectory = coords.groupId.replace(/\./gi, '/');
   return `https://repo1.maven.org/maven2/${groupIdAsDirectory}/${coords.artifactId}/${coords.version}/${getLocalName(coords)}`;
 }
 
 async function installServiceIfMissing(serviceName: string, coords: MavenCoords): Promise<void> {
-  const doesExist = isServiceInstalled(coords);
+  const doesExist = !isSnapshot(coords.version) && isServiceInstalled(coords);
   if (!doesExist) {
     return window.withProgress(
       {
@@ -105,7 +141,7 @@ async function installJar(
     progress.report({ message: `Starting download` });
   }
   ensureExists(jarHome);
-  const searchUrl = getSearchUrl(coords);
+  const searchUrl = await getSearchUrl(coords);
   const setupInfo = await setupDownload(serviceName, searchUrl);
 
   await downloadFile(
