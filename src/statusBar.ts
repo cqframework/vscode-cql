@@ -41,6 +41,14 @@ class StatusBar implements Disposable {
     this.statusBarItem.tooltip = tooltip;
   }
 
+  public get text(): string {
+    return this.statusBarItem.text;
+  }
+
+  public get tooltip(): string | MarkdownString | undefined {
+    return this.statusBarItem.tooltip;
+  }
+
   public dispose(): void {
     this.statusBarItem.dispose();
   }
