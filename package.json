@@ -169,7 +169,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "rimraf dist && npm run compile",
+    "pretest": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\" && npm run compile",
     "test": "vscode-test"
   },
   "javaDependencies": {
