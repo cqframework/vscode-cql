@@ -1,0 +1,19 @@
+services:
+  integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Mount both repos as read-write so the build artifacts persist
+      - ../:/workspace/vscode-cql
+      - ../../cql-language-server:/workspace/cql-language-server
+      # Cache Maven and npm downloads across runs
+      - maven-cache:/root/.m2
+      - npm-cache:/root/.npm
+    environment:
+      - DISPLAY=:99
+      - NODE_ENV=test
+
+volumes:
+  maven-cache:
+  npm-cache:

@@ -1,19 +1,17 @@
 const { defineConfig } = require('@vscode/test-cli');
 
 module.exports = defineConfig({
-  label: 'Tests (Empty Folder)',
-  files: [
-    'dist/__test__/**/*.test.js',
-    '!dist/__test__/**/integration/**',
-  ],
-  workspaceFolder: './src/__test__/resources/test-workspace',
+  label: 'Integration Tests',
+  files: 'dist/__test__/**/integration.test.js',
+  workspaceFolder: './integration-tests/test-workspace',
   launchArgs: [
-    'tests/empty',
     '--new-window',
-    '--disable-extensions',
     '--disable-updates',
     '--skip-welcome',
     '--skip-release-notes',
     '--disable-workspace-trust',
   ],
+  mocha: {
+    timeout: 120000,
+  },
 });
