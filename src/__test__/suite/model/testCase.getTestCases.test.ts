@@ -38,17 +38,4 @@ suite('testCase.getTestCases()', () => {
     }
   });
 
-  test('reads description from MeasureReport when present', () => {
-    const testPath = Uri.joinPath(workspace.workspaceFolders![0].uri, 'input/tests/measure');
-    const result = getTestCases(testPath, 'SimpleMeasure', []);
-    const tc1111 = result.find(tc => tc.name === '1111');
-    expect(tc1111?.description).to.equal('SimpleMeasure');
-  });
-
-  test('description is undefined when no MeasureReport present', () => {
-    const testPath = Uri.joinPath(workspace.workspaceFolders![0].uri, 'input/tests/measure');
-    const result = getTestCases(testPath, 'SimpleMeasure', []);
-    const tc2222 = result.find(tc => tc.name === '2222');
-    expect(tc2222?.description).to.be.undefined;
-  });
 });

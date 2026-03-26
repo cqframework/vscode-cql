@@ -69,12 +69,38 @@
     },
     "commands": [
       {
-        "command": "cql.open.serverLog",
+        "command": "cql.editor.execute",
+        "title": "Execute CQL",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.editor.execute.select-test-cases",
+        "title": "Execute CQL - Select Test Cases",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.editor.view-elm.json",
+        "title": "View ELM - JSON",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.editor.view-elm.xml",
+        "title": "View ELM - XML",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.execute.select-libraries",
+        "title": "Execute CQL - Select Libraries",
+        "icon": "$(run)",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.open.server-log",
         "title": "Open Server Logs",
         "category": "CQL"
       },
       {
-        "command": "cql.open.clientLog",
+        "command": "cql.open.client-log",
         "title": "Open Client Logs",
         "category": "CQL"
       },
@@ -84,86 +110,416 @@
         "category": "CQL"
       },
       {
-        "command": "cql.action.viewElm",
-        "title": "View ELM",
-        "category": "CQL"
+        "command": "cql.explorer.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)",
+        "category": "CQL Explorer"
       },
       {
-        "command": "cql.action.executeCql",
-        "title": "Execute CQL",
-        "category": "CQL"
+        "command": "cql.explorer.expand-all",
+        "title": "Expand All",
+        "icon": "$(expand-all)",
+        "category": "CQL Explorer"
       },
       {
-        "command": "cqlExplorer.itemClicked",
-        "title": "Item Clicked"
+        "command": "cql.explorer.hide-empty",
+        "title": "Hide Libraries with No Test Cases",
+        "icon": "$(filter)",
+        "category": "CQL Explorer"
       },
       {
-        "command": "cqlExplorer.library.execute",
-        "title": "Execute"
+        "command": "cql.explorer.show-all",
+        "title": "Show All Libraries",
+        "icon": "$(filter-filled)",
+        "category": "CQL Explorer"
       },
       {
-        "command": "cqlExplorer.library.rename",
-        "title": "Rename"
+        "command": "cql.explorer.filter-by-name",
+        "title": "Filter by Library Name",
+        "icon": "$(search)",
+        "category": "CQL Explorer"
       },
       {
-        "command": "cqlExplorer.library.hide",
-        "title": "Hide"
+        "command": "cql.explorer.clear-name-filter",
+        "title": "Clear Name Filter",
+        "icon": "$(search-stop)",
+        "category": "CQL Explorer"
       },
       {
-        "command": "cqlExplorer.testCases.executeAll",
-        "title": "Execute All"
+        "command": "cql.explorer.sort-asc",
+        "title": "Sort A → Z",
+        "icon": "$(arrow-up)",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.sort-desc",
+        "title": "Sort Z → A",
+        "icon": "$(arrow-down)",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.library.execute-all",
+        "title": "Execute CQL - All Libraries",
+        "icon": "$(run-all)",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.library.execute",
+        "title": "Execute All Test Cases",
+        "category": "CQL Explorer",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "cql.explorer.library.elm.json",
+        "title": "View ELM - json",
+        "category": "CQL Explorer",
+        "icon": "$(json)"
+      },
+      {
+        "command": "cql.explorer.library.elm.xml",
+        "title": "View ELM - xml",
+        "category": "CQL Explorer",
+        "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "cql.explorer.test-case.execute",
+        "title": "Execute Test Case",
+        "category": "CQL Explorer",
+        "icon": "$(play)"
+      },
+      {
+        "command": "cql.explorer.test-case.open-resources",
+        "title": "Open All Resources",
+        "category": "CQL Explorer",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "cql.explorer.test-case.clone",
+        "title": "Clone Test Case",
+        "category": "CQL Explorer",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "cql.explorer.test-case.paste",
+        "title": "Paste",
+        "category": "CQL Explorer",
+        "icon": "$(clippy)"
+      },
+      {
+        "command": "cql.explorer.test-case.paste-enhanced",
+        "title": "Paste - Update References",
+        "category": "CQL Explorer",
+        "icon": "$(clippy)"
+      },
+      {
+        "command": "cql.explorer.test-case.delete",
+        "title": "Delete Test Case",
+        "category": "CQL Explorer",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "cql.explorer.test-case.execute-select",
+        "title": "Select and Execute Test Cases",
+        "category": "CQL Explorer",
+        "icon": "$(play)"
+      },
+      {
+        "command": "cql.explorer.test-case.execute-all",
+        "title": "Execute Test Cases - Filtered",
+        "icon": "$(run-all)",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.test-case.filter",
+        "title": "Filter Test Cases",
+        "icon": "$(search)",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.test-case.clear-filter",
+        "title": "Clear Filter",
+        "icon": "$(search-stop)",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.resource.fix-references",
+        "title": "Fix References",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.resource.rename",
+        "title": "Rename...",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.resource.copy",
+        "title": "Copy",
+        "category": "CQL Explorer",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "cql.explorer.resource.cut",
+        "title": "Cut",
+        "category": "CQL Explorer",
+        "icon": "$(scissors)"
+      },
+      {
+        "command": "cql.explorer.resource.delete",
+        "title": "Delete",
+        "category": "CQL Explorer",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "workbench.actions.treeView.cql-libraries.collapseAll",
+        "title": "Collapse All",
+        "icon": "$(collapse-all)",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.show-layout-warnings",
+        "title": "Show Layout Warnings",
+        "icon": "$(warning)",
+        "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.explorer.hide-layout-warnings",
+        "title": "Hide Layout Warnings",
+        "icon": "$(warning)",
+        "category": "CQL Explorer"
       }
     ],
     "menus": {
+      "commandPalette": [
+        { "command": "cql.editor.execute.select-test-cases", "when": "false" },
+        { "command": "cql.editor.view-elm.json", "when": "false" },
+        { "command": "cql.editor.view-elm.xml", "when": "false" },
+        { "command": "cql.explorer.refresh", "when": "false" },
+        { "command": "cql.explorer.library.execute", "when": "false" },
+        { "command": "cql.explorer.library.elm.json", "when": "false" },
+        { "command": "cql.explorer.library.elm.xml", "when": "false" },
+        { "command": "cql.explorer.test-case.execute", "when": "false" },
+        { "command": "cql.explorer.test-case.open-resources", "when": "false" },
+        { "command": "cql.explorer.test-case.clone", "when": "false" },
+        { "command": "cql.explorer.resource.fix-references", "when": "false" },
+        { "command": "cql.explorer.resource.rename", "when": "false" },
+        { "command": "cql.explorer.resource.copy", "when": "false" },
+        { "command": "cql.explorer.resource.cut", "when": "false" },
+        { "command": "cql.explorer.resource.delete", "when": "false" },
+        { "command": "cql.explorer.test-case.paste", "when": "false" },
+        { "command": "cql.explorer.test-case.paste-enhanced", "when": "false" },
+        { "command": "cql.explorer.test-case.delete", "when": "false" },
+        { "command": "cql.explorer.library.execute-all", "when": "false" },
+        { "command": "cql.explorer.hide-empty", "when": "false" },
+        { "command": "cql.explorer.show-all", "when": "false" },
+        { "command": "cql.explorer.sort-asc", "when": "false" },
+        { "command": "cql.explorer.sort-desc", "when": "false" },
+        { "command": "cql.explorer.filter-by-name", "when": "false" },
+        { "command": "cql.explorer.clear-name-filter", "when": "false" },
+        { "command": "cql.explorer.test-case.filter", "when": "false" },
+        { "command": "cql.explorer.test-case.clear-filter", "when": "false" },
+        { "command": "cql.explorer.test-case.execute-select", "when": "false" },
+        { "command": "cql.explorer.test-case.execute-all", "when": "false" },
+{ "command": "cql.explorer.expand-all", "when": "false" },
+        { "command": "cql.explorer.show-layout-warnings", "when": "false" },
+        { "command": "cql.explorer.hide-layout-warnings", "when": "false" }
+      ],
       "editor/context": [
         {
-          "command": "cql.action.viewElm",
-          "when": "editorLangId == cql",
+          "command": "cql.editor.view-elm.json",
+          "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
         },
         {
-          "command": "cql.action.executeCql",
-          "when": "editorLangId == cql",
+          "command": "cql.editor.view-elm.xml",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "group": "1_cqlactions"
+        },
+        {
+          "command": "cql.editor.execute",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "group": "1_cqlactions"
+        },
+        {
+          "command": "cql.editor.execute.select-test-cases",
+          "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
         }
       ],
       "view/item/context": [
         {
-          "command": "cqlExplorer.itemClicked",
-          "when": "view == cql-libraries && viewItem == cqlItem"
+          "command": "cql.explorer.library.execute",
+          "when": "view == cql-libraries && viewItem == cql-library",
+          "group": "1:library"
         },
         {
-          "command": "cqlExplorer.library.execute",
-          "when": "view == cql-libraries && viewItem == library"
+          "command": "cql.explorer.library.elm.json",
+          "group": "2:library",
+          "when": "view == cql-libraries && viewItem == cql-library"
         },
         {
-          "command": "cqlExplorer.library.rename",
-          "when": "view == cql-libraries && viewItem == library"
+          "command": "cql.explorer.library.elm.xml",
+          "group": "2:library",
+          "when": "view == cql-libraries && viewItem == cql-library"
         },
         {
-          "command": "cqlExplorer.library.hide",
-          "when": "view == cql-libraries && viewItem == library"
+          "command": "cql.explorer.test-case.execute",
+          "group": "1:test-case",
+          "when": "view == cql-libraries && viewItem == cql-testcase"
         },
         {
-          "command": "cqlExplorer.testCase.executeAll",
-          "when": "view == cql-libraries && viewItem == testCaseRoot"
+          "command": "cql.explorer.test-case.open-resources",
+          "group": "2:test-case",
+          "when": "view == cql-libraries && viewItem == cql-testcase"
+        },
+        {
+          "command": "cql.explorer.test-case.clone",
+          "group": "3:test-case",
+          "when": "view == cql-libraries && viewItem == cql-testcase"
+        },
+        {
+          "command": "cql.explorer.test-case.paste",
+          "group": "4:test-case",
+          "when": "view == cql-libraries && viewItem == cql-testcase && cql.hasResourceClipboard"
+        },
+        {
+          "command": "cql.explorer.test-case.paste-enhanced",
+          "group": "4:test-case",
+          "when": "view == cql-libraries && viewItem == cql-testcase && cql.hasResourceClipboard"
+        },
+        {
+          "command": "cql.explorer.test-case.delete",
+          "group": "5:test-case",
+          "when": "view == cql-libraries && viewItem == cql-testcase"
+        },
+        {
+          "command": "cql.explorer.resource.cut",
+          "group": "2:resource@1",
+          "when": "view == cql-libraries && viewItem =~ /^cql-testcase-resource/"
+        },
+        {
+          "command": "cql.explorer.resource.copy",
+          "group": "2:resource@2",
+          "when": "view == cql-libraries && viewItem =~ /^cql-testcase-resource/"
+        },
+        {
+          "command": "cql.explorer.resource.rename",
+          "group": "3:resource@1",
+          "when": "view == cql-libraries && viewItem =~ /^cql-testcase-resource/"
+        },
+        {
+          "command": "cql.explorer.resource.delete",
+          "group": "3:resource@2",
+          "when": "view == cql-libraries && viewItem =~ /^cql-testcase-resource/"
+        },
+        {
+          "command": "cql.explorer.test-case.execute",
+          "when": "view == cql-libraries && viewItem == cql-testcase",
+          "group": "inline@1"
+        },
+        {
+          "command": "cql.explorer.test-case.open-resources",
+          "when": "view == cql-libraries && viewItem == cql-testcase",
+          "group": "inline@2"
+        },
+        {
+          "command": "cql.explorer.test-case.execute-select",
+          "when": "view == cql-libraries && viewItem =~ /cql-testcase-root/",
+          "group": "1:test-case-root"
+        },
+        {
+          "command": "cql.explorer.test-case.execute-select",
+          "when": "view == cql-libraries && viewItem =~ /cql-testcase-root/",
+          "group": "inline@1"
+        },
+        {
+          "command": "cql.explorer.test-case.execute-all",
+          "when": "view == cql-libraries && viewItem =~ /cql-testcase-root/",
+          "group": "inline@2"
+        },
+        {
+          "command": "cql.explorer.test-case.filter",
+          "when": "view == cql-libraries && viewItem == cql-testcase-root",
+          "group": "inline@3"
+        },
+        {
+          "command": "cql.explorer.test-case.clear-filter",
+          "when": "view == cql-libraries && viewItem =~ /cql-testcase-root-filtered/",
+          "group": "inline@3"
         }
-      ]
-    },
-    "viewsContainers": {
-      "activitybar": [
+      ],
+      "view/title": [
         {
-          "id": "cql-explorer",
-          "title": "CQL Explorer",
-          "icon": "icons/cqframework.png"
+          "command": "cql.execute.select-libraries",
+          "when": "view == cql-libraries",
+          "group": "navigation@1"
+        },
+        {
+          "command": "cql.explorer.library.execute-all",
+          "when": "view == cql-libraries",
+          "group": "navigation@2"
+        },
+        {
+          "command": "cql.explorer.filter-by-name",
+          "when": "view == cql-libraries",
+          "group": "navigation@3"
+        },
+        {
+          "command": "cql.explorer.refresh",
+          "when": "view == cql-libraries",
+          "group": "navigation@4"
+        },
+        {
+          "command": "cql.explorer.expand-all",
+          "when": "view == cql-libraries",
+          "group": "navigation@5"
+        },
+        {
+          "command": "workbench.actions.treeView.cql-libraries.collapseAll",
+          "when": "view == cql-libraries",
+          "group": "navigation@6"
+        },
+        {
+          "command": "cql.explorer.hide-empty",
+          "when": "view == cql-libraries && !cql.hideEmptyLibraries",
+          "group": "1_filter@1"
+        },
+        {
+          "command": "cql.explorer.show-all",
+          "when": "view == cql-libraries && cql.hideEmptyLibraries",
+          "group": "1_filter@1"
+        },
+        {
+          "command": "cql.explorer.clear-name-filter",
+          "when": "view == cql-libraries && cql.nameFilterActive",
+          "group": "1_filter@2"
+        },
+        {
+          "command": "cql.explorer.sort-desc",
+          "when": "view == cql-libraries && !cql.sortDescending",
+          "group": "2_sort@1"
+        },
+        {
+          "command": "cql.explorer.sort-asc",
+          "when": "view == cql-libraries && cql.sortDescending",
+          "group": "2_sort@1"
+        },
+        {
+          "command": "cql.explorer.show-layout-warnings",
+          "when": "view == cql-libraries && !cql.showLayoutWarnings",
+          "group": "3_warnings@1"
+        },
+        {
+          "command": "cql.explorer.hide-layout-warnings",
+          "when": "view == cql-libraries && cql.showLayoutWarnings",
+          "group": "3_warnings@1"
         }
       ]
     },
     "views": {
-      "cql-explorer": [
+      "explorer": [
         {
           "id": "cql-libraries",
-          "name": "Libraries"
+          "name": "CQL Explorer"
         }
       ]
     }
@@ -183,24 +539,25 @@
     "cql-language-server": {
       "groupId": "org.opencds.cqf.cql.ls",
       "artifactId": "cql-ls-service",
-      "version": "4.1.2"
+      "version": "4.3.0-SNAPSHOT"
     }
   },
   "devDependencies": {
     "@types/chai": "^5.2.3",
     "@types/expand-tilde": "^2.0.0",
     "@types/fs-extra": "^9.0.13",
-    "@types/glob": "^7.1.1",
     "@types/lodash": "^4.14.183",
+    "@types/mock-fs": "^4.13.4",
     "@types/mocha": "^10.0.10",
     "@types/node": "^16.18.34",
     "@types/node-fetch": "^2.6.2",
     "@types/vscode": "^1.73.0",
     "@types/winreg": "^1.2.31",
-    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.3.6",
     "chai": "4.5",
-    "mocha": "^10.8.2",
+    "mock-fs": "^5.5.0",
+    "mocha": "^11.7.5",
     "nyc": "^17.1.0",
     "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
@@ -208,17 +565,19 @@
   },
   "dependencies": {
     "expand-tilde": "^2.0.2",
+    "markdown-to-text": "^0.1.1",
     "find-java-home": "1.2.2",
     "fs-extra": "^8.1.0",
-    "glob": "^7.2.3",
-    "lodash": "^4.17.21",
+    "glob": "^10.5.0",
+    "lodash": "^4.17.23",
     "node-fetch": "2.6.7",
     "tslib": "^2.4.0",
     "vscode-languageclient": "^7.0.0",
     "vscode-uri": "^3.0.8",
     "winreg": "^1.2.4",
     "winston": "^3.8.1",
-    "winston-daily-rotate-file": "^4.7.1"
+    "winston-daily-rotate-file": "^4.7.1",
+    "winston-transport-vscode": "^0.1.0"
   },
   "prettier": {
     "printWidth": 100,

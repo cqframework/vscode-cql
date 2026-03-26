@@ -40,7 +40,7 @@ suite('viewElm()', () => {
     const editor = window.activeTextEditor;
     expect(editor, 'expected an active text editor after viewElm').to.not.be.undefined;
     expect(editor!.document.languageId).to.equal('json');
-    expect(editor!.document.getText()).to.equal(MOCK_JSON_ELM);
+    expect(editor!.document.getText()).to.equal(JSON.stringify(JSON.parse(MOCK_JSON_ELM), null, 2));
   });
 
   test('opens an XML document containing the returned ELM', async () => {
