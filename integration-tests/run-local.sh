@@ -103,6 +103,8 @@ echo "[3/4] Building extension..."
 cd "${EXT_DIR}"
 npm ci
 npm run compile
+# Compile integration tests (excluded from main tsconfig)
+npx tsc -p "${SCRIPT_DIR}/tsconfig.json"
 
 # ------------------------------------------------------------------
 # 4. Run integration tests

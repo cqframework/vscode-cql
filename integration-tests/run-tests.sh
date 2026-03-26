@@ -73,6 +73,8 @@ echo "[3/4] Building vscode-cql extension..."
 cd "${EXT_DIR}"
 npm ci
 npm run compile
+# Compile integration tests (excluded from main tsconfig)
+npx tsc -p "${INT_DIR}/tsconfig.json"
 
 # ------------------------------------------------------------------
 # 4. Run tests
