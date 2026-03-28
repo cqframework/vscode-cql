@@ -1,0 +1,32 @@
+{
+  "name": "CQL Development",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder}/../cql-language-server,target=/workspace/cql-language-server,type=bind"
+  ],
+  "workspaceFolder": "/workspace/vscode-cql",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/vscode-cql,type=bind",
+  "postCreateCommand": "npm ci && cd /workspace/cql-language-server && ./mvnw --batch-mode -no-transfer-progress package -DskipTests -pl ls/service -am",
+  "postStartCommand": "integration-tests/run-local.sh --skip-build 2>/dev/null || true",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "dbaeumer.vscode-eslint"
+      ],
+      "settings": {
+        "java.jdt.ls.java.home": "/opt/java/openjdk",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "forwardPorts": [1044],
+  "portsAttributes": {
+    "1044": {
+      "label": "CQL Language Server Debug",
+      "onAutoForward": "silent"
+    }
+  }
+}
