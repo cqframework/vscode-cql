@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.8.0 Release
+
+- Added more unit tests, and UI tests
+
 ## 0.7.12 Release
 
 - Fixed Windows path issues with model library paths, test case paths, and select libraries paths affecting CQL execution
