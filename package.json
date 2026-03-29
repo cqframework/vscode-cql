@@ -170,7 +170,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\" && npm run compile",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "changelog": "node scripts/update-changelog.js"
   },
   "javaDependencies": {
     "cql-language-server": {

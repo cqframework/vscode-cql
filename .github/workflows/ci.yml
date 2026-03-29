@@ -2,11 +2,51 @@ name: CI
 
 on:
   push:
+    branches: [master]
   pull_request:
     branches: [master]
 
 jobs:
+  # --- NEW JOB: Verify Changelog ---
+  verify-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Changelog Format
+        shell: node {0}
+        run: |
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const version = pkg.version;
+          const [major, minor, patch] = version.split('.').map(Number);
+          
+          const isPrerelease = minor % 2 !== 0;
+          const expectedHeader = isPrerelease ? `## v${version} (prerelease)` : `## v${version}`;
+          
+          console.log(`Checking for ${isPrerelease ? 'Prerelease' : 'Release'} version: ${version}`);
+          
+          const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+          
+          // Regex breakdown:
+          // \n\n           -> Two newlines (one blank line)
+          // ${header}      -> The exact version header
+          // \n\n           -> Two newlines (one blank line)
+          // Date: \d{4}... -> The date string
+          const escapedHeader = expectedHeader.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const pattern = new RegExp(`\\n\\n${escapedHeader}\\n\\nDate: \\d{4}-\\d{2}-\\d{2}`);
+          
+          if (pattern.test(changelog)) {
+            console.log('✅ CHANGELOG.md is correctly formatted.');
+          } else {
+            console.error(`\x1b[31m%s\x1b[0m`, `❌ Error: CHANGELOG.md is missing an entry or formatted incorrectly.`);
+            console.error(`Expected format:\n\n[Blank Line]\n${expectedHeader}\n\nDate: YYYY-MM-DD`);
+            process.exit(1);
+          }
+
+  # --- EXISTING JOB: Tests ---
   test:
+    needs: verify-changelog  # Prevents tests from running if changelog is wrong
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
