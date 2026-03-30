@@ -1,6 +1,14 @@
 # Change Log
 
-## 0.8.0 Release
+## v0.9.0 (prerelease)
+
+Date: 2025-03-27
+
+This is the pre-release version of v0.10
+
+## v0.8.0
+
+Date: 2025-03-27
 
 - Added more unit tests, and UI tests
 

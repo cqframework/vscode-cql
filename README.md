@@ -1,6 +1,15 @@
 # Clinical Quality Language (CQL) for VSCode
 
-Adds syntax highlighting, semantic (error) highlighting, and local execution for the HL7 Clinical Quality Language (CQL) to VS Code
+[![UserGuide](https://img.shields.io/badge/CQL_Extension-User_Guide-olive.svg?style=flat)](https://github.com/cqframework/vscode-cql/wiki/User-Guide)
+[![DeveloperGuide](https://img.shields.io/badge/CQL_Extension-Developer_Guide-blue.svg?style=flat)](https://github.com/cqframework/vscode-cql/wiki/Developer-Guide)
+[![Zulip](https://img.shields.io/badge/Zulip-CQL_Chat-mediumpurple.svg?style=flat)](https://chat.fhir.org/#narrow/channel/179220-cq)
+
+[The VS Code CQL extension](https://marketplace.visualstudio.com/items?itemName=cqframework.cql) provides syntax highlighting, semantic (error) highlighting, and local execution for [HL7 Clinical Quality Language (CQL)](http://cql.hl7.org).
+
+## Requirements
+
+* Visual Studio Code 1.90 or newer
+* Java 11 or newer
 
 ## Quick Start
 
@@ -16,11 +25,11 @@ The Clinical Quality Language (CQL) is a domain specific language for expressing
 electronic clinical quality measures (eCQM) and clinical decision support rules
 (CDS) in an author-friendly computable format. Find out more about CQL:
 
-- [CQL Specification](http://cql.hl7.org)
-- [CQL Stream on FHIR Zulip Chat](https://chat.fhir.org/#narrow/stream/179220-cql)
-- [clinical_quality_language on GitHub](https://github.com/cqframework/clinical_quality_language)
-- [Clinical Quality Language at HL7](https://confluence.hl7.org/display/CDS/Clinical+Quality+Language)
-- [Clinical Quality Framework (CQF)](https://confluence.hl7.org/display/CQIWC/Clinical+Quality+Framework)
+* [CQL Specification](http://cql.hl7.org)
+* [CQL Stream on FHIR Zulip Chat](https://chat.fhir.org/#narrow/stream/179220-cql)
+* [clinical_quality_language on GitHub](https://github.com/cqframework/clinical_quality_language)
+* [Clinical Quality Language at HL7](https://confluence.hl7.org/display/CDS/Clinical+Quality+Language)
+* [Clinical Quality Framework (CQF)](https://confluence.hl7.org/display/CQIWC/Clinical+Quality+Framework)
 
 ## Getting Help
 
@@ -40,68 +49,14 @@ meetings. Email bryn at alphora.com to be added to the invite list.
 
 ## Related Projects
 
-- [atom_cql_support](https://github.com/cqframework/atom_cql_support) - CQL Support for the Atom editor.
 - [cql-language-server](https://github.com/cqframework/cql-language-server) - The Java and Language Server Protocol based server that powers this extension.
 - [cql-translator](https://github.com/cqframework/clinical_quality_language/tree/master/Src/java/cql-to-elm) - The ELM generation component used in this project.
 - [clinical-reasoning](https://github.com/cqframework/clinical-reasoning) - The Java CQL runtime environment used in the extension.
+- [atom_cql_support](https://github.com/cqframework/atom_cql_support) - CQL Support for the Atom editor.
 
-## Local Plugin Development
+## Development
 
-Install `npm`
-
-Run `npm install` from the root
-
-Run `npm run watch` from the root
-
-Run the `debug` launch from VS Code
-
-TIP: The cql-language-server that provides error highlighting is a Java project. It's also launched in debug mode when this VS Code extension is launched in debug mode, allowing you to attach a Java debugger as well. If you're simultaneously iterating on the cql-language-server, you can create a symlink to that Java artifact and changes will be picked up when VS Code restarts.
-
-On linux:
-`vscode-cql/dist/jars$ ln -s your-repo-home/cql-language-server/ls/service/target/cql-ls-service-1.5.8.jar cql-ls-service-1.5.8.jar`
-
-Java version managers are often used. These include:
-
-
-[SDKMAN!](https://sdkman.io/)
-
-[jenv](https://github.com/jenv/jenv)
-
-[asdf](https://asdf-vm.com/)
-
-If you are seeing something similar to:
-
-      Starting client failed.
-      Launching server using command /undefined/bin/java failed.
-      Error: spawn /undefined/bin/java ENOENT
-
-Then you will need to add the following to your shell startup file (either .zshrc or .bashrc).
-
-      For jenv users:
-         `jenv add ~/.jenv/plugins/java/set-java-home.zsh`
-      For asdf users:
-         `add ~/.asdf/plugins/java/set-java-home.zsh to ~/.zshrc` (You might need to add this to ~/.bashrc if using bash or the same with other shells).
-
-   SDKMAN! should automatically manage JAVA_HOME for you.
-
-Set your repo home directory and update the versions as needed.
-
-## Versioning
-
-This project follows the guidance given by Microsoft for the VS Code marketplace [here](https://code.visualstudio.com/updates/v1_63#_publishing-prerelease-extensions) and publishes prereleases to the VS Code marketplace using odd minor version numbers. Full releases are published using even minor version numbers.
-
-## Release Process
-
-1. Update master to be a release version (and all the reviews, bug fixes, etc. that that requires)
-    1. Update `package.json` - version to X.X.X (e.g. `0.7.7`)
-    2. Update `CHANGELOG.md` - add a new section at the top for the release version with a summary of changes (see existing entries for format)
-2. Passed CI Build = ready for release
-3. Run `vsce login cqframework` to authenticate, then `vsce publish` to publish to the VS Code Marketplace
-4. Create a github release (specify a tag of `vX.X.X` (e.g. `v0.7.7`) pointing at master to be created on release)
-    1. Choose the "Auto-generate release notes" option
-    2. Provide any additional detail/cleanup on the release notes
-5. Update master version to the next snapshot version `X.X.X-SNAPSHOT` (e.g. `0.7.8-SNAPSHOT`)
-6. Close all issues included in the release
+Development details can be found in the [Developer Guide](https://github.com/cqframework/vscode-cql/wiki/Developer-Guide).
 
 ## Acknowledgements
 
