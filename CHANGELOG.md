@@ -1,5 +1,12 @@
 # Change Log
 
+## v0.9.1 (prerelease)
+
+Date: 2026-03-30
+
+* bump to v0.9.1
+* Upgrade to CQL-LS v4.4.1
+
 ## v0.9.0 (prerelease)
 
 Date: 2025-03-27
@@ -10,107 +17,107 @@ This is the pre-release version of v0.10
 
 Date: 2025-03-27
 
-- Added more unit tests, and UI tests
+* Added more unit tests, and UI tests
 
 ## 0.7.12 Release
 
-- Fixed Windows path issues with model library paths, test case paths, and select libraries paths affecting CQL execution
+* Fixed Windows path issues with model library paths, test case paths, and select libraries paths affecting CQL execution
 
 ## 0.7.11 Release
 
-- Added support for viewing ELM as JSON
-- Added support for selective CQL execution from the context menu
-- Added quick-pick test case selector with saved selections across sessions
-- CQL commands are now only available once the language server is ready
+* Added support for viewing ELM as JSON
+* Added support for selective CQL execution from the context menu
+* Added quick-pick test case selector with saved selections across sessions
+* CQL commands are now only available once the language server is ready
 
 ## 0.7.10 Release
 
-- Update to CQL Language Server 4.1.2
-- Added support for excluding individual test cases from execution
-- Updated README with setup instructions for asdf and other shell version managers
+* Update to CQL Language Server 4.1.2
+* Added support for excluding individual test cases from execution
+* Updated README with setup instructions for asdf and other shell version managers
 
 ## 0.7.9 Release
 
-- Update to CQL Language Server 4.0.0
+* Update to CQL Language Server 4.0.0
 
 ## 0.7.5 Release
 
-- Update to CQL Language Server 3.4.0
+* Update to CQL Language Server 3.4.0
 
 ## 0.7.4 Release
 
-- Update to CQL Language Server 3.3.1
-  - This requires Java 17
-- Update to check for Java 17 pre-requisites
-- Various bug fixes for CQL evaluation
+* Update to CQL Language Server 3.3.1
+  * This requires Java 17
+* Update to check for Java 17 pre-requisites
+* Various bug fixes for CQL evaluation
 
 ## 0.7.3 Release
 
-- Update to CQL Language Server 3.2.1
-  - Fixes for external IGs
+* Update to CQL Language Server 3.2.1
+  * Fixes for external IGs
 
 ## 0.7.1 Release
 
-- Update to CQL Language Server 3.1.0
-  - Fixes for paths on Windows
+* Update to CQL Language Server 3.1.0
+  * Fixes for paths on Windows
 
 ## 0.7.0 Release
 
-- Update to CQL Language Server 3.0.0
-  - Includes new CQL language features such as aggregate clauses and new compiler warning messages
-- Preview Snippets functionality for common CQL patterns
+* Update to CQL Language Server 3.0.0
+  * Includes new CQL language features such as aggregate clauses and new compiler warning messages
+* Preview Snippets functionality for common CQL patterns
 
 ## 0.6.0 Release
 
-- Update to CQL Language Server 2.0.0
-  - Support for loading CQL libraries via NPM
-  - Various bug fixes for CQL Translator, Engine, and Evaluator
+* Update to CQL Language Server 2.0.0
+  * Support for loading CQL libraries via NPM
+  * Various bug fixes for CQL Translator, Engine, and Evaluator
 
 ## 0.2.0 Release
 
-- Fixed library resolution in multi-root CQL projects (known issue: all CQL projects included in a multi-root project must use the same version of FHIRHelpers. Multiple versions of FHIRHelpers in a multi-root CQL project will result in errors and is not currently supported)
-- Fixed URI handling issues on Windows
-  - These changes fixed numerous bugs on Windows, such as the return type hover, the error highlighting, the execute ELM functionality
+* Fixed library resolution in multi-root CQL projects (known issue: all CQL projects included in a multi-root project must use the same version of FHIRHelpers. Multiple versions of FHIRHelpers in a multi-root CQL project will result in errors and is not currently supported)
+* Fixed URI handling issues on Windows
+  * These changes fixed numerous bugs on Windows, such as the return type hover, the error highlighting, the execute ELM functionality
 
-## 0.1.7 - Prerelease
+## 0.1.7 * Prerelease
 
-- Size reductions in plugin
+* Size reductions in plugin
 
-## 0.1.6 - Prerelease
+## 0.1.6 * Prerelease
 
-- Update to cql-language server 1.5.8
-  - Multi-root workspace support
-  - Performance enhancements
+* Update to cql-language server 1.5.8
+  * Multi-root workspace support
+  * Performance enhancements
 
 ## 0.1.5
 
-- Update to cql-language server 1.5.7
+* Update to cql-language server 1.5.7
 
 ## 0.1.4
 
-- Update to cql-language server 1.5.6
+* Update to cql-language server 1.5.6
 
 ## 0.1.3
 
-- Update to cql-language server 1.5.4
-  - fixes for CQL 1.5
-  - fixes for duplicate problems
-  - fixes for no error highlighting on certain CQL files
-  - fixes for null pointer exceptions in output
+* Update to cql-language server 1.5.4
+  * fixes for CQL 1.5
+  * fixes for duplicate problems
+  * fixes for no error highlighting on certain CQL files
+  * fixes for null pointer exceptions in output
 
 ## 0.1.2
 
-- Add support for cql-options.json file in the cql directory
-- Updated dependencies
-  - cql-translator 1.5.6
-  - cql-evaluator 1.4.1
+* Add support for cql-options.json file in the cql directory
+* Updated dependencies
+  * cql-translator 1.5.6
+  * cql-evaluator 1.4.1
 
 ## 0.1.1
 
-- Fixes for test discovery found in review
+* Fixes for test discovery found in review
 
 ## 0.1.0
 
-- Initial preview release
-- Supports syntax highlighting, error highlighting, viewing ELM, and local execution
-- Feature parity with [Atom CQL plugin](https://github.com/cqframework/atom_cql_support)
+* Initial preview release
+* Supports syntax highlighting, error highlighting, viewing ELM, and local execution
+* Feature parity with [Atom CQL plugin](https://github.com/cqframework/atom_cql_support)
