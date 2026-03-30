@@ -15,6 +15,41 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"label": "Rebuild Language Server",
+			"type": "shell",
+			"command": "${workspaceFolder}/.devcontainer/rebuild-ls.sh",
+			"group": "build",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
+		},
+		{
+			"label": "Rebuild Language Server (watch)",
+			"type": "shell",
+			"command": "${workspaceFolder}/.devcontainer/rebuild-ls.sh --watch",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
+		},
+		{
+			"label": "Watch All (Extension + Language Server)",
+			"type": "shell",
+			"command": "${workspaceFolder}/.devcontainer/watch-all.sh",
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
 		}
 	]
 }

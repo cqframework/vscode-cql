@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../src",
+    "outDir": "../dist"
+  },
+  "include": ["../src/__test__/suite/integration/**/*.ts"],
+  "exclude": ["../node_modules"]
+}
