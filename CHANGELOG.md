@@ -1,5 +1,24 @@
 # Change Log
 
+## v0.9.2 (prerelease)
+
+Date: 2026-03-31
+
+### CQL Explorer
+
+Adds a new **CQL Explorer** tree view for managing CQL libraries and MADIE test cases.
+
+* **Library tree** — browse all CQL libraries in the workspace alongside their FHIR test case directories
+* **Expand / collapse all** — expand or collapse the entire tree with a single toolbar button
+* **Execute all test cases** — run all test cases for a library or for the entire workspace from the toolbar or context menu
+* **Test case cloning** — clone an existing test case with fresh patient and resource UUIDs auto-generated
+* **Resource operations** — copy, cut, paste, rename, and delete individual FHIR resources within a test case; paste rewrites all patient ID references to match the target test case
+* **Fix references** — auto-correct patient UUID mismatches across resources in a test case
+* **Filtering** — filter libraries by name (hide empty libraries, show only matching names) and filter test cases within a library by name or description; active filters are shown in the tree view description
+* **Sorting** — sort libraries ascending or descending by name
+* **Layout warnings** — detects non-standard test case directory structures and reports them in the Problems panel
+* **Expansion state persistence** — remembers which libraries and test cases are expanded across tree rebuilds
+
 ## v0.9.1 (prerelease)
 
 Date: 2026-03-30

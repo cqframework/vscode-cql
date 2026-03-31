@@ -1,7 +1,8 @@
 library SimpleMeasure version '1.0.0'
 
 using FHIR version '4.0.1'
-include FHIRHelpers version '4.0.1' called FHIRHelpers
+
+include FHIRHelpers version '4.1.0' called FHIRHelpers
 
 context Patient
 
@@ -23,3 +24,6 @@ define function "Get Name String"(name FHIR.HumanName):
       name.text.value, 
       Combine(name.given.value, ' ') + ' ' + Coalesce(name.family.value, '')
     )
+
+define TestAge: Age { value: decimal { value: 12.0 }, unit: string { value: 'a' }, system: uri { value: 'http://unitsofmeasure.org' }, code: code { value: 'a' } }
+define TestAgeSpecificallyConverts: FHIRHelpers.ToQuantity(TestAge)

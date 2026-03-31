@@ -14,10 +14,10 @@ const pkg: PackageJson = JSON.parse(
 );
 
 const CONTEXT_MENU_COMMANDS = [
-  'cql.action.executeCql',
-  'cql.action.executeCql.selectTestCases',
-  'cql.action.viewElm.xml',
-  'cql.action.viewElm.json',
+  'cql.editor.execute',
+  'cql.editor.execute.select-test-cases',
+  'cql.editor.view-elm.xml',
+  'cql.editor.view-elm.json',
 ];
 
 const EXPECTED_WHEN = 'editorLangId == cql && cql.languageServerReady';
@@ -26,14 +26,14 @@ suite('package.json contributions', () => {
   test('all expected commands are declared in contributes.commands', () => {
     const ids = pkg.contributes.commands.map(c => c.command);
     for (const cmd of [
-      'cql.open.serverLog',
-      'cql.open.clientLog',
+      'cql.open.server-log',
+      'cql.open.client-log',
       'cql.open.logs',
-      'cql.action.viewElm.xml',
-      'cql.action.viewElm.json',
-      'cql.action.executeCql',
-      'cql.action.executeCql.selectLibraries',
-      'cql.action.executeCql.selectTestCases',
+      'cql.editor.view-elm.xml',
+      'cql.editor.view-elm.json',
+      'cql.editor.execute',
+      'cql.execute.select-libraries',
+      'cql.editor.execute.select-test-cases',
     ]) {
       expect(ids, `"${cmd}" should be declared in contributes.commands`).to.include(cmd);
     }

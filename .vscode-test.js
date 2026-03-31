@@ -3,7 +3,7 @@ const { defineConfig } = require('@vscode/test-cli');
 module.exports = defineConfig({
   label: 'Tests (Empty Folder)',
   files: 'dist/__test__/**/*.test.js',
-  workspaceFolder: './src/__test__/resources/test-workspace',
+  workspaceFolder: './src/__test__/resources/simple-project',
   launchArgs: [
     'tests/empty',
     '--new-window',

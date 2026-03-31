@@ -12,5 +12,6 @@
     "importHelpers": true,
     "skipLibCheck": true
   },
-  "exclude": ["node_modules", ".vscode-test"]
+  "include": ["src/**/*", "src/__test__/**/*"],
+  "exclude": ["node_modules", ".vscode-test", "src/languageServer"]
 }

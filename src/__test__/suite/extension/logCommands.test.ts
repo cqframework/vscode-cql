@@ -2,7 +2,8 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 
 suite('log file commands', () => {
-  suiteSetup(async () => {
+  suiteSetup(async function() {
+    this.timeout(60000);
     const ext = vscode.extensions.getExtension('cqframework.cql');
     if (!ext?.isActive) {
       await ext?.activate();
@@ -11,12 +12,12 @@ suite('log file commands', () => {
 
   // The client logger is initialised during activation and writes a log file to
   // storageUri/logs/ immediately, so the command should succeed and return true.
-  test('cql.open.clientLog opens the log file created during activation', async () => {
-    const result = await vscode.commands.executeCommand('cql.open.clientLog');
+  test('cql.open.client-log opens the log file created during activation', async () => {
+    const result = await vscode.commands.executeCommand('cql.open.client-log');
     assert.strictEqual(result, true, 'command should open the client log file created on activation');
   });
 
-  // cql.open.serverLog requires the language server to have run (writes
+  // cql.open.server-log requires the language server to have run (writes
   // storageUri/cql_ls_ws/.metadata/.log). In the test environment the server
   // never starts, so the log file does not exist. window.showWarningMessage
   // blocks until dismissed in a headed session, making this untestable here.

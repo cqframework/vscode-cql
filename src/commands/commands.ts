@@ -17,12 +17,12 @@ export namespace Commands {
   /**
    * Open CQL Language Server Log file
    */
-  export const OPEN_SERVER_LOG = 'cql.open.serverLog';
+  export const OPEN_SERVER_LOG = 'cql.open.server-log';
 
   /**
    * Open CQL client Log file
    */
-  export const OPEN_CLIENT_LOG = 'cql.open.clientLog';
+  export const OPEN_CLIENT_LOG = 'cql.open.client-log';
 
   /**
    * Open CQL log files side by side
@@ -37,20 +37,19 @@ export namespace Commands {
   /*
    * View ELM for CQL
    */
-  // TODO: Shorten the command, the whole namespace isn't needed.
-  export const VIEW_ELM_COMMAND_XML = 'cql.action.viewElm.xml';
-  export const VIEW_ELM_COMMAND_JSON = 'cql.action.viewElm.json';
+  export const VIEW_ELM_COMMAND_XML = 'cql.editor.view-elm.xml';
+  export const VIEW_ELM_COMMAND_JSON = 'cql.editor.view-elm.json';
   export const VIEW_ELM = 'org.opencds.cqf.cql.ls.viewElm';
 
   /*
    * Execute CQL
    * TODO: Deprecate once full debugging support exists
    */
-  export const EXECUTE_CQL_COMMAND = 'cql.action.executeCql';
+  export const EXECUTE_CQL_COMMAND = 'cql.editor.execute';
   export const EXECUTE_CQL = 'org.opencds.cqf.cql.ls.plugin.debug.startDebugSession';
 
-  export const EXECUTE_CQL_COMMAND_SELECT_LIBRARIES = 'cql.action.executeCql.selectLibraries';
-  export const EXECUTE_CQL_COMMAND_SELECT_TEST_CASES = 'cql.action.executeCql.selectTestCases';
+  export const EXECUTE_CQL_COMMAND_SELECT_LIBRARIES = 'cql.execute.select-libraries';
+  export const EXECUTE_CQL_COMMAND_SELECT_TEST_CASES = 'cql.editor.execute.select-test-cases';
 
   /*
    * Open settings.json

@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { commands, ExtensionContext, Uri, window } from 'vscode';
+import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
 import {
   CloseAction,
   ErrorAction,
@@ -13,6 +13,7 @@ import { register as registerExecuteCql } from './commands/execute-cql';
 import { register as registerLogCommands } from './commands/log-files';
 import { register as registerViewElmCommand } from './commands/view-elm';
 import { cqlLanguageClientInstance } from './cql-language-server/cqlLanguageClient';
+import { CqlExplorer } from './cql-explorer/cqlExplorer';
 import { ClientStatus } from './extension.api';
 import * as requirements from './java-support/requirements';
 import * as log from './log-services/logger';
@@ -77,6 +78,9 @@ function getStorageUri(context: ExtensionContext): Uri {
 export function activate(context: ExtensionContext): Promise<void> {
   const storageUri = getStorageUri(context);
   const outputChannel = log.initialize(Uri.joinPath(storageUri, 'logs'), EXTENSION_NAME);
+  if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
+    new CqlExplorer(context);
+  }
 
   return requirements
     .resolveRequirements(context)
@@ -92,7 +96,7 @@ export function activate(context: ExtensionContext): Promise<void> {
     })
     .then(async requirements => {
       //log.info('extension activated');
-      const workspacePath = path.resolve(storageUri.fsPath + '/cql_ls_ws');
+      const workspacePath = path.join(storageUri.fsPath, 'cql_ls_ws');
 
       // Options to control the language client
       const clientOptions: LanguageClientOptions = {

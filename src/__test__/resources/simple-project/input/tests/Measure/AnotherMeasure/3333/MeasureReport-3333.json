@@ -1,0 +1,17 @@
+{
+  "resourceType": "MeasureReport",
+  "id": "3333",
+  "extension": [
+    {
+      "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription",
+      "valueMarkdown": "AnotherMeasure"
+    }
+  ],
+  "status": "complete",
+  "type": "individual",
+  "measure": "https://vscode-cql/tests/measure/AnotherMeasure",
+  "period": {
+    "start": "2026-01-01",
+    "end": "2026-12-31"
+  }
+}

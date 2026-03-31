@@ -18,7 +18,7 @@
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": [
-        "${workspaceFolder}/src/__test__/resources/test-workspace",
+        "${workspaceFolder}/src/__test__/resources/simple-project",
         "--extensionDevelopmentPath=${workspaceFolder}",
         "--disable-extensions",
         "--new-window",

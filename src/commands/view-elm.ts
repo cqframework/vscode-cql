@@ -22,9 +22,21 @@ export async function viewElm(
   try {
     log.debug(`attempting to get ELM from [${cqlFileUri}] as ${elmType}`);
     const elm: string = await elmFetcher(cqlFileUri, elmType);
-    const doc = await workspace.openTextDocument({ language: elmType, content: elm });
+    const formatted = elmType === 'json' ? formatJson(elm) : elm;
+    const doc = await workspace.openTextDocument({ language: elmType, content: formatted });
     await window.showTextDocument(doc);
+    if (elmType === 'xml') {
+      await commands.executeCommand('editor.action.formatDocument');
+    }
   } catch (error) {
     window.showErrorMessage(`Error while converting ${cqlFileUri.fsPath} to ELM. err: ${error}`);
+  }
+}
+
+function formatJson(raw: string): string {
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
   }
 }
