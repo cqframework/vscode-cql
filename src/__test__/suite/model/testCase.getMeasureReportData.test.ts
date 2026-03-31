@@ -10,7 +10,7 @@ suite('testCase.getMeasureReportData tests', () => {
   test('returns undefined when no MeasureReport file is present', () => {
     const folder = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/2222',
+      'input/tests/Measure/SimpleMeasure/2222',
     );
     expect(getMeasureReportData(folder)).to.be.undefined;
   });
@@ -18,7 +18,7 @@ suite('testCase.getMeasureReportData tests', () => {
   test('returns undefined populations when MeasureReport has no group field', () => {
     const folder = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/1111',
+      'input/tests/Measure/SimpleMeasure/1111',
     );
     const result = getMeasureReportData(folder);
     expect(result).to.not.be.undefined;
@@ -28,7 +28,7 @@ suite('testCase.getMeasureReportData tests', () => {
   test('extracts patientId from contained Parameters (MADIE format)', () => {
     const folder = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/1111',
+      'input/tests/Measure/SimpleMeasure/1111',
     );
     const result = getMeasureReportData(folder);
     expect(result!.patientId).to.equal('0c76341a-34f1-4d1b-9bbe-5915e00a0818');
@@ -37,7 +37,7 @@ suite('testCase.getMeasureReportData tests', () => {
   test('returns populations with groupId for each group', () => {
     const folder = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/3333',
+      'input/tests/Measure/SimpleMeasure/3333',
     );
     const result = getMeasureReportData(folder);
     expect(result).to.not.be.undefined;
@@ -48,7 +48,7 @@ suite('testCase.getMeasureReportData tests', () => {
   test('assigns correct groupId to populations from Group_1', () => {
     const folder = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/3333',
+      'input/tests/Measure/SimpleMeasure/3333',
     );
     const result = getMeasureReportData(folder);
     const group1Pops = result!.populations!.filter(p => p.groupId === 'Group_1');
@@ -60,7 +60,7 @@ suite('testCase.getMeasureReportData tests', () => {
   test('assigns correct groupId to populations from Group_2', () => {
     const folder = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/3333',
+      'input/tests/Measure/SimpleMeasure/3333',
     );
     const result = getMeasureReportData(folder);
     const group2Pops = result!.populations!.filter(p => p.groupId === 'Group_2');
@@ -72,7 +72,7 @@ suite('testCase.getMeasureReportData tests', () => {
   test('includes code field for each population', () => {
     const folder = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/3333',
+      'input/tests/Measure/SimpleMeasure/3333',
     );
     const result = getMeasureReportData(folder);
     const ipp = result!.populations!.find(
@@ -84,7 +84,7 @@ suite('testCase.getMeasureReportData tests', () => {
   test('extracts description from cqfm-testCaseDescription extension (1111 fixture)', () => {
     const folder = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/1111',
+      'input/tests/Measure/SimpleMeasure/1111',
     );
     const result = getMeasureReportData(folder);
     expect(result!.description).to.equal('SimpleMeasure');
@@ -93,7 +93,7 @@ suite('testCase.getMeasureReportData tests', () => {
   test('description is undefined when no extension block present (3333 fixture)', () => {
     const folder = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/3333',
+      'input/tests/Measure/SimpleMeasure/3333',
     );
     const result = getMeasureReportData(folder);
     expect(result!.description).to.be.undefined;

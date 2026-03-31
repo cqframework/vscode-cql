@@ -6,7 +6,7 @@ suite('CqlTestCase', () => {
   function makeTestCase(): CqlTestCase {
     const uri = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      'input/tests/measure/SimpleMeasure/1111',
+      'input/tests/Measure/SimpleMeasure/1111',
     );
     return new CqlTestCase(uri);
   }

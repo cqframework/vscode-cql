@@ -22,7 +22,7 @@ suite('CqlProjectTreeDataProvider.nodeId()', () => {
   // | CqlLibraryRootTreeItem  | Windows    | C:\workspace\input\cql\SimpleMeasure.cql              |
   // | CqlTestCaseRootTreeItem | macOS/Linux| /workspace/input/cql/SimpleMeasure.cql/testcases      |
   // | CqlTestCaseRootTreeItem | Windows    | C:\workspace\input\cql\SimpleMeasure.cql\testcases    |
-  // | CqlTestCaseTreeItem     | macOS/Linux| /workspace/input/tests/measure/SimpleMeasure/1111     |
+  // | CqlTestCaseTreeItem     | macOS/Linux| /workspace/input/tests/Measure/SimpleMeasure/1111     |
   // | CqlTestCaseTreeItem     | Windows    | C:\workspace\input\tests\measure\SimpleMeasure\1111   |
   // | CqlLibraryTreeItem      | any        | undefined (leaf node)                                 |
 
@@ -32,7 +32,7 @@ suite('CqlProjectTreeDataProvider.nodeId()', () => {
   setup(() => {
     const wsRoot = workspace.workspaceFolders![0].uri;
     lib = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/SimpleMeasure.cql'));
-    tc = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/measure/SimpleMeasure/1111'));
+    tc = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/Measure/SimpleMeasure/1111'));
   });
 
   test('CqlLibraryRootTreeItem ID equals library fsPath', () => {
@@ -87,14 +87,14 @@ suite('buildTree per-library filter', () => {
     const wsRoot = workspace.workspaceFolders![0].uri;
 
     simpleMeasureLib = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/SimpleMeasure.cql'));
-    tc1111 = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/measure/SimpleMeasure/1111'));
-    tc2222 = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/measure/SimpleMeasure/2222'));
+    tc1111 = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/Measure/SimpleMeasure/1111'));
+    tc2222 = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/Measure/SimpleMeasure/2222'));
     simpleMeasureLib.addTestCase(tc1111);
     simpleMeasureLib.addTestCase(tc2222);
 
     anotherMeasureLib = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/AnotherMeasure.cql'));
-    tc3333 = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/measure/AnotherMeasure/3333'));
-    tc4444 = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/measure/AnotherMeasure/4444'));
+    tc3333 = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/Measure/AnotherMeasure/3333'));
+    tc4444 = new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/Measure/AnotherMeasure/4444'));
     anotherMeasureLib.addTestCase(tc3333);
     anotherMeasureLib.addTestCase(tc4444);
 

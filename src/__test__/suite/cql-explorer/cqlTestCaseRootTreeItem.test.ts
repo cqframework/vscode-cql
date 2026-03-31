@@ -19,11 +19,11 @@ suite('CqlTestCaseRootTreeItem filtering', () => {
     lib = new CqlLibrary(libUri);
 
     tc1111 = new CqlTestCase(
-      Uri.joinPath(workspace.workspaceFolders![0].uri, 'input/tests/measure/SimpleMeasure/1111'),
+      Uri.joinPath(workspace.workspaceFolders![0].uri, 'input/tests/Measure/SimpleMeasure/1111'),
     );
 
     tc2222 = new CqlTestCase(
-      Uri.joinPath(workspace.workspaceFolders![0].uri, 'input/tests/measure/SimpleMeasure/2222'),
+      Uri.joinPath(workspace.workspaceFolders![0].uri, 'input/tests/Measure/SimpleMeasure/2222'),
     );
   });
 

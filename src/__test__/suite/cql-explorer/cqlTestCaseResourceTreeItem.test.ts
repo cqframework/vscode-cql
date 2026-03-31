@@ -8,7 +8,7 @@ suite('CqlTestCaseResourceTreeItem', () => {
   function makeItem(dir: string, fileName: string): CqlTestCaseResourceTreeItem {
     const uri = Uri.joinPath(
       wsRoot(),
-      `input/tests/measure/SimpleMeasure/${dir}/${fileName}`,
+      `input/tests/Measure/SimpleMeasure/${dir}/${fileName}`,
     );
     return new CqlTestCaseResourceTreeItem({ name: fileName, uri });
   }

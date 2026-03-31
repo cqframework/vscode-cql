@@ -7,7 +7,7 @@ suite('CqlTestCaseTreeItem', () => {
   function makeTestCase(subdir: string): CqlTestCase {
     const uri = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
-      `input/tests/measure/SimpleMeasure/${subdir}`,
+      `input/tests/Measure/SimpleMeasure/${subdir}`,
     );
     return new CqlTestCase(uri);
   }
