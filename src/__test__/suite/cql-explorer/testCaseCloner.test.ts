@@ -20,7 +20,9 @@ suite('cloneTestCase', () => {
   });
 
   setup(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-cql-clone-'));
+    // Normalize through Uri.file so the drive letter is capitalised on Windows,
+    // matching what cloneTestCase returns via Uri.file(destDir).fsPath.
+    tmpDir = Uri.file(fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-cql-clone-'))).fsPath;
     srcDir = path.join(tmpDir, OLD_PATIENT_ID);
     fs.mkdirSync(srcDir);
     fs.writeFileSync(
