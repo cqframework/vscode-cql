@@ -139,6 +139,7 @@ export class CqlLanguageClient {
 
   private registerCommands(context: ExtensionContext): void {
     context.subscriptions.push(
+      // open output file
       commands.registerCommand(Commands.OPEN_OUTPUT, () =>
         this.languageClient!.outputChannel.show(),
       ),

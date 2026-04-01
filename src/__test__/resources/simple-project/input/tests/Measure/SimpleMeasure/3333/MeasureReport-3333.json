@@ -1,0 +1,79 @@
+{
+    "resourceType": "MeasureReport",
+    "id": "3333",
+    "contained": [
+        {
+            "resourceType": "Parameters",
+            "id": "params-3333",
+            "parameter": [
+                {
+                    "name": "subject",
+                    "valueString": "patient-3333"
+                }
+            ]
+        }
+    ],
+    "status": "complete",
+    "type": "individual",
+    "measure": "https://vscode-cql/tests/measure/SimpleMeasure",
+    "period": {
+        "start": "2026-01-01",
+        "end": "2026-12-31"
+    },
+    "group": [
+        {
+            "id": "Group_1",
+            "population": [
+                {
+                    "code": {
+                        "coding": [
+                            {
+                                "code": "initial-population",
+                                "display": "Initial Population"
+                            }
+                        ]
+                    },
+                    "count": 1
+                },
+                {
+                    "code": {
+                        "coding": [
+                            {
+                                "code": "numerator",
+                                "display": "Numerator"
+                            }
+                        ]
+                    },
+                    "count": 0
+                }
+            ]
+        },
+        {
+            "id": "Group_2",
+            "population": [
+                {
+                    "code": {
+                        "coding": [
+                            {
+                                "code": "initial-population",
+                                "display": "Initial Population"
+                            }
+                        ]
+                    },
+                    "count": 1
+                },
+                {
+                    "code": {
+                        "coding": [
+                            {
+                                "code": "denominator",
+                                "display": "Denominator"
+                            }
+                        ]
+                    },
+                    "count": 1
+                }
+            ]
+        }
+    ]
+}

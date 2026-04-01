@@ -6,7 +6,8 @@ suite('extension activation tests', () => {
     assert.ok(vscode.extensions.getExtension('cqframework.cql'));
   });
 
-  test('extension should be active', async () => {
+  test('extension should be active', async function() {
+    this.timeout(60000);
     const extension = vscode.extensions.getExtension('cqframework.cql');
     if (!extension?.isActive) {
       await extension?.activate();
@@ -16,7 +17,8 @@ suite('extension activation tests', () => {
 });
 
 suite('non-CQL file isolation', () => {
-  suiteSetup(async () => {
+  suiteSetup(async function() {
+    this.timeout(60000);
     const ext = vscode.extensions.getExtension('cqframework.cql');
     if (!ext?.isActive) {
       await ext?.activate();

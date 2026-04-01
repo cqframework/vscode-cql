@@ -1,6 +1,5 @@
 import * as fse from 'fs-extra';
 import { glob } from 'glob';
-import markdownToText from 'markdown-to-text';
 import * as fs from 'node:fs';
 import {
   commands,
@@ -16,7 +15,8 @@ import { Utils } from 'vscode-uri';
 import { Commands } from '../commands/commands';
 import { executeCql } from '../cql-service/cqlService.executeCql';
 import * as log from '../log-services/logger';
-import { getTestCases, TestCase, TestCaseExclusion } from '../model/testCase';
+import { toGlobPath } from '../helpers/fileHelper';
+import { getTestCases, getMeasureReportData, TestCase, TestCaseExclusion } from '../model/testCase';
 
 let _context: ExtensionContext | undefined;
 
@@ -85,17 +85,20 @@ export async function selectLibraries(): Promise<void> {
         {
           location: ProgressLocation.Notification,
           title: 'Executing CQL Libraries',
-          cancellable: false,
+          cancellable: true,
         },
-        async progress => {
+        async (progress, token) => {
           const total = selected.length;
           for (let i = 0; i < total; i++) {
+            if (token.isCancellationRequested) {
+              break;
+            }
             const item = selected[i];
             progress.report({
               message: `(${i + 1}/${total}) ${item.label}`,
               increment: (1 / total) * 100,
             });
-            await executeCQLFile(item.uri);
+            await executeCQLFile(item.uri, undefined, false);
             await new Promise(resolve => setTimeout(resolve, 500));
           }
         },
@@ -131,12 +134,13 @@ export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
   );
   const quickPickItems = namedTestCases.map(testCase => ({
     label: testCase.name,
-    detail: markdownToText(testCase.description), // use quickpick detail to get description on 2nd line of quickpick
+    detail: getMeasureReportData(testCase.path)?.description,
   }));
 
   if (quickPickItems.length > 0) {
     quickPick.items = quickPickItems;
     quickPick.canSelectMany = true;
+    quickPick.matchOnDetail = true;
 
     const stateKey = `selectTestCases.selections.${libraryName}`;
     const savedSelections = _context?.workspaceState.get<string[]>(stateKey) ?? [];
@@ -164,6 +168,7 @@ export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
 export async function executeCQLFile(
   cqlFileUri: Uri,
   testCases: Array<TestCase> | undefined = undefined,
+  showProgress: boolean = true,
 ): Promise<void> {
   if (!fs.existsSync(cqlFileUri.fsPath)) {
     window.showInformationMessage('No library content found. Please save before executing.');
@@ -185,17 +190,15 @@ export async function executeCQLFile(
   const testConfig = loadTestConfig(cqlPaths.testConfigPath);
   const excludedTestCases = getExcludedTestCases(libraryName, testConfig.testCasesToExclude);
 
-  if (!testCases) {
-    testCases = getTestCases(
-      cqlPaths.testDirectoryPath,
-      libraryName,
-      Array.from(excludedTestCases.keys()),
-    );
-  }
+  const effectiveTestCases: Array<TestCase> =
+    testCases ??
+    getTestCases(
+      cqlPaths.testDirectoryPath, libraryName, Array.from(excludedTestCases.keys())
+    )
 
   // We didn't find any test cases, so we'll just execute an empty one
-  if (testCases.length === 0) {
-    testCases.push({});
+  if (effectiveTestCases.length === 0) {
+    effectiveTestCases.push({});
   }
 
   const cqlMessage = `CQL: ${cqlPaths.libraryDirectoryPath.fsPath}`;
@@ -204,13 +207,13 @@ export async function executeCQLFile(
     : `No terminology found at ${cqlPaths.terminologyDirectoryPath.fsPath}. Evaluation may fail if terminology is required.`;
 
   let testMessage = [];
-  if (testCases.length == 1 && testCases[0].name === null) {
+  if (effectiveTestCases.length == 1 && !effectiveTestCases[0].name) {
     testMessage.push(
       `No data found at ${cqlPaths.testDirectoryPath.fsPath}. Evaluation may fail if data is required.`,
     );
   } else {
     testMessage.push(`Test cases:`);
-    for (let p of testCases) {
+    for (let p of effectiveTestCases) {
       testMessage.push(`${p.name} - ${p.path?.fsPath}`);
     }
   }
@@ -228,20 +231,40 @@ export async function executeCQLFile(
 
   const startExecution = Date.now();
 
-  let fhirVersion = getFhirVersion(fs.readFileSync(cqlFileUri.fsPath, 'utf-8'));
-  if (!fhirVersion) {
-    fhirVersion = 'R4';
+  const determinedFhirVersion = getFhirVersion(fs.readFileSync(cqlFileUri.fsPath, 'utf-8'));
+  const fhirVersion: string = determinedFhirVersion ?? 'R4';
+  if (!determinedFhirVersion) {
     window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
   }
 
-  const result: string | undefined = await executeCql(
-    cqlFileUri,
-    testCases,
-    cqlPaths.terminologyDirectoryPath,
-    fhirVersion,
-    cqlPaths.optionsPath,
-    cqlPaths.projectDirectoryPath,
-  );
+  const libraryDisplayName = Utils.basename(cqlFileUri).replace('.cql', '');
+
+  const doExecute = () =>
+    executeCql(
+      cqlFileUri,
+      effectiveTestCases,
+      cqlPaths.terminologyDirectoryPath,
+      fhirVersion,
+      cqlPaths.optionsPath,
+      cqlPaths.projectDirectoryPath,
+    );
+
+  let result: string | undefined;
+  if (showProgress) {
+    result = await window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: `Executing CQL: ${libraryDisplayName}`,
+        cancellable: false,
+      },
+      async progress => {
+        progress.report({ message: 'Running...' });
+        return doExecute();
+      },
+    );
+  } else {
+    result = await doExecute();
+  }
 
   const endExecution = Date.now();
 
@@ -313,9 +336,8 @@ export function getLibraries(libraryPath: Uri): Array<Uri> {
     log.warn(`unable to find libraries @ ${libraryPath.fsPath}`);
     return [];
   }
-  const libraryPathPosix = libraryPath.fsPath.replace(/\\/g, '/');
   return glob
-    .sync(`${libraryPathPosix}/**/*.cql`)
+    .sync(`${toGlobPath(libraryPath.fsPath)}/**/*.cql`)
     .filter(f => fs.statSync(f).isFile())
     .map(f => Uri.file(f));
 }
