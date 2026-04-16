@@ -1,5 +1,42 @@
 # Change Log
 
+## v0.9.3
+
+Date: 2026-04-15
+
+### Execute CQL — RPC refactor
+
+Rewrites Execute CQL to use the language server's JSON-RPC command instead of the
+previous CLI argument array approach.
+
+* Sends a structured `ExecuteCqlRequest` (library name, model URI, context, parameters)
+* Receives structured `ExecuteCqlResponse` with typed expression results and server logs
+* Removes CLI argument construction (`CliCommand`, picocli dependency)
+
+### Execute CQL — optimization and result formats
+
+* **Individual result files** (default) — writes
+  `input/tests/results/{LibraryName}/TestCaseResult-{patientId}.json` per test case; opens the
+  file automatically when a single test case is selected
+* **Flat format** — set `"resultFormat": "flat"` in `config.json` to write a single
+  `input/tests/results/{LibraryName}.txt` per library (previous behavior)
+* **User-defined parameters** — add a `"parameters"` block to `config.json` to pass typed
+  parameter overrides to the CQL engine; per-test-case overrides supported via `testCases` map
+* **Select test cases** — new command `cql.editor.execute.select-test-cases` opens a quick-pick
+  to run a subset of test cases for a library
+* **Select libraries** — `cql.execute.select-libraries` runs multiple libraries in sequence with
+  a progress notification showing per-library timing
+* **CQL Explorer result nodes** — result files appear as child nodes under each test case in the
+  CQL Explorer tree; a dual watcher monitors both the test directory and results directory
+* `config.json` schema registered — enables IntelliSense for `resultFormat`, `parameters`,
+  and `testCasesToExclude` in VS Code
+
+### Bug fixes
+
+* Fixed "file is newer" conflict when executing CQL in flat format with the output file
+  already open in VS Code — the output file is no longer truncated on disk before opening;
+  stale in-memory content is cleared via an in-memory edit instead
+
 ## v0.9.2 (prerelease)
 
 Date: 2026-03-31

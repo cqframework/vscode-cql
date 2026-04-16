@@ -91,12 +91,12 @@ suite('CqlLibraryRootTreeItem.rebuildTestCases', () => {
     expect(getTestCaseNames(item)).to.have.members(['1111', '2222']);
   });
 
-  test('rebuildTestCases adds Results node when resultUri is set', () => {
+  test('rebuildTestCases adds Results node when result is added', () => {
     const item = new CqlLibraryRootTreeItem(lib, vscode.TreeItemCollapsibleState.Collapsed);
     // Initially no result
     expect(item.children.some(c => c instanceof CqlResultsRootTreeItem)).to.be.false;
 
-    lib.setResult(Uri.joinPath(
+    lib.addResult(Uri.joinPath(
       workspace.workspaceFolders![0].uri,
       'input/tests/results/SimpleMeasure.txt',
     ));
@@ -104,15 +104,15 @@ suite('CqlLibraryRootTreeItem.rebuildTestCases', () => {
     expect(item.children.some(c => c instanceof CqlResultsRootTreeItem)).to.be.true;
   });
 
-  test('rebuildTestCases removes Results node when resultUri is cleared', () => {
-    lib.setResult(Uri.joinPath(
+  test('rebuildTestCases removes Results node when results are cleared', () => {
+    lib.addResult(Uri.joinPath(
       workspace.workspaceFolders![0].uri,
       'input/tests/results/SimpleMeasure.txt',
     ));
     const item = new CqlLibraryRootTreeItem(lib, vscode.TreeItemCollapsibleState.Collapsed);
     expect(item.children.some(c => c instanceof CqlResultsRootTreeItem)).to.be.true;
 
-    lib.setResult(undefined);
+    lib.clearResults();
     item.rebuildTestCases('');
     expect(item.children.some(c => c instanceof CqlResultsRootTreeItem)).to.be.false;
   });

@@ -5,12 +5,10 @@ import { commands, ExtensionContext, Uri, ViewColumn, window, workspace } from '
 import { Commands } from '../commands/commands';
 import * as log from '../log-services/logger';
 
-export function register(context: ExtensionContext, storageUri: Uri): void {
-  const workspacePath = path.resolve(storageUri.fsPath + '/cql_ls_ws');
-
+export function register(context: ExtensionContext): void {
   context.subscriptions.push(
     commands.registerCommand(Commands.OPEN_SERVER_LOG, (column: ViewColumn) =>
-      openServerLogFile(workspacePath, column),
+      openServerLogFile(context.logUri, column),
     ),
     commands.registerCommand(Commands.OPEN_CLIENT_LOG, (column: ViewColumn) =>
       openClientLogFile(column),
@@ -82,9 +80,9 @@ function openLogFile(
 }
 
 function openServerLogFile(
-  workspacePath: string,
+  logUri: Uri,
   column: ViewColumn = ViewColumn.Active,
 ): Thenable<boolean> {
-  const serverLogFile = path.join(workspacePath, '.metadata', '.log');
+  const serverLogFile = path.join(logUri.fsPath, 'cql-ls.log');
   return openLogFile(serverLogFile, 'Could not open CQL Language Server log file', column);
 }

@@ -1,6 +1,6 @@
 {
   "name": "cql",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "displayName": "Clinical Quality Language (CQL)",
   "description": "Syntax highlighting, linting, and execution for the HL7 Clinical Quality Language (CQL) for VS Code",
   "publisher": "cqframework",
@@ -63,10 +63,6 @@
         "path": "./syntaxes/cql.tmLanguage.json"
       }
     ],
-    "configuration": {
-      "type": "object",
-      "title": "CQL"
-    },
     "commands": [
       {
         "command": "cql.editor.execute",
@@ -96,17 +92,17 @@
       },
       {
         "command": "cql.open.server-log",
-        "title": "Open Server Logs",
+        "title": "Show CQL Language Server Logs",
         "category": "CQL"
       },
       {
         "command": "cql.open.client-log",
-        "title": "Open Client Logs",
+        "title": "Show CQL Extension Logs",
         "category": "CQL"
       },
       {
         "command": "cql.open.logs",
-        "title": "Open Logs",
+        "title": "Show CQL Extension and Language Server Logs",
         "category": "CQL"
       },
       {
@@ -147,19 +143,19 @@
       },
       {
         "command": "cql.explorer.sort-asc",
-        "title": "Sort A → Z",
+        "title": "Sort A \u2192 Z",
         "icon": "$(arrow-up)",
         "category": "CQL Explorer"
       },
       {
         "command": "cql.explorer.sort-desc",
-        "title": "Sort Z → A",
+        "title": "Sort Z \u2192 A",
         "icon": "$(arrow-down)",
         "category": "CQL Explorer"
       },
       {
         "command": "cql.explorer.library.execute-all",
-        "title": "Execute CQL - All Libraries",
+        "title": "Execute CQL - Filtered Libraries",
         "icon": "$(run-all)",
         "category": "CQL Explorer"
       },
@@ -290,38 +286,134 @@
     ],
     "menus": {
       "commandPalette": [
-        { "command": "cql.editor.execute.select-test-cases", "when": "false" },
-        { "command": "cql.editor.view-elm.json", "when": "false" },
-        { "command": "cql.editor.view-elm.xml", "when": "false" },
-        { "command": "cql.explorer.refresh", "when": "false" },
-        { "command": "cql.explorer.library.execute", "when": "false" },
-        { "command": "cql.explorer.library.elm.json", "when": "false" },
-        { "command": "cql.explorer.library.elm.xml", "when": "false" },
-        { "command": "cql.explorer.test-case.execute", "when": "false" },
-        { "command": "cql.explorer.test-case.open-resources", "when": "false" },
-        { "command": "cql.explorer.test-case.clone", "when": "false" },
-        { "command": "cql.explorer.resource.fix-references", "when": "false" },
-        { "command": "cql.explorer.resource.rename", "when": "false" },
-        { "command": "cql.explorer.resource.copy", "when": "false" },
-        { "command": "cql.explorer.resource.cut", "when": "false" },
-        { "command": "cql.explorer.resource.delete", "when": "false" },
-        { "command": "cql.explorer.test-case.paste", "when": "false" },
-        { "command": "cql.explorer.test-case.paste-enhanced", "when": "false" },
-        { "command": "cql.explorer.test-case.delete", "when": "false" },
-        { "command": "cql.explorer.library.execute-all", "when": "false" },
-        { "command": "cql.explorer.hide-empty", "when": "false" },
-        { "command": "cql.explorer.show-all", "when": "false" },
-        { "command": "cql.explorer.sort-asc", "when": "false" },
-        { "command": "cql.explorer.sort-desc", "when": "false" },
-        { "command": "cql.explorer.filter-by-name", "when": "false" },
-        { "command": "cql.explorer.clear-name-filter", "when": "false" },
-        { "command": "cql.explorer.test-case.filter", "when": "false" },
-        { "command": "cql.explorer.test-case.clear-filter", "when": "false" },
-        { "command": "cql.explorer.test-case.execute-select", "when": "false" },
-        { "command": "cql.explorer.test-case.execute-all", "when": "false" },
-{ "command": "cql.explorer.expand-all", "when": "false" },
-        { "command": "cql.explorer.show-layout-warnings", "when": "false" },
-        { "command": "cql.explorer.hide-layout-warnings", "when": "false" }
+        {
+          "command": "cql.editor.execute.select-test-cases",
+          "when": "false"
+        },
+        {
+          "command": "cql.editor.view-elm.json",
+          "when": "false"
+        },
+        {
+          "command": "cql.editor.view-elm.xml",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.refresh",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.library.execute",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.library.elm.json",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.library.elm.xml",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.execute",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.open-resources",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.clone",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.resource.fix-references",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.resource.rename",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.resource.copy",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.resource.cut",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.resource.delete",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.paste",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.paste-enhanced",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.delete",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.library.execute-all",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.hide-empty",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.show-all",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.sort-asc",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.sort-desc",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.filter-by-name",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.clear-name-filter",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.filter",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.clear-filter",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.execute-select",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.execute-all",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.expand-all",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.show-layout-warnings",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.hide-layout-warnings",
+          "when": "false"
+        }
       ],
       "editor/context": [
         {
@@ -522,6 +614,30 @@
           "name": "CQL Explorer"
         }
       ]
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": "**/input/tests/config.jsonc",
+        "url": "./schemas/cql-config.schema.json"
+      }
+    ],
+    "configuration": {
+      "title": "CQL",
+      "properties": {
+        "cql.execute.resultFormat": {
+          "type": "string",
+          "enum": [
+            "individual",
+            "flat"
+          ],
+          "enumDescriptions": [
+            "Save one JSON result file per test case to input/tests/results/{libraryName}/TestCaseResult-{patientId}.json",
+            "Save all test case results for a library to a single text file at input/tests/results/{libraryName}.txt"
+          ],
+          "default": "individual",
+          "description": "Controls how Execute CQL results are saved."
+        }
+      }
     }
   },
   "resolutions": {
@@ -538,8 +654,8 @@
   "javaDependencies": {
     "cql-language-server": {
       "groupId": "org.opencds.cqf.cql.ls",
-      "artifactId": "cql-ls-service",
-      "version": "4.4.1"
+      "artifactId": "cql-ls-server",
+      "version": "4.5.0"
     }
   },
   "devDependencies": {
@@ -547,8 +663,8 @@
     "@types/expand-tilde": "^2.0.0",
     "@types/fs-extra": "^9.0.13",
     "@types/lodash": "^4.14.183",
-    "@types/mock-fs": "^4.13.4",
     "@types/mocha": "^10.0.10",
+    "@types/mock-fs": "^4.13.4",
     "@types/node": "^16.18.34",
     "@types/node-fetch": "^2.6.2",
     "@types/vscode": "^1.73.0",
@@ -556,8 +672,8 @@
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.3.6",
     "chai": "4.5",
-    "mock-fs": "^5.5.0",
     "mocha": "^11.7.5",
+    "mock-fs": "^5.5.0",
     "nyc": "^17.1.0",
     "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
@@ -565,11 +681,12 @@
   },
   "dependencies": {
     "expand-tilde": "^2.0.2",
-    "markdown-to-text": "^0.1.1",
     "find-java-home": "1.2.2",
     "fs-extra": "^8.1.0",
     "glob": "^10.5.0",
+    "jsonc-parser": "^3.3.1",
     "lodash": "^4.17.23",
+    "markdown-to-text": "^0.1.1",
     "node-fetch": "2.6.7",
     "tslib": "^2.4.0",
     "vscode-languageclient": "^7.0.0",
