@@ -119,7 +119,7 @@ export async function selectLibraries(): Promise<void> {
             });
             const libStart = Date.now();
             try {
-              await executeCQLFile(item.uri, undefined, false, 'individual', false);
+              await executeCQLFile(item.uri, undefined, false, undefined, false);
               log.info(`[PERF] ${item.label}: ${((Date.now() - libStart) / 1000).toFixed(1)}s`);
               completed++;
             } catch (e) {
