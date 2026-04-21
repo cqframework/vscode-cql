@@ -38,7 +38,7 @@ export function getTestCases(
   for (let dir of directories) {
     let cases = fs
       .readdirSync(dir)
-      .filter(d => fs.statSync(path.join(dir, d)).isDirectory() && !testCasesToExclude.includes(d));
+      .filter(d => fs.statSync(path.join(dir, d)).isDirectory() && d !== 'shared' && !testCasesToExclude.includes(d));
     for (let c of cases) {
       testCases.push({
         name: c,

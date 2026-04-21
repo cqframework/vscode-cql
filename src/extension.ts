@@ -118,7 +118,7 @@ export function activate(context: ExtensionContext): Promise<void> {
       };
 
       registerExecuteCql(context);
-      registerLogCommands(context, storageUri);
+      registerLogCommands(context);
       registerViewElmCommand(context);
       context.subscriptions.push(statusBar);
 

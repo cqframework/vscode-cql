@@ -103,9 +103,30 @@ export class CqlExplorer {
       // execute all visible libraries
       vscode.commands.registerCommand('cql.explorer.library.execute-all', async () => {
         logger.debug(`Command cql.explorer.library.execute-all selected`);
-        for (const lib of this.cqlProjects.flatMap(p => p.Libraries).filter(l => l.visible.value)) {
-          await executeCQLFile(lib.uri);
+        const filter = this.nameFilter.toLowerCase();
+        const libs = this.cqlProjects
+          .flatMap(p => p.Libraries)
+          .filter(l => filter === '' || l.name.toLowerCase().includes(filter));
+        if (libs.length === 0) {
+          return;
         }
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: 'Execute CQL',
+            cancellable: true,
+          },
+          async (progress, token) => {
+            for (let i = 0; i < libs.length; i++) {
+              if (token.isCancellationRequested) {
+                break;
+              }
+              const lib = libs[i];
+              progress.report({ message: `${lib.name} (${i + 1} of ${libs.length})` });
+              await executeCQLFile(lib.uri, undefined, false);
+            }
+          },
+        );
       }),
 
       // execute all test cases for a library

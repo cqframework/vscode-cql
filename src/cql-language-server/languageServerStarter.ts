@@ -68,6 +68,13 @@ function prepareParams(
   workspacePath: string,
 ): string[] {
   const params: string[] = [];
+  params.push('-Xmx4g');
+  const logFile = path.join(context.logUri.fsPath, 'cql-ls.log');
+  const gcLogFile = path.join(context.logUri.fsPath, 'gc.log');
+  params.push(`-DLOG_FILE=${logFile}`);
+  params.push(`-Xlog:gc*:file=${gcLogFile}:time,uptime,level,tags:filecount=3,filesize=10m`);
+  log.info(`CQL language server log file: ${logFile}`);
+
   if (DEBUG) {
     const port = 1044;
     params.push('-Dlog.level=ALL');
