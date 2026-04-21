@@ -1,8 +1,12 @@
 # Change Log
 
-## v0.9.3
+## v0.9.3 (prerelease)
 
-Date: 2026-04-15
+Date: 2026-04-21
+
+* fixes issue with result format
+* upgrades lodash to 4.18
+* adds execute cql optimization: RPC execution, structured results, CQL explorer support, user parameters (v0.9.3)
 
 ### Execute CQL — RPC refactor
 
