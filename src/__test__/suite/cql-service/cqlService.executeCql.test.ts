@@ -3,113 +3,127 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import {
-  getCqlCommandArgs,
-  getExecArgs,
-} from '../../../cql-service/cqlService.executeCql';
+import { buildRequest } from '../../../cql-service/cqlService.executeCql';
+import { CqlParametersConfig } from '../../../model/parameters';
+import { TestCase } from '../../../model/testCase';
 
-suite('getCqlCommandArgs()', () => {
+suite('buildRequest()', () => {
+  const cqlUri = Uri.file('/project/input/cql/MyLib.cql');
+  const terminologyUri = Uri.file('/no/such/terminology');
+  const rootUri = Uri.file('/project');
   const noOptsUri = Uri.file('/no/such/opts.json');
-  const rootUri = Uri.file('/project/root');
 
-  test('first arg is always "cql"', () => {
-    const args = getCqlCommandArgs('R4', noOptsUri, rootUri);
-    expect(args[0]).to.equal('cql');
+  test('sets fhirVersion from supplied argument', () => {
+    const req = buildRequest(cqlUri, [], terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.fhirVersion).to.equal('R4');
   });
 
-  test('includes fhir version flag', () => {
-    const args = getCqlCommandArgs('R4', noOptsUri, rootUri);
-    expect(args).to.include('-fv=R4');
+  test('sets rootDir from supplied URI', () => {
+    const req = buildRequest(cqlUri, [], terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.rootDir).to.equal(rootUri.toString());
   });
 
-  test('includes rootDir flag', () => {
-    const args = getCqlCommandArgs('R4', noOptsUri, rootUri);
-    expect(args.some(a => a.startsWith('-rd='))).to.be.true;
+  test('sets optionsPath to null when file does not exist', () => {
+    const req = buildRequest(cqlUri, [], terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.optionsPath).to.be.null;
   });
 
-  test('skips options flag when file does not exist', () => {
-    const args = getCqlCommandArgs('R4', noOptsUri, rootUri);
-    expect(args.some(a => a.startsWith('-op='))).to.be.false;
-  });
-
-  test('includes options flag when file exists', () => {
+  test('sets optionsPath when file exists', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-cql-test-'));
     try {
       const optsPath = path.join(tmpDir, 'cql-options.json');
       fs.writeFileSync(optsPath, '{}');
-      const args = getCqlCommandArgs('R4', Uri.file(optsPath), rootUri);
-      expect(args.some(a => a.startsWith('-op='))).to.be.true;
+      const req = buildRequest(cqlUri, [], terminologyUri, 'R4', Uri.file(optsPath), rootUri);
+      expect(req.optionsPath).to.not.be.null;
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
   });
 
-  test('propagates the supplied fhir version string', () => {
-    expect(getCqlCommandArgs('DSTU3', noOptsUri, rootUri)).to.include('-fv=DSTU3');
-    expect(getCqlCommandArgs('R5', noOptsUri, rootUri)).to.include('-fv=R5');
-  });
-});
-
-suite('getExecArgs()', () => {
-  const cqlUri = Uri.file('/path/to/MyLib.cql');
-
-  test('includes library name derived from filename', () => {
-    const args = getExecArgs(cqlUri);
-    expect(args).to.include('-ln=MyLib');
+  test('produces one LibraryRequest per test case', () => {
+    const testCases: TestCase[] = [{ name: 'patient1' }, { name: 'patient2' }];
+    const req = buildRequest(cqlUri, testCases, terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.libraries).to.have.length(2);
   });
 
-  test('includes library URI flag', () => {
-    const args = getExecArgs(cqlUri);
-    expect(args.some(a => a.startsWith('-lu='))).to.be.true;
+  test('library name is derived from cql filename', () => {
+    const req = buildRequest(cqlUri, [{}], terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.libraries[0].libraryName).to.equal('MyLib');
   });
 
-  test('omits model and testCase flags when no testCaseUri', () => {
-    const args = getExecArgs(cqlUri);
-    expect(args.some(a => a.startsWith('-m='))).to.be.false;
-    expect(args.some(a => a.startsWith('-mu='))).to.be.false;
+  test('library URI points to parent directory of cql file', () => {
+    const req = buildRequest(cqlUri, [{}], terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.libraries[0].libraryUri).to.include('input/cql');
   });
 
-  test('includes model and testCase flags when testCaseUri provided', () => {
-    const args = getExecArgs(cqlUri, Uri.file('/path/to/testcase'));
-    expect(args).to.include('-m=FHIR');
-    expect(args.some(a => a.startsWith('-mu='))).to.be.true;
+  test('sets context from test case name when no contextValue override', () => {
+    const testCases: TestCase[] = [{ name: 'patient-abc' }];
+    const req = buildRequest(cqlUri, testCases, terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.libraries[0].context?.contextName).to.equal('Patient');
+    expect(req.libraries[0].context?.contextValue).to.equal('patient-abc');
   });
 
-  test('includes terminology flag when provided', () => {
-    const args = getExecArgs(cqlUri, undefined, Uri.file('/vocab/valueset'));
-    expect(args.some(a => a.startsWith('-t='))).to.be.true;
+  test('overrides context with contextValue argument when provided', () => {
+    const testCases: TestCase[] = [{ name: 'patient-abc' }];
+    const req = buildRequest(cqlUri, testCases, terminologyUri, 'R4', noOptsUri, rootUri, 'override-id');
+    expect(req.libraries[0].context?.contextValue).to.equal('override-id');
   });
 
-  test('omits terminology flag when not provided', () => {
-    const args = getExecArgs(cqlUri);
-    expect(args.some(a => a.startsWith('-t='))).to.be.false;
+  test('sets context to null when no name and no contextValue', () => {
+    const req = buildRequest(cqlUri, [{}], terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.libraries[0].context).to.be.null;
   });
 
-  test('includes context flags when contextValue provided', () => {
-    const args = getExecArgs(cqlUri, undefined, undefined, 'Patient123');
-    expect(args).to.include('-c=Patient');
-    expect(args).to.include('-cv=Patient123');
+  test('sets model from test case path when present', () => {
+    const testCases: TestCase[] = [{ name: 'p1', path: Uri.file('/project/input/tests/MyLib/p1') }];
+    const req = buildRequest(cqlUri, testCases, terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.libraries[0].model?.modelName).to.equal('FHIR');
+    expect(req.libraries[0].model?.modelUri).to.include('p1');
   });
 
-  test('omits context flags when no contextValue', () => {
-    const args = getExecArgs(cqlUri);
-    expect(args.some(a => a.startsWith('-c='))).to.be.false;
-    expect(args.some(a => a.startsWith('-cv='))).to.be.false;
+  test('sets model to null when test case has no path', () => {
+    const req = buildRequest(cqlUri, [{ name: 'p1' }], terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.libraries[0].model).to.be.null;
   });
 
-  test('includes measurement period flags when period provided', () => {
-    const args = getExecArgs(cqlUri, undefined, undefined, undefined, '2024-01-01/2024-12-31');
-    expect(args.some(a => a.startsWith('-p='))).to.be.true;
-    expect(args).to.include('-pv=2024-01-01/2024-12-31');
+  test('sets terminologyUri to null when file does not exist', () => {
+    const req = buildRequest(cqlUri, [{}], terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.libraries[0].terminologyUri).to.be.null;
   });
 
-  test('omits measurement period flags when empty string', () => {
-    const args = getExecArgs(cqlUri, undefined, undefined, undefined, '');
-    expect(args.some(a => a.startsWith('-p='))).to.be.false;
+  test('sets terminologyUri when file exists', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-cql-test-'));
+    try {
+      const termPath = Uri.file(tmpDir);
+      const req = buildRequest(cqlUri, [{}], termPath, 'R4', noOptsUri, rootUri);
+      expect(req.libraries[0].terminologyUri).to.not.be.null;
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 
-  test('omits measurement period flags when not provided', () => {
-    const args = getExecArgs(cqlUri);
-    expect(args.some(a => a.startsWith('-p='))).to.be.false;
+  test('sends empty parameters array when no parametersConfig is provided', () => {
+    const req = buildRequest(cqlUri, [{ name: 'p1' }], terminologyUri, 'R4', noOptsUri, rootUri);
+    expect(req.libraries[0].parameters).to.deep.equal([]);
+  });
+
+  test('sends resolved parameters when parametersConfig is provided', () => {
+    const config: CqlParametersConfig = [
+      { name: 'Measurement Period', type: 'Interval<DateTime>', value: 'Interval[@2024-01-01, @2024-12-31]' },
+    ];
+    const req = buildRequest(cqlUri, [{ name: 'p1' }], terminologyUri, 'R4', noOptsUri, rootUri, undefined, config, '1.0.000');
+    expect(req.libraries[0].parameters).to.have.length(1);
+    expect(req.libraries[0].parameters[0].parameterName).to.equal('Measurement Period');
+    expect(req.libraries[0].parameters[0].parameterType).to.equal('Interval<DateTime>');
+    expect(req.libraries[0].parameters[0].parameterValue).to.equal('Interval[@2024-01-01, @2024-12-31]');
+  });
+
+  test('test case overrides global parameter value in sent request', () => {
+    const config: CqlParametersConfig = [
+      { name: 'Product Line', type: 'String', value: 'HMO' },
+      { library: 'MyLib', testCases: { p1: [{ name: 'Product Line', type: 'String', value: 'Medicaid' }] } },
+    ];
+    const req = buildRequest(cqlUri, [{ name: 'p1' }], terminologyUri, 'R4', noOptsUri, rootUri, undefined, config, '1.0.000');
+    expect(req.libraries[0].parameters[0].parameterValue).to.equal('Medicaid');
   });
 });

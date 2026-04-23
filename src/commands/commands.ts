@@ -43,10 +43,9 @@ export namespace Commands {
 
   /*
    * Execute CQL
-   * TODO: Deprecate once full debugging support exists
    */
   export const EXECUTE_CQL_COMMAND = 'cql.editor.execute';
-  export const EXECUTE_CQL = 'org.opencds.cqf.cql.ls.plugin.debug.startDebugSession';
+  export const EXECUTE_CQL = 'org.opencds.cqf.cql.ls.executeCql';
 
   export const EXECUTE_CQL_COMMAND_SELECT_LIBRARIES = 'cql.execute.select-libraries';
   export const EXECUTE_CQL_COMMAND_SELECT_TEST_CASES = 'cql.editor.execute.select-test-cases';

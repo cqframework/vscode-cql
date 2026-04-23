@@ -122,19 +122,21 @@ export class CqlTestCasesLoadingTreeItem extends vscode.TreeItem {
 export class CqlResultsRootTreeItem extends vscode.TreeItem {
   private readonly _children: vscode.TreeItem[] = [];
 
-  constructor(resultUri: vscode.Uri) {
+  constructor(resultUris: vscode.Uri[]) {
     super('Results', vscode.TreeItemCollapsibleState.Collapsed);
     this.contextValue = 'cql-results-root';
     this.iconPath = new vscode.ThemeIcon('output');
 
-    const leaf = new vscode.TreeItem(
-      path.basename(resultUri.fsPath),
-      vscode.TreeItemCollapsibleState.None,
-    );
-    leaf.iconPath = new vscode.ThemeIcon('file-text');
-    leaf.contextValue = 'cql-result';
-    leaf.command = { command: 'vscode.open', title: 'Open', arguments: [resultUri] };
-    this._children.push(leaf);
+    for (const uri of resultUris) {
+      const leaf = new vscode.TreeItem(
+        path.basename(uri.fsPath),
+        vscode.TreeItemCollapsibleState.None,
+      );
+      leaf.iconPath = new vscode.ThemeIcon('file-text');
+      leaf.contextValue = 'cql-result';
+      leaf.command = { command: 'vscode.open', title: 'Open', arguments: [uri] };
+      this._children.push(leaf);
+    }
   }
 
   public get children(): vscode.TreeItem[] {
@@ -175,8 +177,8 @@ export class CqlLibraryRootTreeItem extends vscode.TreeItem {
     cqlLibrary.TestCases.sort((a, b) => a.name.localeCompare(b.name));
     cqlLibrary.TestCases.forEach(tc => this.addTestCase(tc));
 
-    if (cqlLibrary.resultUri) {
-      this._children.push(new CqlResultsRootTreeItem(cqlLibrary.resultUri));
+    if (cqlLibrary.resultUris.length > 0) {
+      this._children.push(new CqlResultsRootTreeItem(cqlLibrary.resultUris));
     }
   }
 
@@ -220,8 +222,8 @@ export class CqlLibraryRootTreeItem extends vscode.TreeItem {
     this.cqlLibrary.TestCases.sort((a, b) => a.name.localeCompare(b.name));
     this.cqlLibrary.TestCases.forEach(tc => this.addTestCase(tc));
 
-    if (this.cqlLibrary.resultUri) {
-      this._children.push(new CqlResultsRootTreeItem(this.cqlLibrary.resultUri));
+    if (this.cqlLibrary.resultUris.length > 0) {
+      this._children.push(new CqlResultsRootTreeItem(this.cqlLibrary.resultUris));
     }
   }
 
