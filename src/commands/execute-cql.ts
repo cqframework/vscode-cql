@@ -16,6 +16,7 @@ import {
 import { Utils } from 'vscode-uri';
 import { Commands } from '../commands/commands';
 import { ExecuteCqlResponse, ExpressionResult, executeCql } from '../cql-service/cqlService.executeCql';
+import { CqlLibrary, CqlProject, CqlProjectEvents } from '../model/cqlProject';
 import { CqlSolution } from '../model/cqlSolution';
 import { extractLibraryVersion, toGlobPath } from '../helpers/fileHelper';
 import { resolveParameters } from '../helpers/parametersHelper';
@@ -56,6 +57,31 @@ const DEFAULT_TEST_CONFIG: TestConfig = { testCasesToExclude: [], resultFormat: 
 
 export function register(context: ExtensionContext): void {
   _context = context;
+
+  // Track when library shells are loaded so the select-libraries command can be enabled in menus.
+  // Uses libraryShellsLoaded to handle the race where LOADED fires before register() runs.
+  const solution = CqlSolution.getCurrent();
+  commands.executeCommand('setContext', 'cql.solutionLoaded', false);
+  const total = solution.projects.length;
+  if (total === 0) {
+    commands.executeCommand('setContext', 'cql.solutionLoaded', true);
+  } else {
+    let loadedCount = solution.projects.filter(p => p.libraryShellsLoaded).length;
+    if (loadedCount >= total) {
+      commands.executeCommand('setContext', 'cql.solutionLoaded', true);
+    } else {
+      for (const project of solution.projects) {
+        if (!project.libraryShellsLoaded) {
+          project.once(CqlProjectEvents.LOADED, () => {
+            if (++loadedCount >= total) {
+              commands.executeCommand('setContext', 'cql.solutionLoaded', true);
+            }
+          });
+        }
+      }
+    }
+  }
+
   context.subscriptions.push(
     commands.registerCommand(Commands.EXECUTE_CQL_COMMAND, async (uri: Uri) => {
       executeCQLFile(uri);
@@ -235,6 +261,17 @@ export async function executeCQLFile(
 
   const testConfig = loadTestConfig(cqlPaths.testConfigPath);
   const excludedTestCases = getExcludedTestCases(libraryName, testConfig.testCasesToExclude);
+
+  // When no test cases are provided we are about to scan disk for them.  Wait for the
+  // in-memory model to finish loading first so we never execute against an empty set
+  // during initial workspace startup.  No-op if the library is already loaded.
+  if (testCases === undefined) {
+    const project = CqlSolution.getCurrent().findProjectForUri(cqlFileUri);
+    const library = project?.Libraries.find(lib => lib.uri.fsPath === cqlFileUri.fsPath);
+    if (library && project) {
+      await waitForTestCasesLoaded(library, project, showProgress);
+    }
+  }
 
   const effectiveTestCases: Array<TestCase> =
     testCases ??
@@ -554,6 +591,40 @@ async function insertLineAtEnd(textEditor: TextEditor, text: string) {
     },
     { undoStopBefore: false, undoStopAfter: false },
   );
+}
+
+async function waitForTestCasesLoaded(
+  library: CqlLibrary,
+  project: CqlProject,
+  showProgress: boolean,
+): Promise<void> {
+  if (library.testCaseLoadState === 'loaded') return;
+
+  const waitPromise = new Promise<void>(resolve => {
+    const handler = (loaded: CqlLibrary) => {
+      if (loaded === library) {
+        project.off(CqlProjectEvents.LIBRARY_TESTCASES_LOADED, handler);
+        resolve();
+      }
+    };
+    project.on(CqlProjectEvents.LIBRARY_TESTCASES_LOADED, handler);
+    if (library.testCaseLoadState === 'not-loaded') {
+      project.loadTestCasesForLibrary(library).catch(() => {});
+    }
+  });
+
+  if (showProgress) {
+    await window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: `Loading ${library.name}\u2026`,
+        cancellable: false,
+      },
+      () => waitPromise,
+    );
+  } else {
+    await waitPromise;
+  }
 }
 
 export function loadTestConfig(testConfigPath: Uri): TestConfig {

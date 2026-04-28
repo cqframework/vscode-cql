@@ -229,6 +229,18 @@
         "category": "CQL Explorer"
       },
       {
+        "command": "cql.explorer.project.execute-select",
+        "title": "Select and Execute Libraries",
+        "category": "CQL Explorer",
+        "icon": "$(play)"
+      },
+      {
+        "command": "cql.explorer.project.execute-all",
+        "title": "Execute All Libraries",
+        "icon": "$(run-all)",
+        "category": "CQL Explorer"
+      },
+      {
         "command": "cql.explorer.test-case.filter",
         "title": "Filter Test Cases",
         "icon": "$(search)",
@@ -406,6 +418,14 @@
           "when": "false"
         },
         {
+          "command": "cql.explorer.project.execute-all",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.project.execute-select",
+          "when": "false"
+        },
+        {
           "command": "cql.explorer.expand-all",
           "when": "false"
         },
@@ -540,12 +560,32 @@
           "command": "cql.explorer.test-case.clear-filter",
           "when": "view == cql-libraries && viewItem =~ /cql-testcase-root-filtered/",
           "group": "inline@3"
+        },
+        {
+          "command": "cql.explorer.project.execute-select",
+          "when": "view == cql-libraries && viewItem == cql-project-root",
+          "group": "1:project"
+        },
+        {
+          "command": "cql.explorer.project.execute-all",
+          "when": "view == cql-libraries && viewItem == cql-project-root",
+          "group": "1:project"
+        },
+        {
+          "command": "cql.explorer.project.execute-select",
+          "when": "view == cql-libraries && viewItem == cql-project-root",
+          "group": "inline@1"
+        },
+        {
+          "command": "cql.explorer.project.execute-all",
+          "when": "view == cql-libraries && viewItem == cql-project-root",
+          "group": "inline@2"
         }
       ],
       "view/title": [
         {
           "command": "cql.execute.select-libraries",
-          "when": "view == cql-libraries",
+          "when": "view == cql-libraries && cql.solutionLoaded",
           "group": "navigation@1"
         },
         {

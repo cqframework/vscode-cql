@@ -622,6 +622,18 @@ export class CqlProjectTreeDataProvider implements vscode.TreeDataProvider<vscod
             item.cqlLibrary.TestCases.length > 0
           );
         }
+        if (item instanceof CqlProjectRootTreeItem) {
+          for (const child of [...item.children]) {
+            if (
+              child instanceof CqlLibraryRootTreeItem &&
+              child.cqlLibrary.testCaseLoadState === 'loaded' &&
+              child.cqlLibrary.TestCases.length === 0
+            ) {
+              item.removeLibraryItem(child);
+            }
+          }
+          return item.children.length > 0;
+        }
         return true;
       });
       if (this.rootItems.length !== before) changed = true;
@@ -813,11 +825,13 @@ export function buildTree(
     return buildLibraryItems(projects[0]);
   }
 
-  return projects.map(project => {
-    const projRoot = new CqlProjectRootTreeItem(project, showDeviationWarnings);
-    for (const libItem of buildLibraryItems(project)) {
-      projRoot.addLibraryItem(libItem);
-    }
-    return projRoot;
-  });
+  return projects
+    .map(project => {
+      const projRoot = new CqlProjectRootTreeItem(project, showDeviationWarnings);
+      for (const libItem of buildLibraryItems(project)) {
+        projRoot.addLibraryItem(libItem);
+      }
+      return projRoot;
+    })
+    .filter(projRoot => !hideEmpty || projRoot.children.length > 0);
 }

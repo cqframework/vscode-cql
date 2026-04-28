@@ -51,6 +51,18 @@ suite('CqlProject.loadTestCasesForLibrary', () => {
   });
 });
 
+suite('CqlProject.loadResults', () => {
+  test('resolves without error when results folder does not exist', async () => {
+    const wsRoot = workspace.workspaceFolders![0].uri;
+    const project = new CqlProject(wsRoot.fsPath, []);
+    // loadResults is private; call via cast. The results folder won't exist in
+    // the test workspace, so the inner readdir catch fires and we return early.
+    // Before the fix this returned without logging; after the fix the finally
+    // block always logs. Either way the promise must resolve, not reject.
+    await (project as any).loadResults();
+  });
+});
+
 suite('CqlTestCasesLoadingTreeItem', () => {
   test('has spinner icon', () => {
     const item = new CqlTestCasesLoadingTreeItem();

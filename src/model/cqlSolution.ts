@@ -12,6 +12,7 @@
  */
 import * as path from 'node:path';
 import { Uri, workspace } from 'vscode';
+import { logger } from '../extensionLogger';
 import { detectIgProjects } from './igLayoutDetector';
 import { CqlProject } from './cqlProject';
 
@@ -46,6 +47,7 @@ export class CqlSolution {
         projects = [new CqlProject(workspaceRoot, [])];
       }
       CqlSolution._current = new CqlSolution(projects);
+      logger.info(`solution: loading (${projects.length} project${projects.length === 1 ? '' : 's'})`);
     }
     return CqlSolution._current;
   }

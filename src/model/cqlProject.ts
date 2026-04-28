@@ -164,6 +164,7 @@ export class CqlProject extends EventEmitter {
   public readonly projectDeviations: Set<DeviationKind>;
 
   private _scanGeneration: number = 0;
+  private _libraryShellsLoaded = false;
   private _loadStart = Date.now();
   private readonly _libraries: Map<string, CqlLibrary> = new Map();
   private readonly libraryFolder: string;
@@ -318,6 +319,7 @@ export class CqlProject extends EventEmitter {
 
   private async loadLibraries(): Promise<void> {
     this._loadStart = Date.now();
+    logger.info(`${this.name}: project loading started`);
     const t0 = Date.now();
     try {
       const entries = await fs.promises.readdir(this.libraryFolder);
@@ -330,6 +332,7 @@ export class CqlProject extends EventEmitter {
     }
     logger.info(`[perf] ${this.name}: library scan: ${this._libraries.size} libraries found in ${Date.now() - t0}ms`);
     this.emit(CqlProject.Events.LOADED);
+    this._libraryShellsLoaded = true;
     // Phase 2 runs in background — not awaited
     this.startBackgroundTestScan().catch(e =>
       logger.error('Failed to scan test cases', e)
@@ -450,6 +453,7 @@ export class CqlProject extends EventEmitter {
       `[perf] ${this.name}: explorer ready: ${libraries.length} libraries, ` +
       `${totalTestCases} test cases in ${Date.now() - this._loadStart}ms`,
     );
+    logger.info(`${this.name}: project loaded`);
     this.emit(CqlProject.Events.SCAN_COMPLETE);
   }
 
@@ -534,8 +538,9 @@ export class CqlProject extends EventEmitter {
       }
     } catch (e) {
       logger.error('Error loading result data:', e);
+    } finally {
+      logger.info(`[perf] ${this.name}: results loaded: ${matched} matched in ${Date.now() - t0}ms`);
     }
-    logger.info(`[perf] ${this.name}: results loaded: ${matched} matched in ${Date.now() - t0}ms`);
   }
 
   /**
@@ -559,6 +564,11 @@ export class CqlProject extends EventEmitter {
 
   public get Libraries(): Array<CqlLibrary> {
     return Array.from(this._libraries.values());
+  }
+
+  /** True once all library shells have been created (the LOADED event has fired at least once). */
+  public get libraryShellsLoaded(): boolean {
+    return this._libraryShellsLoaded;
   }
 
   public refresh() {
