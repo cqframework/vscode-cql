@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
-import { CqlLibrary, CqlProject, CqlTestCase } from '../../../cql-explorer/cqlProject';
+import { CqlLibrary, CqlProject, CqlTestCase } from '../../../model/cqlProject';
 import {
   CqlLibraryRootTreeItem,
   CqlProjectRootTreeItem,
   CqlProjectTreeDataProvider,
   CqlTestCasesLoadingTreeItem,
 } from '../../../cql-explorer/cqlProjectTreeDataProvider';
-import { DeviationKind } from '../../../cql-explorer/igLayoutDetector';
+import { DeviationKind } from '../../../model/igLayoutDetector';
 
 function fakeProject(name: string, libs: CqlLibrary[]): CqlProject {
   return {

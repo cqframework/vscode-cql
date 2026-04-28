@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { DeviationKind, detectIgProjects, findTestCasesFolder } from '../../../cql-explorer/igLayoutDetector';
+import { DeviationKind, detectIgProjects, findTestCasesFolder } from '../../../model/igLayoutDetector';
 
 // Helper: create a directory and any missing parents
 function mkdir(p: string): void {

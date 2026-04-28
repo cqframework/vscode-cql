@@ -13,8 +13,9 @@ import {
   CqlTestCaseRootTreeItem,
   CqlTestCaseTreeItem,
 } from './cqlProjectTreeDataProvider';
-import { CqlProject, CqlTestCase } from './cqlProject';
-import { DeviationKind } from './igLayoutDetector';
+import { CqlProject, CqlTestCase } from '../model/cqlProject';
+import { CqlSolution } from '../model/cqlSolution';
+import { DeviationKind } from '../model/igLayoutDetector';
 import { cloneTestCase } from './testCaseCloner';
 import {
   copyResources,
@@ -53,7 +54,7 @@ export class CqlExplorer {
   private clipboard: { uris: vscode.Uri[]; operation: 'copy' | 'cut' } | null = null;
 
   constructor(context: vscode.ExtensionContext) {
-    this.cqlProjects = CqlProject.getInstances();
+    this.cqlProjects = [...CqlSolution.getCurrent().projects];
 
     this.cqlLibraryTreeProvider = new CqlProjectTreeDataProvider(this.cqlProjects);
     context.subscriptions.push(this.diagnostics);
@@ -198,11 +199,10 @@ export class CqlExplorer {
           logger.debug(`Command cql.explorer.test-case.clone selected for item: ${item.label}`);
           try {
             const destUri = await cloneTestCase(item.cqlTestCase.uri);
-            // Find the parent library by name (library name = test cases folder name)
-            const libraryName = path.basename(path.dirname(item.cqlTestCase.uri.fsPath));
+            // Find the parent library by test case URI — unambiguous across projects.
             const library = this.cqlProjects
               .flatMap(p => p.Libraries)
-              .find(lib => lib.name === libraryName);
+              .find(lib => lib.TestCases.some(tc => tc.uri.fsPath === item.cqlTestCase.uri.fsPath));
             if (!library) {
               this.cqlProjects.forEach(p => p.refresh());
               return;
@@ -454,11 +454,11 @@ export class CqlExplorer {
           }
           try {
             await deleteTestCase(item.cqlTestCase.uri);
-            // Targeted update: remove from model, refresh only the Test Cases node
-            const libraryName = path.basename(path.dirname(item.cqlTestCase.uri.fsPath));
+            // Targeted update: remove from model, refresh only the Test Cases node.
+            // Look up by test case URI — unambiguous across projects.
             const library = this.cqlProjects
               .flatMap(p => p.Libraries)
-              .find(lib => lib.name === libraryName);
+              .find(lib => lib.TestCases.some(tc => tc.uri.fsPath === item.cqlTestCase.uri.fsPath));
             if (!library) {
               this.cqlProjects.forEach(p => p.refresh());
               return;

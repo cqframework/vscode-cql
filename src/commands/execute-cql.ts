@@ -15,7 +15,8 @@ import {
 } from 'vscode';
 import { Utils } from 'vscode-uri';
 import { Commands } from '../commands/commands';
-import { executeCql, ExecuteCqlResponse, ExpressionResult } from '../cql-service/cqlService.executeCql';
+import { ExecuteCqlResponse, ExpressionResult, executeCql } from '../cql-service/cqlService.executeCql';
+import { CqlSolution } from '../model/cqlSolution';
 import { extractLibraryVersion, toGlobPath } from '../helpers/fileHelper';
 import { resolveParameters } from '../helpers/parametersHelper';
 import * as log from '../log-services/logger';
@@ -69,7 +70,19 @@ export function register(context: ExtensionContext): void {
 }
 
 export async function selectLibraries(): Promise<void> {
-  const cqlPaths = getCqlPaths();
+  // Use the active editor's URI to scope to the right project; fall back to
+  // the first project if no editor is open or the file is not in any project.
+  const activeUri = window.activeTextEditor?.document.uri;
+  const solution = CqlSolution.getCurrent();
+  const fallbackProject = solution.projects[0];
+  const anchorUri = activeUri
+    ? (solution.findProjectForUri(activeUri) ? activeUri : fallbackProject && Uri.file(fallbackProject.igRoot))
+    : (fallbackProject && Uri.file(fallbackProject.igRoot));
+  if (!anchorUri) {
+    window.showErrorMessage('No CQL project found in this workspace.');
+    return;
+  }
+  const cqlPaths = getCqlPaths(anchorUri);
   if (!cqlPaths) {
     window.showErrorMessage('Unable to determine needed CQL Paths.');
     return;
@@ -146,7 +159,7 @@ export async function selectLibraries(): Promise<void> {
 }
 
 export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
-  const cqlPaths = getCqlPaths();
+  const cqlPaths = getCqlPaths(cqlFileUri);
   if (!cqlPaths) {
     const msg = 'Unable to resolve needed CQL project paths.';
     log.error(msg);
@@ -211,7 +224,7 @@ export async function executeCQLFile(
     return;
   }
 
-  const cqlPaths = getCqlPaths();
+  const cqlPaths = getCqlPaths(cqlFileUri);
   if (!cqlPaths) {
     window.showErrorMessage('Unable to determine needed CQL Paths.');
     return;
@@ -457,12 +470,13 @@ export function resolveTestConfigPath(testDirectoryPath: Uri): Uri {
   return Utils.resolvePath(testDirectoryPath, 'config.json');
 }
 
-function getCqlPaths(): CqlPaths | undefined {
-  const projectDirectoryPath = getWorkspacePath(); //workspace.getWorkspaceFolder(cqlFileUri)!.uri;
-  if (!projectDirectoryPath) {
+function getCqlPaths(cqlFileUri: Uri): CqlPaths | undefined {
+  const project = CqlSolution.getCurrent().findProjectForUri(cqlFileUri);
+  if (!project) {
     window.showErrorMessage('Unable to determine path to project root.');
     return;
   }
+  const projectDirectoryPath = Uri.file(project.igRoot);
   const libraryDirectoryPath = Utils.resolvePath(projectDirectoryPath, 'input', 'cql');
   const testDirectoryPath = Utils.resolvePath(projectDirectoryPath, 'input', 'tests');
   return {
@@ -531,12 +545,6 @@ export function getLibraries(libraryPath: Uri): Array<Uri> {
     .map(f => Uri.file(f));
 }
 
-function getWorkspacePath(): Uri | undefined {
-  if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-    return workspace.workspaceFolders[0].uri;
-  }
-  return undefined;
-}
 
 async function insertLineAtEnd(textEditor: TextEditor, text: string) {
   const document = textEditor.document;

@@ -8,8 +8,8 @@ import {
   CqlProjectEvents,
   CqlTestCase,
   CqlTestCaseResource,
-} from './cqlProject';
-import { DeviationKind } from './igLayoutDetector';
+} from '../model/cqlProject';
+import { DeviationKind } from '../model/igLayoutDetector';
 
 export class CqlTestCaseResourceTreeItem extends vscode.TreeItem {
   constructor(public readonly resource: CqlTestCaseResource) {

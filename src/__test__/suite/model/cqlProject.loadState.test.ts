@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
-import { CqlLibrary, CqlProject } from '../../../cql-explorer/cqlProject';
+import { CqlLibrary, CqlProject } from '../../../model/cqlProject';
 import { CqlTestCasesLoadingTreeItem } from '../../../cql-explorer/cqlProjectTreeDataProvider';
 
 suite('CqlLibrary — initial load state', () => {

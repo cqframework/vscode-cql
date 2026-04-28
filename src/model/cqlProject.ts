@@ -9,10 +9,10 @@ import path from 'node:path';
 import { FileSystemWatcher, RelativePattern, Uri, workspace } from 'vscode';
 import { logger } from '../extensionLogger';
 import { fileExists, isDirectory } from '../helpers/fileHelper';
-import { extractTestCaseDescription } from '../model/testCase';
+import { extractTestCaseDescription } from './testCase';
 import { ObservableProperty } from '../shared/ObservableProperty';
 import { RobustEmitter } from '../shared/RobustEmitter';
-import { DeviationKind, detectIgProjects, findTestCasesFolder } from './igLayoutDetector';
+import { DeviationKind, findTestCasesFolder } from './igLayoutDetector';
 
 export class CqlTestCaseResult {}
 
@@ -79,6 +79,12 @@ export class CqlLibrary extends RobustEmitter {
   public resourceTypeDir: string | undefined;
   /** Tracks whether test cases have been loaded for this library. */
   public testCaseLoadState: TestCaseLoadState = 'not-loaded';
+  /**
+   * The project that owns this library.
+   * Always set in production (by CqlProject.createLibraryShell).
+   * May be undefined for libraries constructed directly in tests.
+   */
+  public project: CqlProject | undefined;
 
   constructor(uri: Uri, visible: boolean = true) {
     super();
@@ -151,7 +157,6 @@ export enum CqlProjectEvents {
 }
 
 export class CqlProject extends EventEmitter {
-  private static _instances: CqlProject[] | undefined;
   static readonly Events = CqlProjectEvents;
 
   public readonly igRoot: string;
@@ -169,31 +174,6 @@ export class CqlProject extends EventEmitter {
   private testCaseResourceWatcher: FileSystemWatcher | undefined;
   private resultFolderWatcher: FileSystemWatcher | undefined;
   private individualResultFolderWatcher: FileSystemWatcher | undefined;
-
-  public static getInstances(): CqlProject[] {
-    if (!CqlProject._instances) {
-      const folders = workspace.workspaceFolders;
-      if (!folders || folders.length === 0) return [];
-      const workspaceRoot = folders[0].uri.fsPath;
-      CqlProject._instances = detectIgProjects(workspaceRoot).map(
-        info => new CqlProject(info.root, info.deviations),
-      );
-      // Fallback: if no IG projects detected, treat workspace root as single project
-      if (CqlProject._instances.length === 0) {
-        CqlProject._instances = [new CqlProject(workspaceRoot, [])];
-      }
-    }
-    return CqlProject._instances;
-  }
-
-  /** @deprecated Use getInstances()[0] for single-project workspaces. */
-  public static getInstance(): CqlProject {
-    return CqlProject.getInstances()[0];
-  }
-
-  public static resetInstances(): void {
-    CqlProject._instances = undefined;
-  }
 
   constructor(igRoot: string, projectDeviations: DeviationKind[] = []) {
     super();
@@ -360,6 +340,7 @@ export class CqlProject extends EventEmitter {
     if (!uri.fsPath.toLowerCase().endsWith(CqlLibrary.FILE_EXT)) return;
     if (!fileExists(uri.fsPath)) return;
     const cqlLibrary = new CqlLibrary(uri, true);
+    cqlLibrary.project = this;
     this._libraries.set(cqlLibrary.uri.fsPath, cqlLibrary);
     this.emit(CqlProject.Events.LIBRARY_ADDED, cqlLibrary);
   }
