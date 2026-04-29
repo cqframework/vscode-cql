@@ -23,6 +23,9 @@ const EXPECTED_COMMANDS = [
   'cql.explorer.sort-desc',
   'cql.explorer.show-layout-warnings',
   'cql.explorer.hide-layout-warnings',
+  // Explorer project node commands
+  'cql.explorer.project.execute-all',
+  'cql.explorer.project.execute-select',
   // Explorer library node commands
   'cql.explorer.library.execute-all',
   'cql.explorer.library.execute',

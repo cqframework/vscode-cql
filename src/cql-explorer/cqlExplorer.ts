@@ -108,9 +108,12 @@ export class CqlExplorer {
           logger.debug(`Command cql.explorer.project.execute-all selected for project: ${item.cqlProject.name}`);
           const filter = this.nameFilter.toLowerCase();
           const libs = item.cqlProject.Libraries.filter(
-            l => filter === '' || l.name.toLowerCase().includes(filter),
+            l =>
+              l.TestCases.length > 0 &&
+              (filter === '' || l.name.toLowerCase().includes(filter)),
           );
           if (libs.length === 0) {
+            vscode.window.showInformationMessage('No libraries with test cases match the current filter.');
             return;
           }
           await vscode.window.withProgress(
@@ -140,10 +143,12 @@ export class CqlExplorer {
           logger.debug(`Command cql.explorer.project.execute-select selected for project: ${item.cqlProject.name}`);
           const filter = this.nameFilter.toLowerCase();
           const libs = item.cqlProject.Libraries.filter(
-            l => filter === '' || l.name.toLowerCase().includes(filter),
+            l =>
+              l.TestCases.length > 0 &&
+              (filter === '' || l.name.toLowerCase().includes(filter)),
           );
           if (libs.length === 0) {
-            vscode.window.showInformationMessage('No libraries match the current filter.');
+            vscode.window.showInformationMessage('No libraries with test cases match the current filter.');
             return;
           }
           const picks = await vscode.window.showQuickPick(
