@@ -43,6 +43,11 @@ export function toGlobPath(fsPath: string): string {
   return fsPath.replace(/\\/g, '/');
 }
 
+/** Extracts the version string from a CQL library declaration, e.g. `library Foo version '1.0.0'` → `'1.0.0'`. */
+export function extractLibraryVersion(cqlSource: string): string | undefined {
+  return cqlSource.match(/^library\s+\S+\s+version\s+'([^']+)'/m)?.[1];
+}
+
 export function findSubFolderByName(folderPath: string, folderName: string): vscode.Uri | null {
   try {
     logger.info(`looking in ${folderPath} for ${folderName}`);

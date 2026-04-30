@@ -69,7 +69,7 @@ export class CqlLibrary extends RobustEmitter {
   static readonly Events = CqlLibraryEvents;
 
   private readonly testCases: Array<CqlTestCase> = [];
-  private _resultUri: Uri | undefined;
+  private _resultUris: Uri[] = [];
   public readonly name: string;
   public readonly visible: ObservableProperty<boolean>;
   public readonly uri: Uri;
@@ -93,12 +93,24 @@ export class CqlLibrary extends RobustEmitter {
     }
   }
 
-  get resultUri(): Uri | undefined {
-    return this._resultUri;
+  get resultUris(): Uri[] {
+    return [...this._resultUris];
   }
 
-  setResult(uri: Uri | undefined) {
-    this._resultUri = uri;
+  addResult(uri: Uri): void {
+    if (!this._resultUris.some(u => u.fsPath === uri.fsPath)) {
+      this._resultUris.push(uri);
+    }
+    this.emit(CqlLibraryEvents.RESULT_CHANGED);
+  }
+
+  removeResult(uri: Uri): void {
+    this._resultUris = this._resultUris.filter(u => u.fsPath !== uri.fsPath);
+    this.emit(CqlLibraryEvents.RESULT_CHANGED);
+  }
+
+  clearResults(): void {
+    this._resultUris = [];
     this.emit(CqlLibraryEvents.RESULT_CHANGED);
   }
 
@@ -156,6 +168,7 @@ export class CqlProject extends EventEmitter {
   private testFolderWatcher: FileSystemWatcher | undefined;
   private testCaseResourceWatcher: FileSystemWatcher | undefined;
   private resultFolderWatcher: FileSystemWatcher | undefined;
+  private individualResultFolderWatcher: FileSystemWatcher | undefined;
 
   public static getInstances(): CqlProject[] {
     if (!CqlProject._instances) {
@@ -230,27 +243,35 @@ export class CqlProject extends EventEmitter {
   }
 
   private configureResultFolderWatcher() {
-    this.resultFolderWatcher!.onDidCreate(async (uri: Uri) => {
+    this.resultFolderWatcher!.onDidCreate((uri: Uri) => {
       const name = path.basename(uri.fsPath, path.extname(uri.fsPath));
-      const lib = this.findLibraryByName(name);
-      if (lib) {
-        lib.setResult(uri);
-      }
+      this.findLibraryByName(name)?.addResult(uri);
     });
-    this.resultFolderWatcher!.onDidDelete(async (uri: Uri) => {
+    this.resultFolderWatcher!.onDidDelete((uri: Uri) => {
       const name = path.basename(uri.fsPath, path.extname(uri.fsPath));
-      const lib = this.findLibraryByName(name);
-      if (lib) {
-        lib.setResult(undefined);
-      }
+      this.findLibraryByName(name)?.removeResult(uri);
     });
-    this.resultFolderWatcher!.onDidChange(async (uri: Uri) => {
+    this.resultFolderWatcher!.onDidChange((uri: Uri) => {
       const name = path.basename(uri.fsPath, path.extname(uri.fsPath));
-      const lib = this.findLibraryByName(name);
-      if (lib) {
-        lib.setResult(uri);
-      }
+      this.findLibraryByName(name)?.addResult(uri);
     });
+  }
+
+  private configureIndividualResultFolderWatcher() {
+    this.individualResultFolderWatcher!.onDidCreate((uri: Uri) => {
+      this.findLibraryFromResultUri(uri)?.addResult(uri);
+    });
+    this.individualResultFolderWatcher!.onDidDelete((uri: Uri) => {
+      this.findLibraryFromResultUri(uri)?.removeResult(uri);
+    });
+    this.individualResultFolderWatcher!.onDidChange((uri: Uri) => {
+      this.findLibraryFromResultUri(uri)?.addResult(uri);
+    });
+  }
+
+  private findLibraryFromResultUri(uri: Uri): CqlLibrary | undefined {
+    const dirName = path.basename(path.dirname(uri.fsPath));
+    return this.findLibraryByName(dirName);
   }
 
   private configureTestCaseResourceWatcher() {
@@ -466,6 +487,11 @@ export class CqlProject extends EventEmitter {
       new RelativePattern(this.resultFolder, '*.txt'),
     );
     this.configureResultFolderWatcher();
+
+    this.individualResultFolderWatcher = workspace.createFileSystemWatcher(
+      new RelativePattern(this.resultFolder, '*/TestCaseResult-*.json'),
+    );
+    this.configureIndividualResultFolderWatcher();
   }
 
   private disposeTestWatchers(): void {
@@ -475,6 +501,8 @@ export class CqlProject extends EventEmitter {
     this.testCaseResourceWatcher = undefined;
     this.resultFolderWatcher?.dispose();
     this.resultFolderWatcher = undefined;
+    this.individualResultFolderWatcher?.dispose();
+    this.individualResultFolderWatcher = undefined;
   }
 
   private async loadResults(): Promise<void> {
@@ -488,14 +516,39 @@ export class CqlProject extends EventEmitter {
         return;
       }
       for (const entry of entries) {
-        if (!entry.isFile() || !entry.name.endsWith('.txt')) {
-          continue;
-        }
-        const name = path.basename(entry.name, path.extname(entry.name));
-        const lib = this.findLibraryByName(name);
-        if (lib) {
-          lib.setResult(Uri.file(path.join(this.resultFolder, entry.name)));
-          matched++;
+        if (entry.isFile() && entry.name.endsWith('.txt')) {
+          // Flat format: {LibraryName}.txt
+          const name = path.basename(entry.name, '.txt');
+          const lib = this.findLibraryByName(name);
+          if (lib) {
+            lib.addResult(Uri.file(path.join(this.resultFolder, entry.name)));
+            matched++;
+          }
+        } else if (entry.isDirectory()) {
+          // Individual format: {LibraryName}/TestCaseResult-{patientId}.json
+          const lib = this.findLibraryByName(entry.name);
+          if (lib) {
+            try {
+              const subEntries = await fs.promises.readdir(
+                path.join(this.resultFolder, entry.name),
+                { withFileTypes: true },
+              );
+              for (const sub of subEntries) {
+                if (
+                  sub.isFile() &&
+                  sub.name.startsWith('TestCaseResult-') &&
+                  sub.name.endsWith('.json')
+                ) {
+                  lib.addResult(
+                    Uri.file(path.join(this.resultFolder, entry.name, sub.name)),
+                  );
+                  matched++;
+                }
+              }
+            } catch {
+              // subdir not readable — skip
+            }
+          }
         }
       }
     } catch (e) {

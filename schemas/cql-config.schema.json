@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CQL Test Configuration",
+  "description": "Configuration for CQL test execution: test case exclusions and runtime parameter overrides.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "testCasesToExclude": {
+      "description": "Test cases to skip during execution.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["library", "testCase", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "library": { "type": "string", "description": "Library name." },
+          "testCase": { "type": "string", "description": "Patient UUID of the test case to exclude." },
+          "reason": { "type": "string", "description": "Why this test case is excluded." }
+        }
+      }
+    },
+    "parameters": {
+      "description": "Runtime parameter overrides. Each entry is either a global parameter (no 'library' field) or a library-scoped block (has 'library' field). Merge order: global → library → testCase (highest priority wins).",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/definitions/parameterEntry" },
+          { "$ref": "#/definitions/libraryParameterBlock" }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "parameterEntry": {
+      "type": "object",
+      "required": ["name", "type", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The CQL parameter name as declared in the library (e.g. \"Measurement Period\")."
+        },
+        "type": {
+          "type": "string",
+          "description": "The CQL type of the parameter.",
+          "enum": [
+            "String",
+            "Integer",
+            "Decimal",
+            "Boolean",
+            "DateTime",
+            "Date",
+            "Time",
+            "Interval<DateTime>",
+            "Interval<Date>",
+            "Quantity"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "description": "The parameter value as a string. For String/Integer/Decimal/Boolean: raw value (e.g. \"HMO\", \"42\", \"true\"). For DateTime/Date/Time: CQL literal (e.g. \"@2024-01-15\"). For Interval<DateTime>: CQL literal (e.g. \"Interval[@2024-01-01T00:00:00.000Z, @2025-01-01T00:00:00.000Z)\")."
+        }
+      }
+    },
+    "libraryParameterBlock": {
+      "type": "object",
+      "required": ["library"],
+      "additionalProperties": false,
+      "properties": {
+        "library": {
+          "type": "string",
+          "description": "The CQL library name these parameters apply to."
+        },
+        "version": {
+          "type": "string",
+          "description": "Optional. When specified, parameters only apply to this exact library version. Omit to match any version."
+        },
+        "parameters": {
+          "description": "Library-scoped parameter overrides — applied to all test cases for this library.",
+          "type": "array",
+          "items": { "$ref": "#/definitions/parameterEntry" }
+        },
+        "testCases": {
+          "description": "Test-case-scoped parameter overrides. Keys are patient UUIDs (directory names under input/tests/{MeasureName}/). Highest priority — overrides both global and library entries.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/parameterEntry" }
+          }
+        }
+      }
+    }
+  }
+}

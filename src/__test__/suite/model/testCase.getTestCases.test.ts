@@ -38,4 +38,11 @@ suite('testCase.getTestCases()', () => {
     }
   });
 
+  test('does not return shared/ as a patient test case', () => {
+    const testPath = Uri.joinPath(workspace.workspaceFolders![0].uri, 'input/tests/Measure');
+    const result = getTestCases(testPath, 'SimpleMeasure', []);
+    const names = result.map(tc => tc.name);
+    expect(names).not.to.include('shared');
+  });
+
 });

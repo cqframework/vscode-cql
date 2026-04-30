@@ -3,7 +3,49 @@ import path from 'node:path';
 import { Uri } from 'vscode';
 import { Commands } from '../commands/commands';
 import { sendRequest } from '../cql-language-server/cqlLanguageClient';
+import { CqlParametersConfig } from '../model/parameters';
+import { resolveParameters } from '../helpers/parametersHelper';
+import { extractLibraryVersion } from '../helpers/fileHelper';
 import { TestCase } from '../model/testCase';
+
+export interface ExecuteCqlResponse {
+  results: LibraryResult[];
+  logs: string[];
+}
+
+export interface LibraryResult {
+  libraryName: string;
+  expressions: ExpressionResult[];
+  usedDefaultParameters?: Array<{ name: string; value: string; source: string }>;
+}
+
+export interface ExpressionResult {
+  name: string;
+  value: string;
+}
+
+interface ExecuteCqlRequest {
+  fhirVersion: string;
+  rootDir: string | null;
+  optionsPath: string | null;
+  libraries: LibraryRequest[];
+}
+
+interface ParameterRequest {
+  parameterName: string;
+  parameterType: string;
+  parameterValue: string;
+}
+
+interface LibraryRequest {
+  libraryName: string;
+  libraryUri: string;
+  libraryVersion: string | null;
+  terminologyUri: string | null;
+  model: { modelName: string; modelUri: string } | null;
+  context: { contextName: string; contextValue: string } | null;
+  parameters: ParameterRequest[];
+}
 
 export async function executeCql(
   cqlFileUri: Uri,
@@ -13,77 +55,75 @@ export async function executeCql(
   optionsPath: Uri,
   rootDir: Uri,
   contextValue?: string,
-  measurementPeriod?: string,
-): Promise<string> {
-  let testCasesArgs: string[] = [];
-  for (let testCase of testCases) {
-    testCasesArgs.push(
-      ...getExecArgs(
-        cqlFileUri,
-        testCase.path,
-        terminologyUri,
-        contextValue ?? testCase.name,
-        measurementPeriod,
-      ),
-    );
-  }
-
-  let operationArgs = getCqlCommandArgs(fhirVersion, optionsPath, rootDir);
-  operationArgs.push(...testCasesArgs);
-  return await sendRequest(Commands.EXECUTE_CQL, operationArgs);
-}
-
-export function getCqlCommandArgs(fhirVersion: string, optionsPath: Uri, rootDir: Uri): string[] {
-  const args = ['cql'];
-
-  args.push(`-fv=${fhirVersion}`);
-
-  if (optionsPath && fs.existsSync(optionsPath.fsPath)) {
-    args.push(`-op=${optionsPath}`);
-  }
-
-  if (rootDir) {
-    args.push(`-rd=${rootDir}`);
-  }
-
-  return args;
-}
-
-export function getExecArgs(
-  cqlFileUri: Uri,
-  testCaseUri?: Uri,
-  terminologyUri?: Uri,
-  contextValue?: string,
-  measurementPeriod?: string,
-): string[] {
-  // TODO: One day we might support other models and contexts
-  const modelType = 'FHIR';
-  const contextType = 'Patient';
-
-  let args: string[] = [];
-  args.push(
-    `-ln=${path.basename(cqlFileUri.fsPath, '.cql')}`,
-    `-lu=${Uri.file(path.dirname(cqlFileUri.fsPath))}`,
+  parametersConfig?: CqlParametersConfig,
+  libraryVersion?: string,
+): Promise<ExecuteCqlResponse> {
+  const request = buildRequest(
+    cqlFileUri,
+    testCases,
+    terminologyUri,
+    fhirVersion,
+    optionsPath,
+    rootDir,
+    contextValue,
+    parametersConfig,
+    libraryVersion,
   );
+  return await sendRequest(Commands.EXECUTE_CQL, [request]);
+}
 
-  if (testCaseUri) {
-    args.push(`-m=${modelType}`, `-mu=${Uri.file(testCaseUri.fsPath)}`);
-  }
+export function buildRequest(
+  cqlFileUri: Uri,
+  testCases: Array<TestCase>,
+  terminologyUri: Uri,
+  fhirVersion: string,
+  optionsPath: Uri,
+  rootDir: Uri,
+  contextValue?: string,
+  parametersConfig?: CqlParametersConfig,
+  libraryVersion?: string,
+): ExecuteCqlRequest {
+  const libraryName = path.basename(cqlFileUri.fsPath, '.cql');
+  const libraryUri = Uri.file(path.dirname(cqlFileUri.fsPath)).toString();
+  // Only read the CQL file when parametersConfig is present and no explicit version is given.
+  const resolvedLibraryVersion = parametersConfig
+    ? (libraryVersion ?? extractLibraryVersion(fs.readFileSync(cqlFileUri.fsPath, 'utf-8')))
+    : undefined;
 
-  if (terminologyUri) {
-    args.push(`-t=${terminologyUri}`);
-  }
+  const optionsPathStr =
+    optionsPath && fs.existsSync(optionsPath.fsPath) ? optionsPath.toString() : null;
+  const rootDirStr = rootDir ? rootDir.toString() : null;
+  const terminologyUriStr =
+    terminologyUri && fs.existsSync(terminologyUri.fsPath) ? terminologyUri.toString() : null;
 
-  if (contextValue) {
-    args.push(`-c=${contextType}`, `-cv=${contextValue}`);
-  }
+  const libraries: LibraryRequest[] = testCases.map(testCase => {
+    const cv = contextValue ?? testCase.name;
+    const resolved = parametersConfig
+      ? resolveParameters(parametersConfig, libraryName, resolvedLibraryVersion, cv)
+      : [];
+    const parameters: ParameterRequest[] = resolved.map(p => ({
+      parameterName: p.name,
+      parameterType: p.type,
+      parameterValue: p.value,
+    }));
 
-  if (measurementPeriod && measurementPeriod !== '') {
-    args.push(
-      `-p=${path.basename(cqlFileUri.fsPath)}."Measurement Period"`,
-      `-pv=${measurementPeriod}`,
-    );
-  }
+    return {
+      libraryName,
+      libraryUri,
+      libraryVersion: null,
+      terminologyUri: terminologyUriStr,
+      model: testCase.path
+        ? { modelName: 'FHIR', modelUri: Uri.file(testCase.path.fsPath).toString() }
+        : null,
+      context: cv ? { contextName: 'Patient', contextValue: cv } : null,
+      parameters,
+    };
+  });
 
-  return args;
+  return {
+    fhirVersion,
+    rootDir: rootDirStr,
+    optionsPath: optionsPathStr,
+    libraries,
+  };
 }
