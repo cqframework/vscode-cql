@@ -1,5 +1,16 @@
 # Change Log
 
+
+## v0.9.4 (prerelease)
+
+Date: 2026-05-14
+
+* fixes issue with missing "testCasesToExclude" option in config.json file
+* fix logging issues, most logs were defaulting to info level and not honoring actual defined level
+* bumps CQL LS to v4.6.0
+* bumps version to 0.9.4
+
+
 ## v0.9.3 (prerelease)
 
 Date: 2026-04-21
