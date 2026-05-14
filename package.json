@@ -623,25 +623,7 @@
         "fileMatch": "**/input/tests/config.jsonc",
         "url": "./schemas/cql-config.schema.json"
       }
-    ],
-    "configuration": {
-      "title": "CQL",
-      "properties": {
-        "cql.execute.resultFormat": {
-          "type": "string",
-          "enum": [
-            "individual",
-            "flat"
-          ],
-          "enumDescriptions": [
-            "Save one JSON result file per test case to input/tests/results/{libraryName}/TestCaseResult-{patientId}.json",
-            "Save all test case results for a library to a single text file at input/tests/results/{libraryName}.txt"
-          ],
-          "default": "individual",
-          "description": "Controls how Execute CQL results are saved."
-        }
-      }
-    }
+    ]
   },
   "resolutions": {
     "color-name": "1.1.3"
@@ -658,7 +640,7 @@
     "cql-language-server": {
       "groupId": "org.opencds.cqf.cql.ls",
       "artifactId": "cql-ls-server",
-      "version": "4.6.0"
+      "version": "4.7.0"
     }
   },
   "devDependencies": {

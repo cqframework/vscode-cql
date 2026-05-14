@@ -1,5 +1,6 @@
 import * as fse from 'fs-extra';
 import { glob } from 'glob';
+import { ParseError, parse as parseJsonc } from 'jsonc-parser';
 import * as fs from 'node:fs';
 import {
   commands,
@@ -14,13 +15,12 @@ import {
 } from 'vscode';
 import { Utils } from 'vscode-uri';
 import { Commands } from '../commands/commands';
-import { ExecuteCqlResponse, ExpressionResult, executeCql } from '../cql-service/cqlService.executeCql';
-import * as log from '../log-services/logger';
+import { executeCql, ExecuteCqlResponse, ExpressionResult } from '../cql-service/cqlService.executeCql';
 import { extractLibraryVersion, toGlobPath } from '../helpers/fileHelper';
-import { parse as parseJsonc, ParseError } from 'jsonc-parser';
-import { CqlParametersConfig, ParameterEntry, ResultParameterEntry } from '../model/parameters';
 import { resolveParameters } from '../helpers/parametersHelper';
-import { getTestCases, getMeasureReportData, TestCase, TestCaseExclusion } from '../model/testCase';
+import * as log from '../log-services/logger';
+import { CqlParametersConfig, ParameterEntry, ResultParameterEntry } from '../model/parameters';
+import { getMeasureReportData, getTestCases, TestCase, TestCaseExclusion } from '../model/testCase';
 
 let _context: ExtensionContext | undefined;
 
@@ -50,6 +50,8 @@ export interface TestConfig {
   parameters?: CqlParametersConfig;
   resultFormat?: 'individual' | 'flat';
 }
+
+const DEFAULT_TEST_CONFIG: TestConfig = { testCasesToExclude: [], resultFormat: 'flat' }
 
 export function register(context: ExtensionContext): void {
   _context = context;
@@ -240,7 +242,6 @@ export async function executeCQLFile(
 
   const resultFormat = resultFormatOverride
     ?? testConfig.resultFormat
-    ?? workspace.getConfiguration('cql').get<string>('execute.resultFormat', 'individual');
 
   const doExecute = () =>
     executeCql(
@@ -550,7 +551,7 @@ async function insertLineAtEnd(textEditor: TextEditor, text: string) {
 export function loadTestConfig(testConfigPath: Uri): TestConfig {
   if (!fs.existsSync(testConfigPath.fsPath)) {
     log.info('No test config file found, using default settings', testConfigPath.fsPath);
-    return { testCasesToExclude: [] };
+    return DEFAULT_TEST_CONFIG;
   }
   try {
     const jsonString = fs.readFileSync(testConfigPath.fsPath, 'utf-8');
@@ -558,12 +559,12 @@ export function loadTestConfig(testConfigPath: Uri): TestConfig {
     const parsed = parseJsonc(jsonString, errors) as TestConfig;
     if (errors.length > 0) {
       log.error('Error parsing config file', errors);
-      return { testCasesToExclude: [] };
+      return DEFAULT_TEST_CONFIG;
     }
-    // Ensure testCasesToExclude is always defined to prevent iteration errors
     return {
       ...parsed,
-      testCasesToExclude: parsed.testCasesToExclude ?? []
+      testCasesToExclude: parsed.testCasesToExclude ?? DEFAULT_TEST_CONFIG.testCasesToExclude,
+      resultFormat: parsed.resultFormat ?? DEFAULT_TEST_CONFIG.resultFormat
     };
   } catch (error) {
     log.error('Error reading config file', error);
