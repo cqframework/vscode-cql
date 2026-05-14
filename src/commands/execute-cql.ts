@@ -560,7 +560,11 @@ export function loadTestConfig(testConfigPath: Uri): TestConfig {
       log.error('Error parsing config file', errors);
       return { testCasesToExclude: [] };
     }
-    return parsed;
+    // Ensure testCasesToExclude is always defined to prevent iteration errors
+    return {
+      ...parsed,
+      testCasesToExclude: parsed.testCasesToExclude ?? []
+    };
   } catch (error) {
     log.error('Error reading config file', error);
     return { testCasesToExclude: [] };
