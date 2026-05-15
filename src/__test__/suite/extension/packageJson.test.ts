@@ -16,6 +16,7 @@ const pkg: PackageJson = JSON.parse(
 const CONTEXT_MENU_COMMANDS = [
   'cql.editor.execute',
   'cql.editor.execute.select-test-cases',
+  'cql.editor.debug-test-case',
   'cql.editor.view-elm.xml',
   'cql.editor.view-elm.json',
 ];
@@ -34,6 +35,7 @@ suite('package.json contributions', () => {
       'cql.editor.execute',
       'cql.execute.select-libraries',
       'cql.editor.execute.select-test-cases',
+      'cql.editor.debug-test-case',
     ]) {
       expect(ids, `"${cmd}" should be declared in contributes.commands`).to.include(cmd);
     }
