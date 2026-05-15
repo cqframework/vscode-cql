@@ -93,6 +93,11 @@
         "category": "CQL"
       },
       {
+        "command": "cql.editor.debug-test-case",
+        "title": "Debug Test Case",
+        "category": "CQL"
+      },
+      {
         "command": "cql.editor.view-elm.json",
         "title": "View ELM - JSON",
         "category": "CQL"
@@ -210,6 +215,12 @@
         "title": "View ELM - AST",
         "category": "CQL Explorer",
         "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "cql.explorer.test-case.debug",
+        "title": "Debug Test Case",
+        "category": "CQL Explorer",
+        "icon": "$(debug-alt)"
       },
       {
         "command": "cql.explorer.test-case.execute",
@@ -337,6 +348,10 @@
           "when": "false"
         },
         {
+          "command": "cql.editor.debug-test-case",
+          "when": "false"
+        },
+        {
           "command": "cql.editor.view-elm.json",
           "when": "false"
         },
@@ -370,6 +385,10 @@
         },
         {
           "command": "cql.explorer.library.ast",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.debug",
           "when": "false"
         },
         {
@@ -511,6 +530,11 @@
           "command": "cql.editor.execute.select-test-cases",
           "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
+        },
+        {
+          "command": "cql.editor.debug-test-case",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "group": "1_cqlactions"
         }
       ],
       "view/item/context": [
@@ -536,6 +560,11 @@
         },
         {
           "command": "cql.explorer.test-case.execute",
+          "group": "1:test-case",
+          "when": "view == cql-libraries && viewItem == cql-testcase"
+        },
+        {
+          "command": "cql.explorer.test-case.debug",
           "group": "1:test-case",
           "when": "view == cql-libraries && viewItem == cql-testcase"
         },
@@ -593,6 +622,21 @@
           "command": "cql.explorer.test-case.open-resources",
           "when": "view == cql-libraries && viewItem == cql-testcase",
           "group": "inline@2"
+        },
+        {
+          "command": "cql.explorer.test-case.debug",
+          "when": "view == cql-libraries && viewItem == cql-testcase",
+          "group": "inline@3"
+        },
+        {
+          "command": "cql.explorer.test-case.debug",
+          "when": "view == cql-libraries && viewItem =~ /cql-testcase-root/",
+          "group": "1:test-case-root"
+        },
+        {
+          "command": "cql.explorer.test-case.debug",
+          "when": "view == cql-libraries && viewItem =~ /cql-testcase-root/",
+          "group": "inline@4"
         },
         {
           "command": "cql.explorer.test-case.execute-select",
@@ -716,6 +760,30 @@
         }
       ]
     },
+    "debuggers": [
+      {
+        "type": "cql",
+        "label": "CQL Debug",
+        "languages": ["cql"],
+        "configurationAttributes": {
+          "launch": {
+            "required": ["libraryUri", "fhirVersion"],
+            "properties": {
+              "libraryUri": { "type": "string" },
+              "fhirVersion": { "type": "string" },
+              "testCaseName": { "type": "string" },
+              "testCaseUri": { "type": "string" },
+              "terminologyUri": { "type": "string" },
+              "rootDir": { "type": "string" },
+              "optionsPath": { "type": "string" }
+            }
+          }
+        }
+      }
+    ],
+    "breakpoints": [
+      { "language": "cql" }
+    ],
     "jsonValidation": [
       {
         "fileMatch": "**/input/tests/config.jsonc",

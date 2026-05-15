@@ -4,6 +4,7 @@ import { ParseError, parse as parseJsonc } from 'jsonc-parser';
 import * as fs from 'node:fs';
 import {
   commands,
+  debug,
   ExtensionContext,
   Position,
   ProgressLocation,
@@ -91,6 +92,9 @@ export function register(context: ExtensionContext): void {
     }),
     commands.registerCommand(Commands.EXECUTE_CQL_COMMAND_SELECT_TEST_CASES, async (uri: Uri) => {
       selectTestCases(uri);
+    }),
+    commands.registerCommand(Commands.DEBUG_TEST_CASE_COMMAND, async (uri: Uri) => {
+      debugTestCase(uri);
     }),
   );
 }
@@ -236,6 +240,77 @@ export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
       executeCQLFile(cqlFileUri, selected);
     });
   }
+}
+
+export async function debugTestCase(cqlFileUri: Uri): Promise<void> {
+  const cqlPaths = getCqlPaths(cqlFileUri);
+  if (!cqlPaths) {
+    window.showErrorMessage('Unable to resolve needed CQL project paths.');
+    return;
+  }
+
+  const libraryName = Utils.basename(cqlFileUri).replace('.cql', '').split('-')[0];
+
+  const allTestCases = getTestCases(cqlPaths.testDirectoryPath, libraryName, []);
+  const namedTestCases = allTestCases.filter(
+    (tc): tc is Required<TestCase> => tc.name !== undefined,
+  );
+
+  if (namedTestCases.length === 0) {
+    window.showInformationMessage('No test cases found.');
+    return;
+  }
+
+  const quickPickItems = namedTestCases.map(tc => ({
+    label: tc.name,
+    testCase: tc,
+  }));
+
+  const quickPick = window.createQuickPick<{ label: string; testCase: TestCase }>();
+  quickPick.items = quickPickItems;
+  quickPick.canSelectMany = false;
+  quickPick.placeholder = 'Select a test case to debug';
+  quickPick.title = `Debug — ${libraryName}`;
+
+  const stateKey = `debugTestCase.selections.${libraryName}`;
+  const saved = _context?.workspaceState.get<string>(stateKey);
+  if (saved) {
+    const match = quickPickItems.find(item => item.label === saved);
+    if (match) {
+      quickPick.selectedItems = [match];
+      quickPick.activeItems = [match];
+    }
+  }
+
+  quickPick.show();
+
+  quickPick.onDidAccept(async () => {
+    const selected = quickPick.selectedItems[0];
+    quickPick.hide();
+    if (!selected) return;
+
+    await _context?.workspaceState.update(stateKey, selected.label);
+
+    const cqlSource = fs.readFileSync(cqlFileUri.fsPath, 'utf-8');
+    const fhirVersion = getFhirVersion(cqlSource) ?? 'R4';
+
+    await debug.startDebugging(
+      workspace.getWorkspaceFolder(cqlFileUri),
+      {
+        type: 'cql',
+        request: 'launch',
+        name: `Debug ${libraryName} — ${selected.label}`,
+        libraryUri: cqlFileUri.toString(),
+        libraryName,
+        fhirVersion,
+        testCaseName: selected.label,
+        testCaseUri: selected.testCase.path!.toString(),
+        terminologyUri: cqlPaths.terminologyDirectoryPath?.toString(),
+        rootDir: cqlPaths.projectDirectoryPath?.toString(),
+        optionsPath: cqlPaths.optionsPath?.toString(),
+      },
+    );
+  });
 }
 
 export async function executeCQLFile(
@@ -507,7 +582,7 @@ export function resolveTestConfigPath(testDirectoryPath: Uri): Uri {
   return Utils.resolvePath(testDirectoryPath, 'config.json');
 }
 
-function getCqlPaths(cqlFileUri: Uri): CqlPaths | undefined {
+export function getCqlPaths(cqlFileUri: Uri): CqlPaths | undefined {
   const project = CqlSolution.getCurrent().findProjectForUri(cqlFileUri);
   if (!project) {
     window.showErrorMessage('Unable to determine path to project root.');

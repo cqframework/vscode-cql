@@ -47,6 +47,8 @@ export namespace Commands {
   export const EXECUTE_CQL_COMMAND_SELECT_LIBRARIES = 'cql.execute.select-libraries';
   export const EXECUTE_CQL_COMMAND_SELECT_TEST_CASES = 'cql.editor.execute.select-test-cases';
 
+  export const DEBUG_TEST_CASE_COMMAND = 'cql.editor.debug-test-case';
+
   /*
    * Open settings.json
    */

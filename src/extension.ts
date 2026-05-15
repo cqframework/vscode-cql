@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
+import { commands, debug, ExtensionContext, Uri, window, workspace } from 'vscode';
 import {
   CloseAction,
   ErrorAction,
@@ -13,6 +13,7 @@ import { register as registerExecuteCql } from './commands/execute-cql';
 import { register as registerLogCommands } from './commands/log-files';
 import { register as registerViewElmCommand } from './commands/view-elm';
 import { cqlLanguageClientInstance } from './cql-language-server/cqlLanguageClient';
+import { CqlDebugAdapterDescriptorFactory } from './debug/cqlDebugAdapterDescriptorFactory';
 import { CqlExplorer } from './cql-explorer/cqlExplorer';
 import { ClientStatus } from './extension.api';
 import * as requirements from './java-support/requirements';
@@ -139,6 +140,12 @@ async function startServer(
   try {
     await cqlLanguageClientInstance.initialize(context, requirements, clientOptions, workspacePath);
     await cqlLanguageClientInstance.start();
+    context.subscriptions.push(
+      debug.registerDebugAdapterDescriptorFactory(
+        'cql',
+        new CqlDebugAdapterDescriptorFactory(cqlLanguageClientInstance.getClient()),
+      ),
+    );
     statusBar.showStatusBar();
   } catch (error) {
     log.error(`Failed to start server: ${error}`);

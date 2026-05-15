@@ -5,6 +5,7 @@ const EXPECTED_COMMANDS = [
   // Active editor commands
   'cql.editor.execute',
   'cql.editor.execute.select-test-cases',
+  'cql.editor.debug-test-case',
   'cql.editor.view-elm.xml',
   'cql.editor.view-elm.json',
   'cql.editor.view-elm.ast',
