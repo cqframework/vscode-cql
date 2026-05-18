@@ -134,22 +134,33 @@ async function downloadFile(
   progress?: Progress<{ message?: string; increment?: number }>,
 ) {
   const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to download ${url}: ${res.statusText} (${res.status})`);
+  }
   const fileStream = fs.createWriteStream(path);
   let bytesSoFar = 0;
-  await new Promise((resolve, reject) => {
-    res.body.pipe(fileStream);
-    res.body.on('data', chunk => {
-      if (progress) {
-        bytesSoFar += chunk.length;
-        progress.report({
-          message: `Downloading`,
-          increment: bytesSoFar / totalBytes!,
-        });
-      }
+  try {
+    await new Promise((resolve, reject) => {
+      res.body.pipe(fileStream);
+      res.body.on('data', chunk => {
+        if (progress) {
+          bytesSoFar += chunk.length;
+          progress.report({
+            message: `Downloading`,
+            increment: bytesSoFar / totalBytes!,
+          });
+        }
+      });
+      res.body.on('error', reject);
+      fileStream.on('error', reject);
+      fileStream.on('finish', resolve);
     });
-    res.body.on('error', reject);
-    fileStream.on('finish', resolve);
-  });
+  } catch (e) {
+    if (fs.existsSync(path)) {
+      fs.unlinkSync(path);
+    }
+    throw e;
+  }
 }
 
 async function setupDownload(serviceName: string, url: string) {

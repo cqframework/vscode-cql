@@ -740,7 +740,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\" && npm run compile",
+    "pretest": "node scripts/clean-dist.js && npm run compile",
     "test": "vscode-test",
     "changelog": "node scripts/update-changelog.js"
   },
