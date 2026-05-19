@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { commands, debug, ExtensionContext, Uri, window, workspace } from 'vscode';
+import { commands, debug, ExtensionContext, languages, Uri, window, workspace } from 'vscode';
 import {
   CloseAction,
   ErrorAction,
@@ -9,11 +9,15 @@ import {
   RevealOutputChannelOn,
 } from 'vscode-languageclient';
 import { Commands } from './commands/commands';
-import { register as registerExecuteCql } from './commands/execute-cql';
+import { register as registerExecuteCqlFile } from './commands/execute-cql-file';
+import { register as registerSelectLibraries } from './commands/select-libraries';
+import { register as registerSelectTestCases } from './commands/select-test-cases';
+import { register as registerDebugTestCase } from './commands/debug-test-case';
 import { register as registerLogCommands } from './commands/log-files';
 import { register as registerViewElmCommand } from './commands/view-elm';
 import { cqlLanguageClientInstance } from './cql-language-server/cqlLanguageClient';
 import { CqlDebugAdapterDescriptorFactory } from './debug/cqlDebugAdapterDescriptorFactory';
+import { CqlEvaluatableExpressionProvider } from './debug/cqlEvaluatableExpressionProvider';
 import { CqlExplorer } from './cql-explorer/cqlExplorer';
 import { ClientStatus } from './extension.api';
 import * as requirements from './java-support/requirements';
@@ -118,7 +122,10 @@ export function activate(context: ExtensionContext): Promise<void> {
         outputChannelName: EXTENSION_NAME,
       };
 
-      registerExecuteCql(context);
+      registerSelectLibraries(context);
+      registerExecuteCqlFile(context);
+      registerSelectTestCases(context);
+      registerDebugTestCase(context);
       registerLogCommands(context);
       registerViewElmCommand(context);
       context.subscriptions.push(statusBar);
@@ -144,6 +151,10 @@ async function startServer(
       debug.registerDebugAdapterDescriptorFactory(
         'cql',
         new CqlDebugAdapterDescriptorFactory(cqlLanguageClientInstance.getClient()),
+      ),
+      languages.registerEvaluatableExpressionProvider(
+        { language: 'cql' },
+        new CqlEvaluatableExpressionProvider(),
       ),
     );
     statusBar.showStatusBar();

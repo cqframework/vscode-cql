@@ -1,7 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { executeCQLFile, getCqlPaths, getFhirVersion } from '../commands/execute-cql';
+import { executeCQLFile } from '../commands/execute-cql-file';
+import { promptAndDebugTestCase, startDebuggingForTestCase } from '../commands/debug-test-case';
 import { viewElm } from '../commands/view-elm';
 import { logger } from '../extensionLogger';
 import {
@@ -728,70 +729,11 @@ export class CqlExplorer {
               vscode.window.showErrorMessage('Unable to find parent library.');
               return;
             }
-            const libraryUri = library.uri;
-            const cqlPaths = getCqlPaths(libraryUri);
-            const cqlSource = await vscode.workspace.fs.readFile(libraryUri);
-            const fhirVersion = getFhirVersion(Buffer.from(cqlSource).toString()) ?? 'R4';
-            await vscode.debug.startDebugging(
-              vscode.workspace.getWorkspaceFolder(libraryUri),
-              {
-                type: 'cql',
-                request: 'launch',
-                name: `Debug ${library.name} — ${item.cqlTestCase.name}`,
-                libraryUri: libraryUri.toString(),
-                libraryName: library.name,
-                fhirVersion,
-                testCaseName: item.cqlTestCase.name,
-                testCaseUri: item.cqlTestCase.uri.toString(),
-                terminologyUri: cqlPaths?.terminologyDirectoryPath?.toString(),
-                rootDir: cqlPaths?.projectDirectoryPath?.toString(),
-                optionsPath: cqlPaths?.optionsPath?.toString(),
-              },
-            );
+            await startDebuggingForTestCase(library, item.cqlTestCase);
             return;
           }
 
-          const testCaseItems = item.children.filter(
-            (c): c is CqlTestCaseTreeItem => c instanceof CqlTestCaseTreeItem,
-          );
-          if (testCaseItems.length === 0) {
-            vscode.window.showInformationMessage('No test cases found.');
-            return;
-          }
-
-          let selected: CqlTestCase;
-          if (testCaseItems.length === 1) {
-            selected = testCaseItems[0].cqlTestCase;
-          } else {
-            const pick = await vscode.window.showQuickPick(
-              testCaseItems.map(c => ({ label: c.cqlTestCase.name, testCase: c.cqlTestCase })),
-              { placeHolder: 'Select a test case to debug', title: `Debug — ${item.cqlLibrary.name}` },
-            );
-            if (!pick) return;
-            selected = pick.testCase;
-          }
-
-          const libraryUri = item.cqlLibrary.uri;
-          const cqlPaths = getCqlPaths(libraryUri);
-          const cqlSource = await vscode.workspace.fs.readFile(libraryUri);
-          const fhirVersion = getFhirVersion(Buffer.from(cqlSource).toString()) ?? 'R4';
-
-          await vscode.debug.startDebugging(
-            vscode.workspace.getWorkspaceFolder(libraryUri),
-            {
-              type: 'cql',
-              request: 'launch',
-              name: `Debug ${item.cqlLibrary.name} — ${selected.name}`,
-              libraryUri: libraryUri.toString(),
-              libraryName: item.cqlLibrary.name,
-              fhirVersion,
-              testCaseName: selected.name,
-              testCaseUri: selected.uri.toString(),
-              terminologyUri: cqlPaths?.terminologyDirectoryPath?.toString(),
-              rootDir: cqlPaths?.projectDirectoryPath?.toString(),
-              optionsPath: cqlPaths?.optionsPath?.toString(),
-            },
-          );
+          await promptAndDebugTestCase(item.cqlLibrary);
         },
       ),
     );
