@@ -35,57 +35,51 @@ export interface CqlLsInfo {
 export async function resolveJavaRequirements(
   _context: ExtensionContext,
 ): Promise<JavaRequirements> {
-  return new Promise(async (resolve, reject) => {
-    let source: string;
-    let javaVersion: number | undefined;
+  let source: string;
+  let javaVersion: number | undefined;
 
-    let javaHome: string | undefined;
-    // java.home not specified, search valid JDKs from env.JAVA_HOME, env.PATH, Registry(Window), Common directories
-    const javaRuntimes = await findJavaHomes();
-    const validJdks = javaRuntimes.filter(r => r.version >= REQUIRED_JDK_VERSION);
-    if (validJdks.length > 0) {
-      sortJdksBySource(validJdks);
-      javaHome = validJdks[0].home;
-      javaVersion = validJdks[0].version;
-    }
-    if (javaHome) {
-      // java.home explicitly specified
-      source = `java.home variable defined in ${env.appName} settings`;
-      javaHome = expandTilde(javaHome);
-      if (!(await fse.pathExists(javaHome!))) {
-        rejectWithMessage(
-          reject,
-          `The ${source} points to a missing or inaccessible folder (${javaHome})`,
-        );
-      } else if (!(await fse.pathExists(path.resolve(javaHome!, 'bin', JAVAC_FILENAME)))) {
-        let msg: string;
-        if (await fse.pathExists(path.resolve(javaHome!, JAVAC_FILENAME))) {
-          msg = `'bin' should be removed from the ${source} (${javaHome})`;
-        } else {
-          msg = `The ${source} (${javaHome}) does not point to a JDK.`;
-        }
-        rejectWithMessage(reject, msg);
-      }
-      javaVersion = await getJavaVersion(javaHome!);
-    }
-
-    if (javaVersion! < REQUIRED_JDK_VERSION) {
-      openJDKDownload(
-        reject,
-        `Java ${REQUIRED_JDK_VERSION} or more recent is required to run the Java extension. Please download and install a recent JDK.`,
+  let javaHome: string | undefined;
+  // java.home not specified, search valid JDKs from env.JAVA_HOME, env.PATH, Registry(Window), Common directories
+  const javaRuntimes = await findJavaHomes();
+  const validJdks = javaRuntimes.filter(r => r.version >= REQUIRED_JDK_VERSION);
+  if (validJdks.length > 0) {
+    sortJdksBySource(validJdks);
+    javaHome = validJdks[0].home;
+    javaVersion = validJdks[0].version;
+  }
+  if (javaHome) {
+    // java.home explicitly specified
+    source = `java.home variable defined in ${env.appName} settings`;
+    javaHome = expandTilde(javaHome);
+    if (!(await fse.pathExists(javaHome!))) {
+      throw createRejectWithMessage(
+        `The ${source} points to a missing or inaccessible folder (${javaHome})`,
       );
+    } else if (!(await fse.pathExists(path.resolve(javaHome!, 'bin', JAVAC_FILENAME)))) {
+      let msg: string;
+      if (await fse.pathExists(path.resolve(javaHome!, JAVAC_FILENAME))) {
+        msg = `'bin' should be removed from the ${source} (${javaHome})`;
+      } else {
+        msg = `The ${source} (${javaHome}) does not point to a JDK.`;
+      }
+      throw createRejectWithMessage(msg);
     }
+    javaVersion = await getJavaVersion(javaHome!);
+  }
 
-    resolve({ java_home: javaHome!, java_version: javaVersion! });
-  });
+  if (javaVersion === undefined || javaVersion < REQUIRED_JDK_VERSION) {
+    throw createOpenJDKDownload(
+      `Java ${REQUIRED_JDK_VERSION} or more recent is required to run the Java extension. Please download and install a recent JDK.`,
+    );
+  }
+
+  return { java_home: javaHome!, java_version: javaVersion! };
 }
 
 export async function resolveJavaDependencies(context: ExtensionContext): Promise<CqlLsInfo> {
-  return new Promise(async (resolve, reject) => {
-    await installJavaDependencies(context);
-    const cqlLsJar = getServicePath(context, 'cql-language-server');
-    resolve({ cql_ls_jar: cqlLsJar });
-  });
+  await installJavaDependencies(context);
+  const cqlLsJar = getServicePath(context, 'cql-language-server');
+  return { cql_ls_jar: cqlLsJar };
 }
 
 export async function resolveRequirements(context: ExtensionContext): Promise<RequirementsData> {
@@ -112,30 +106,17 @@ export function sortJdksBySource(jdks: JavaRuntime[]) {
   rankedJdks.sort((a, b) => a.rank - b.rank);
 }
 
-function openJDKDownload(
-  reject: {
-    (reason?: any): void;
-    (arg0: { message: any; label: string; command: string; commandParam: Uri }): void;
-  },
-  cause: string,
-) {
-  reject({
+function createOpenJDKDownload(cause: string) {
+  return {
     message: cause,
     label: 'Get the Java Development Kit',
     command: Commands.OPEN_BROWSER,
     commandParam: Uri.parse(JDK_URL),
-  });
+  };
 }
 
-function rejectWithMessage(
-  reject: {
-    (reason?: any): void;
-    (reason?: any): void;
-    (arg0: { message: string }): void;
-  },
-  cause: string,
-) {
-  reject({
+function createRejectWithMessage(cause: string) {
+  return {
     message: cause,
-  });
+  };
 }

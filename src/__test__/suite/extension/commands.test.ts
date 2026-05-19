@@ -46,6 +46,7 @@ const EXPECTED_COMMANDS = [
   'cql.explorer.test-case.execute-all',
   'cql.explorer.test-case.filter',
   'cql.explorer.test-case.clear-filter',
+  'cql.explorer.test-case.debug',
   // Explorer resource node commands
   'cql.explorer.resource.fix-references',
   'cql.explorer.resource.rename',
