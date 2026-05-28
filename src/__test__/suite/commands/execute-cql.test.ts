@@ -178,7 +178,7 @@ suite('loadTestConfig()', () => {
     const configPath = path.join(tmpDir, 'config.json');
     fs.writeFileSync(configPath, JSON.stringify(config));
     const result = loadTestConfig(Uri.file(configPath));
-    expect(result.resultFormat).to.be.undefined;
+    expect(result.resultFormat).to.equal('flat');
   });
 
   test('returns individual resultFormat when config specifies individual', () => {
