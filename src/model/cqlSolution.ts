@@ -66,8 +66,10 @@ export class CqlSolution {
    * starts with the project's igRoot.
    */
   public findProjectForUri(uri: Uri): CqlProject | undefined {
-    return this.projects.find(
-      p => uri.fsPath === p.igRoot || uri.fsPath.startsWith(p.igRoot + path.sep),
-    );
+    const uriPath = path.resolve(uri.fsPath);
+    return this.projects.find(p => {
+      const root = path.resolve(p.igRoot);
+      return uriPath === root || uriPath.startsWith(root + path.sep);
+    });
   }
 }
