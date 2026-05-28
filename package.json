@@ -1,6 +1,6 @@
 {
   "name": "cql",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "displayName": "Clinical Quality Language (CQL)",
   "description": "Syntax highlighting, linting, and execution for the HL7 Clinical Quality Language (CQL) for VS Code",
   "publisher": "cqframework",
@@ -229,6 +229,18 @@
         "category": "CQL Explorer"
       },
       {
+        "command": "cql.explorer.project.execute-select",
+        "title": "Select and Execute Libraries",
+        "category": "CQL Explorer",
+        "icon": "$(play)"
+      },
+      {
+        "command": "cql.explorer.project.execute-all",
+        "title": "Execute All Libraries",
+        "icon": "$(run-all)",
+        "category": "CQL Explorer"
+      },
+      {
         "command": "cql.explorer.test-case.filter",
         "title": "Filter Test Cases",
         "icon": "$(search)",
@@ -406,6 +418,14 @@
           "when": "false"
         },
         {
+          "command": "cql.explorer.project.execute-all",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.project.execute-select",
+          "when": "false"
+        },
+        {
           "command": "cql.explorer.expand-all",
           "when": "false"
         },
@@ -540,12 +560,32 @@
           "command": "cql.explorer.test-case.clear-filter",
           "when": "view == cql-libraries && viewItem =~ /cql-testcase-root-filtered/",
           "group": "inline@3"
+        },
+        {
+          "command": "cql.explorer.project.execute-select",
+          "when": "view == cql-libraries && viewItem == cql-project-root",
+          "group": "1:project"
+        },
+        {
+          "command": "cql.explorer.project.execute-all",
+          "when": "view == cql-libraries && viewItem == cql-project-root",
+          "group": "1:project"
+        },
+        {
+          "command": "cql.explorer.project.execute-select",
+          "when": "view == cql-libraries && viewItem == cql-project-root",
+          "group": "inline@1"
+        },
+        {
+          "command": "cql.explorer.project.execute-all",
+          "when": "view == cql-libraries && viewItem == cql-project-root",
+          "group": "inline@2"
         }
       ],
       "view/title": [
         {
           "command": "cql.execute.select-libraries",
-          "when": "view == cql-libraries",
+          "when": "view == cql-libraries && cql.solutionLoaded",
           "group": "navigation@1"
         },
         {
@@ -623,25 +663,7 @@
         "fileMatch": "**/input/tests/config.jsonc",
         "url": "./schemas/cql-config.schema.json"
       }
-    ],
-    "configuration": {
-      "title": "CQL",
-      "properties": {
-        "cql.execute.resultFormat": {
-          "type": "string",
-          "enum": [
-            "individual",
-            "flat"
-          ],
-          "enumDescriptions": [
-            "Save one JSON result file per test case to input/tests/results/{libraryName}/TestCaseResult-{patientId}.json",
-            "Save all test case results for a library to a single text file at input/tests/results/{libraryName}.txt"
-          ],
-          "default": "individual",
-          "description": "Controls how Execute CQL results are saved."
-        }
-      }
-    }
+    ]
   },
   "resolutions": {
     "color-name": "1.1.3"
@@ -658,7 +680,7 @@
     "cql-language-server": {
       "groupId": "org.opencds.cqf.cql.ls",
       "artifactId": "cql-ls-server",
-      "version": "4.6.0"
+      "version": "4.7.0"
     }
   },
   "devDependencies": {

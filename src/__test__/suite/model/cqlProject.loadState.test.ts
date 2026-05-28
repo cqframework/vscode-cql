@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
-import { CqlLibrary, CqlProject } from '../../../cql-explorer/cqlProject';
+import { CqlLibrary, CqlProject } from '../../../model/cqlProject';
 import { CqlTestCasesLoadingTreeItem } from '../../../cql-explorer/cqlProjectTreeDataProvider';
 
 suite('CqlLibrary — initial load state', () => {
@@ -48,6 +48,18 @@ suite('CqlProject.loadTestCasesForLibrary', () => {
     await project.loadTestCasesForLibrary(lib, []);
     expect(lib.testCaseLoadState).to.equal('loaded');
     expect(eventCount).to.equal(0);
+  });
+});
+
+suite('CqlProject.loadResults', () => {
+  test('resolves without error when results folder does not exist', async () => {
+    const wsRoot = workspace.workspaceFolders![0].uri;
+    const project = new CqlProject(wsRoot.fsPath, []);
+    // loadResults is private; call via cast. The results folder won't exist in
+    // the test workspace, so the inner readdir catch fires and we return early.
+    // Before the fix this returned without logging; after the fix the finally
+    // block always logs. Either way the promise must resolve, not reject.
+    await (project as any).loadResults();
   });
 });
 

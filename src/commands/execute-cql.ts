@@ -1,5 +1,6 @@
 import * as fse from 'fs-extra';
 import { glob } from 'glob';
+import { ParseError, parse as parseJsonc } from 'jsonc-parser';
 import * as fs from 'node:fs';
 import {
   commands,
@@ -15,12 +16,13 @@ import {
 import { Utils } from 'vscode-uri';
 import { Commands } from '../commands/commands';
 import { ExecuteCqlResponse, ExpressionResult, executeCql } from '../cql-service/cqlService.executeCql';
-import * as log from '../log-services/logger';
+import { CqlLibrary, CqlProject, CqlProjectEvents } from '../model/cqlProject';
+import { CqlSolution } from '../model/cqlSolution';
 import { extractLibraryVersion, toGlobPath } from '../helpers/fileHelper';
-import { parse as parseJsonc, ParseError } from 'jsonc-parser';
-import { CqlParametersConfig, ParameterEntry, ResultParameterEntry } from '../model/parameters';
 import { resolveParameters } from '../helpers/parametersHelper';
-import { getTestCases, getMeasureReportData, TestCase, TestCaseExclusion } from '../model/testCase';
+import * as log from '../log-services/logger';
+import { CqlParametersConfig, ParameterEntry, ResultParameterEntry } from '../model/parameters';
+import { getMeasureReportData, getTestCases, TestCase, TestCaseExclusion } from '../model/testCase';
 
 let _context: ExtensionContext | undefined;
 
@@ -51,8 +53,35 @@ export interface TestConfig {
   resultFormat?: 'individual' | 'flat';
 }
 
+const DEFAULT_TEST_CONFIG: TestConfig = { testCasesToExclude: [], resultFormat: 'flat' }
+
 export function register(context: ExtensionContext): void {
   _context = context;
+
+  // Track when library shells are loaded so the select-libraries command can be enabled in menus.
+  // Uses libraryShellsLoaded to handle the race where LOADED fires before register() runs.
+  const solution = CqlSolution.getCurrent();
+  commands.executeCommand('setContext', 'cql.solutionLoaded', false);
+  const total = solution.projects.length;
+  if (total === 0) {
+    commands.executeCommand('setContext', 'cql.solutionLoaded', true);
+  } else {
+    let loadedCount = solution.projects.filter(p => p.libraryShellsLoaded).length;
+    if (loadedCount >= total) {
+      commands.executeCommand('setContext', 'cql.solutionLoaded', true);
+    } else {
+      for (const project of solution.projects) {
+        if (!project.libraryShellsLoaded) {
+          project.once(CqlProjectEvents.LOADED, () => {
+            if (++loadedCount >= total) {
+              commands.executeCommand('setContext', 'cql.solutionLoaded', true);
+            }
+          });
+        }
+      }
+    }
+  }
+
   context.subscriptions.push(
     commands.registerCommand(Commands.EXECUTE_CQL_COMMAND, async (uri: Uri) => {
       executeCQLFile(uri);
@@ -67,7 +96,19 @@ export function register(context: ExtensionContext): void {
 }
 
 export async function selectLibraries(): Promise<void> {
-  const cqlPaths = getCqlPaths();
+  // Use the active editor's URI to scope to the right project; fall back to
+  // the first project if no editor is open or the file is not in any project.
+  const activeUri = window.activeTextEditor?.document.uri;
+  const solution = CqlSolution.getCurrent();
+  const fallbackProject = solution.projects[0];
+  const anchorUri = activeUri
+    ? (solution.findProjectForUri(activeUri) ? activeUri : fallbackProject && Uri.file(fallbackProject.igRoot))
+    : (fallbackProject && Uri.file(fallbackProject.igRoot));
+  if (!anchorUri) {
+    window.showErrorMessage('No CQL project found in this workspace.');
+    return;
+  }
+  const cqlPaths = getCqlPaths(anchorUri);
   if (!cqlPaths) {
     window.showErrorMessage('Unable to determine needed CQL Paths.');
     return;
@@ -144,7 +185,7 @@ export async function selectLibraries(): Promise<void> {
 }
 
 export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
-  const cqlPaths = getCqlPaths();
+  const cqlPaths = getCqlPaths(cqlFileUri);
   if (!cqlPaths) {
     const msg = 'Unable to resolve needed CQL project paths.';
     log.error(msg);
@@ -209,7 +250,7 @@ export async function executeCQLFile(
     return;
   }
 
-  const cqlPaths = getCqlPaths();
+  const cqlPaths = getCqlPaths(cqlFileUri);
   if (!cqlPaths) {
     window.showErrorMessage('Unable to determine needed CQL Paths.');
     return;
@@ -220,6 +261,17 @@ export async function executeCQLFile(
 
   const testConfig = loadTestConfig(cqlPaths.testConfigPath);
   const excludedTestCases = getExcludedTestCases(libraryName, testConfig.testCasesToExclude);
+
+  // When no test cases are provided we are about to scan disk for them.  Wait for the
+  // in-memory model to finish loading first so we never execute against an empty set
+  // during initial workspace startup.  No-op if the library is already loaded.
+  if (testCases === undefined) {
+    const project = CqlSolution.getCurrent().findProjectForUri(cqlFileUri);
+    const library = project?.Libraries.find(lib => lib.uri.fsPath === cqlFileUri.fsPath);
+    if (library && project) {
+      await waitForTestCasesLoaded(library, project, showProgress);
+    }
+  }
 
   const effectiveTestCases: Array<TestCase> =
     testCases ??
@@ -240,7 +292,6 @@ export async function executeCQLFile(
 
   const resultFormat = resultFormatOverride
     ?? testConfig.resultFormat
-    ?? workspace.getConfiguration('cql').get<string>('execute.resultFormat', 'individual');
 
   const doExecute = () =>
     executeCql(
@@ -456,12 +507,13 @@ export function resolveTestConfigPath(testDirectoryPath: Uri): Uri {
   return Utils.resolvePath(testDirectoryPath, 'config.json');
 }
 
-function getCqlPaths(): CqlPaths | undefined {
-  const projectDirectoryPath = getWorkspacePath(); //workspace.getWorkspaceFolder(cqlFileUri)!.uri;
-  if (!projectDirectoryPath) {
+function getCqlPaths(cqlFileUri: Uri): CqlPaths | undefined {
+  const project = CqlSolution.getCurrent().findProjectForUri(cqlFileUri);
+  if (!project) {
     window.showErrorMessage('Unable to determine path to project root.');
     return;
   }
+  const projectDirectoryPath = Uri.file(project.igRoot);
   const libraryDirectoryPath = Utils.resolvePath(projectDirectoryPath, 'input', 'cql');
   const testDirectoryPath = Utils.resolvePath(projectDirectoryPath, 'input', 'tests');
   return {
@@ -530,12 +582,6 @@ export function getLibraries(libraryPath: Uri): Array<Uri> {
     .map(f => Uri.file(f));
 }
 
-function getWorkspacePath(): Uri | undefined {
-  if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-    return workspace.workspaceFolders[0].uri;
-  }
-  return undefined;
-}
 
 async function insertLineAtEnd(textEditor: TextEditor, text: string) {
   const document = textEditor.document;
@@ -547,10 +593,44 @@ async function insertLineAtEnd(textEditor: TextEditor, text: string) {
   );
 }
 
+async function waitForTestCasesLoaded(
+  library: CqlLibrary,
+  project: CqlProject,
+  showProgress: boolean,
+): Promise<void> {
+  if (library.testCaseLoadState === 'loaded') return;
+
+  const waitPromise = new Promise<void>(resolve => {
+    const handler = (loaded: CqlLibrary) => {
+      if (loaded === library) {
+        project.off(CqlProjectEvents.LIBRARY_TESTCASES_LOADED, handler);
+        resolve();
+      }
+    };
+    project.on(CqlProjectEvents.LIBRARY_TESTCASES_LOADED, handler);
+    if (library.testCaseLoadState === 'not-loaded') {
+      project.loadTestCasesForLibrary(library).catch(() => {});
+    }
+  });
+
+  if (showProgress) {
+    await window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: `Loading ${library.name}\u2026`,
+        cancellable: false,
+      },
+      () => waitPromise,
+    );
+  } else {
+    await waitPromise;
+  }
+}
+
 export function loadTestConfig(testConfigPath: Uri): TestConfig {
   if (!fs.existsSync(testConfigPath.fsPath)) {
     log.info('No test config file found, using default settings', testConfigPath.fsPath);
-    return { testCasesToExclude: [] };
+    return DEFAULT_TEST_CONFIG;
   }
   try {
     const jsonString = fs.readFileSync(testConfigPath.fsPath, 'utf-8');
@@ -558,12 +638,12 @@ export function loadTestConfig(testConfigPath: Uri): TestConfig {
     const parsed = parseJsonc(jsonString, errors) as TestConfig;
     if (errors.length > 0) {
       log.error('Error parsing config file', errors);
-      return { testCasesToExclude: [] };
+      return DEFAULT_TEST_CONFIG;
     }
-    // Ensure testCasesToExclude is always defined to prevent iteration errors
     return {
       ...parsed,
-      testCasesToExclude: parsed.testCasesToExclude ?? []
+      testCasesToExclude: parsed.testCasesToExclude ?? DEFAULT_TEST_CONFIG.testCasesToExclude,
+      resultFormat: parsed.resultFormat ?? DEFAULT_TEST_CONFIG.resultFormat
     };
   } catch (error) {
     log.error('Error reading config file', error);

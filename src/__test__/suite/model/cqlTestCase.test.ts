@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Uri, workspace } from 'vscode';
-import { CqlTestCase } from '../../../cql-explorer/cqlProject';
+import { CqlTestCase } from '../../../model/cqlProject';
 
 suite('CqlTestCase', () => {
   function makeTestCase(): CqlTestCase {

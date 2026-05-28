@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
-import { CqlLibrary, CqlTestCase } from '../../../cql-explorer/cqlProject';
+import { CqlLibrary, CqlTestCase } from '../../../model/cqlProject';
 import {
   CqlLibraryRootTreeItem,
   CqlResultsRootTreeItem,

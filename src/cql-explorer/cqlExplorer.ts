@@ -13,8 +13,9 @@ import {
   CqlTestCaseRootTreeItem,
   CqlTestCaseTreeItem,
 } from './cqlProjectTreeDataProvider';
-import { CqlProject, CqlTestCase } from './cqlProject';
-import { DeviationKind } from './igLayoutDetector';
+import { CqlProject, CqlTestCase } from '../model/cqlProject';
+import { CqlSolution } from '../model/cqlSolution';
+import { DeviationKind } from '../model/igLayoutDetector';
 import { cloneTestCase } from './testCaseCloner';
 import {
   copyResources,
@@ -53,7 +54,7 @@ export class CqlExplorer {
   private clipboard: { uris: vscode.Uri[]; operation: 'copy' | 'cut' } | null = null;
 
   constructor(context: vscode.ExtensionContext) {
-    this.cqlProjects = CqlProject.getInstances();
+    this.cqlProjects = [...CqlSolution.getCurrent().projects];
 
     this.cqlLibraryTreeProvider = new CqlProjectTreeDataProvider(this.cqlProjects);
     context.subscriptions.push(this.diagnostics);
@@ -100,6 +101,87 @@ export class CqlExplorer {
     });
 
     context.subscriptions.push(
+      // execute all libraries in a specific project node
+      vscode.commands.registerCommand(
+        'cql.explorer.project.execute-all',
+        async (item: CqlProjectRootTreeItem) => {
+          logger.debug(`Command cql.explorer.project.execute-all selected for project: ${item.cqlProject.name}`);
+          const filter = this.nameFilter.toLowerCase();
+          const libs = item.cqlProject.Libraries.filter(
+            l =>
+              l.TestCases.length > 0 &&
+              (filter === '' || l.name.toLowerCase().includes(filter)),
+          );
+          if (libs.length === 0) {
+            vscode.window.showInformationMessage('No libraries with test cases match the current filter.');
+            return;
+          }
+          await vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: `Execute CQL — ${item.cqlProject.name}`,
+              cancellable: true,
+            },
+            async (progress, token) => {
+              for (let i = 0; i < libs.length; i++) {
+                if (token.isCancellationRequested) {
+                  break;
+                }
+                const lib = libs[i];
+                progress.report({ message: `${lib.name} (${i + 1} of ${libs.length})` });
+                await executeCQLFile(lib.uri, undefined, false);
+              }
+            },
+          );
+        },
+      ),
+
+      // select which libraries to execute within a specific project node
+      vscode.commands.registerCommand(
+        'cql.explorer.project.execute-select',
+        async (item: CqlProjectRootTreeItem) => {
+          logger.debug(`Command cql.explorer.project.execute-select selected for project: ${item.cqlProject.name}`);
+          const filter = this.nameFilter.toLowerCase();
+          const libs = item.cqlProject.Libraries.filter(
+            l =>
+              l.TestCases.length > 0 &&
+              (filter === '' || l.name.toLowerCase().includes(filter)),
+          );
+          if (libs.length === 0) {
+            vscode.window.showInformationMessage('No libraries with test cases match the current filter.');
+            return;
+          }
+          const picks = await vscode.window.showQuickPick(
+            libs.map(l => ({ label: l.name, library: l })),
+            {
+              canPickMany: true,
+              placeHolder: 'Select libraries to execute',
+              title: `Execute Libraries — ${item.cqlProject.name}`,
+            },
+          );
+          if (!picks || picks.length === 0) {
+            return;
+          }
+          await vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: `Execute CQL — ${item.cqlProject.name}`,
+              cancellable: true,
+            },
+            async (progress, token) => {
+              for (let i = 0; i < picks.length; i++) {
+                if (token.isCancellationRequested) {
+                  break;
+                }
+                const lib = picks[i].library;
+                progress.report({ message: `${lib.name} (${i + 1} of ${picks.length})` });
+                await executeCQLFile(lib.uri, undefined, false);
+              }
+            },
+          );
+        },
+      ),
+
       // execute all visible libraries
       vscode.commands.registerCommand('cql.explorer.library.execute-all', async () => {
         logger.debug(`Command cql.explorer.library.execute-all selected`);
@@ -198,11 +280,10 @@ export class CqlExplorer {
           logger.debug(`Command cql.explorer.test-case.clone selected for item: ${item.label}`);
           try {
             const destUri = await cloneTestCase(item.cqlTestCase.uri);
-            // Find the parent library by name (library name = test cases folder name)
-            const libraryName = path.basename(path.dirname(item.cqlTestCase.uri.fsPath));
+            // Find the parent library by test case URI — unambiguous across projects.
             const library = this.cqlProjects
               .flatMap(p => p.Libraries)
-              .find(lib => lib.name === libraryName);
+              .find(lib => lib.TestCases.some(tc => tc.uri.fsPath === item.cqlTestCase.uri.fsPath));
             if (!library) {
               this.cqlProjects.forEach(p => p.refresh());
               return;
@@ -454,11 +535,11 @@ export class CqlExplorer {
           }
           try {
             await deleteTestCase(item.cqlTestCase.uri);
-            // Targeted update: remove from model, refresh only the Test Cases node
-            const libraryName = path.basename(path.dirname(item.cqlTestCase.uri.fsPath));
+            // Targeted update: remove from model, refresh only the Test Cases node.
+            // Look up by test case URI — unambiguous across projects.
             const library = this.cqlProjects
               .flatMap(p => p.Libraries)
-              .find(lib => lib.name === libraryName);
+              .find(lib => lib.TestCases.some(tc => tc.uri.fsPath === item.cqlTestCase.uri.fsPath));
             if (!library) {
               this.cqlProjects.forEach(p => p.refresh());
               return;
@@ -480,9 +561,10 @@ export class CqlExplorer {
       ),
 
       // Explorer Refresh
-      vscode.commands.registerCommand('cql.explorer.refresh', () =>
-        this.cqlProjects.forEach(p => p.refresh()),
-      ),
+      vscode.commands.registerCommand('cql.explorer.refresh', () => {
+        logger.info(`cql.explorer.refresh: ${this.cqlProjects.length} project(s)`);
+        this.cqlProjects.forEach(p => p.refresh());
+      }),
 
       // Expand all libraries and their children
       vscode.commands.registerCommand('cql.explorer.expand-all', async () => {

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
-import { CqlLibrary, CqlProject, CqlTestCase } from '../../../cql-explorer/cqlProject';
+import { CqlLibrary, CqlProject, CqlTestCase } from '../../../model/cqlProject';
 import {
   CqlLibraryRootTreeItem,
   CqlLibraryTreeItem,
@@ -12,7 +12,7 @@ import {
   CqlTestCaseTreeItem,
   buildTree,
 } from '../../../cql-explorer/cqlProjectTreeDataProvider';
-import { DeviationKind } from '../../../cql-explorer/igLayoutDetector';
+import { DeviationKind } from '../../../model/igLayoutDetector';
 
 suite('CqlProjectTreeDataProvider.nodeId()', () => {
   // Expected nodeId values per platform:
@@ -242,6 +242,73 @@ suite('buildTree — multi-project and deviations', () => {
     const projRoot = items[0] as CqlProjectRootTreeItem;
     const icon = projRoot.iconPath as vscode.ThemeIcon;
     expect(icon.id).to.equal('symbol-package');
+  });
+});
+
+suite('buildTree — hideEmpty project filtering (multi-project)', () => {
+  const wsRoot = workspace.workspaceFolders![0].uri;
+
+  function makeLib(name: string): CqlLibrary {
+    return new CqlLibrary(Uri.joinPath(wsRoot, `input/cql/${name}.cql`));
+  }
+
+  function makeLoadedLib(name: string): CqlLibrary {
+    const lib = makeLib(name);
+    lib.testCaseLoadState = 'loaded';
+    return lib;
+  }
+
+  function fakeProject(name: string, libs: CqlLibrary[]): CqlProject {
+    return {
+      igRoot: `/fake/${name}`,
+      name,
+      projectDeviations: new Set<DeviationKind>(),
+      Libraries: libs,
+    } as unknown as CqlProject;
+  }
+
+  test('hideEmpty=false keeps projects with no test cases', () => {
+    const emptyLib = makeLoadedLib('EmptyLib');
+    const p1 = fakeProject('ProjectA', [emptyLib]);
+    const p2 = fakeProject('ProjectB', [makeLib('OtherLib')]);
+    const items = buildTree([p1, p2], false);
+    expect(items).to.have.length(2);
+  });
+
+  test('hideEmpty=true hides a project whose only library has no test cases', () => {
+    const emptyLib = makeLoadedLib('EmptyLib');
+    const p1 = fakeProject('EmptyProject', [emptyLib]);
+    const libWithTests = makeLoadedLib('LibWithTests');
+    libWithTests.addTestCase(
+      new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/Measure/LibWithTests/1111')),
+    );
+    const p2 = fakeProject('NonEmptyProject', [libWithTests]);
+    const items = buildTree([p1, p2], true);
+    expect(items).to.have.length(1);
+    expect((items[0] as CqlProjectRootTreeItem).cqlProject.name).to.equal('NonEmptyProject');
+  });
+
+  test('hideEmpty=true keeps a project that has at least one library with test cases', () => {
+    const emptyLib = makeLoadedLib('EmptyLib');
+    const libWithTests = makeLoadedLib('LibWithTests');
+    libWithTests.addTestCase(
+      new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/Measure/LibWithTests/1111')),
+    );
+    const p1 = fakeProject('MixedProject', [emptyLib, libWithTests]);
+    const p2 = fakeProject('OtherProject', [makeLoadedLib('OtherEmpty')]);
+    const items = buildTree([p1, p2], true);
+    expect(items).to.have.length(1);
+    expect((items[0] as CqlProjectRootTreeItem).cqlProject.name).to.equal('MixedProject');
+  });
+
+  test('hideEmpty=true keeps a project whose library testCaseLoadState is not loaded', () => {
+    const loadingLib = makeLib('LoadingLib'); // testCaseLoadState = 'not-loaded'
+    const p1 = fakeProject('LoadingProject', [loadingLib]);
+    const p2 = fakeProject('EmptyProject', [makeLoadedLib('EmptyLib')]);
+    const items = buildTree([p1, p2], true);
+    // p1 is kept because its library hasn't finished loading
+    expect(items).to.have.length(1);
+    expect((items[0] as CqlProjectRootTreeItem).cqlProject.name).to.equal('LoadingProject');
   });
 });
 
