@@ -1,6 +1,18 @@
 # Change Log
 
 
+
+## v0.9.5 (prerelease)
+
+Date: 2026-05-28
+
+* adds check for no test cases
+* enhances CQL Explorer multiple-projects support
+* adds CqlSolution
+* fixes issue with default test config settings
+* bump version to 0.9.5
+
+
 ## v0.9.4 (prerelease)
 
 Date: 2026-05-14
