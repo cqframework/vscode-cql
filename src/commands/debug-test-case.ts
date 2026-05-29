@@ -2,7 +2,8 @@ import { commands, debug, ExtensionContext, Uri, window, workspace } from 'vscod
 import { Commands } from '../commands/commands';
 import { CqlLibrary, CqlTestCase } from '../model/cqlProject';
 import { CqlSolution } from '../model/cqlSolution';
-import { getCqlPaths, getFhirVersion, waitForTestCasesLoaded } from '../helpers/cqlHelpers';
+import { getCqlPaths, getFhirVersion, loadTestConfig, waitForTestCasesLoaded } from '../helpers/cqlHelpers';
+import { resolveParameters } from '../helpers/parametersHelper';
 
 let _context: ExtensionContext | undefined;
 
@@ -36,9 +37,27 @@ export async function startDebuggingForTestCase(
 ): Promise<void> {
   const uri = library.uri;
   const cqlPaths = getCqlPaths(uri);
+  if (!cqlPaths) {
+    window.showErrorMessage('Unable to determine needed CQL Paths.');
+    return;
+  }
   const raw = await workspace.fs.readFile(uri);
   const cqlSource = Buffer.from(raw).toString();
   const fhirVersion = getFhirVersion(cqlSource) ?? 'R4';
+
+  const testConfig = loadTestConfig(cqlPaths.testConfigPath);
+  const resolvedParams = resolveParameters(
+    testConfig.parameters ?? [],
+    library.name,
+    undefined,
+    testCase.name,
+  );
+
+  const parameters = resolvedParams.map(p => ({
+    parameterName: p.name,
+    parameterType: p.type,
+    parameterValue: p.value,
+  }));
 
   await debug.startDebugging(
     workspace.getWorkspaceFolder(uri),
@@ -51,9 +70,10 @@ export async function startDebuggingForTestCase(
       fhirVersion,
       testCaseName: testCase.name,
       testCaseUri: testCase.uri.toString(),
-      terminologyUri: cqlPaths?.terminologyDirectoryPath?.toString(),
-      rootDir: cqlPaths?.projectDirectoryPath?.toString(),
-      optionsPath: cqlPaths?.optionsPath?.toString(),
+      terminologyUri: cqlPaths.terminologyDirectoryPath?.toString(),
+      rootDir: cqlPaths.projectDirectoryPath?.toString(),
+      optionsPath: cqlPaths.optionsPath?.toString(),
+      parameters: parameters.length > 0 ? parameters : undefined,
     },
   );
 }
