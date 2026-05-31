@@ -10,11 +10,6 @@ export namespace Commands {
   export const OPEN_BROWSER = 'vscode.open';
 
   /**
-   * Execute Workspace Command
-   */
-  export const EXECUTE_WORKSPACE_COMMAND = 'cql.execute.workspaceCommand';
-
-  /**
    * Open CQL Language Server Log file
    */
   export const OPEN_SERVER_LOG = 'cql.open.server-log';
