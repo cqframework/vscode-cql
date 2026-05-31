@@ -108,6 +108,11 @@
         "category": "CQL"
       },
       {
+        "command": "cql.editor.view-elm.ast.split",
+        "title": "View ELM - AST (Split)",
+        "category": "CQL"
+      },
+      {
         "command": "cql.execute.select-libraries",
         "title": "Execute CQL - Select Libraries",
         "icon": "$(run)",
@@ -344,6 +349,10 @@
           "when": "false"
         },
         {
+          "command": "cql.editor.view-elm.ast.split",
+          "when": "false"
+        },
+        {
           "command": "cql.explorer.refresh",
           "when": "false"
         },
@@ -485,6 +494,11 @@
         },
         {
           "command": "cql.editor.view-elm.ast",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "group": "1_cqlactions"
+        },
+        {
+          "command": "cql.editor.view-elm.ast.split",
           "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
         },

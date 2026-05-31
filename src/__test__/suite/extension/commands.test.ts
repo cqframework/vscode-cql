@@ -8,6 +8,7 @@ const EXPECTED_COMMANDS = [
   'cql.editor.view-elm.xml',
   'cql.editor.view-elm.json',
   'cql.editor.view-elm.ast',
+  'cql.editor.view-elm.ast.split',
   // Global commands
   'cql.execute.select-libraries',
   'cql.open.server-log',

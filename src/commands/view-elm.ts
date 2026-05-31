@@ -1,7 +1,33 @@
-import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
+import {
+  commands,
+  DecorationOptions,
+  ExtensionContext,
+  Position,
+  Range,
+  Selection,
+  TextEditorRevealType,
+  Uri,
+  ViewColumn,
+  window,
+  workspace,
+} from 'vscode';
 import { getElm } from '../cql-service/cqlService.getElm';
 import * as log from '../log-services/logger';
 import { Commands } from './commands';
+
+const LOC_REGEX = /\[.*?loc=(\d+):(\d+)(?:-(\d+):(\d+))?\]/;
+
+export interface AstLoc {
+  startLine: number;
+  startCol: number;
+  endLine: number;
+  endCol: number;
+}
+
+export interface AstLineIndex {
+  astToCqlLoc: Map<number, AstLoc>;
+  cqlToAstLines: Map<number, number[]>;
+}
 
 export function register(context: ExtensionContext): void {
   context.subscriptions.push(
@@ -13,6 +39,9 @@ export function register(context: ExtensionContext): void {
     }),
     commands.registerCommand(Commands.VIEW_ELM_COMMAND_AST, async (uri: Uri) => {
       viewElm(uri, 'ast');
+    }),
+    commands.registerCommand(Commands.VIEW_ELM_COMMAND_AST_SPLIT, async (uri: Uri) => {
+      await viewElmSplit(uri);
     }),
   );
 }
@@ -34,6 +63,227 @@ export async function viewElm(
     }
   } catch (error) {
     window.showErrorMessage(`Error while converting ${cqlFileUri.fsPath} to ELM. err: ${error}`);
+  }
+}
+
+export function buildAstLineIndex(astContent: string): AstLineIndex {
+  const astToCqlLoc = new Map<number, AstLoc>();
+  const cqlToAstLines = new Map<number, number[]>();
+
+  const lines = astContent.split('\n');
+  for (let astLine = 0; astLine < lines.length; astLine++) {
+    const match = lines[astLine].match(LOC_REGEX);
+    if (!match) continue;
+
+    const loc: AstLoc = {
+      startLine: parseInt(match[1], 10),
+      startCol: parseInt(match[2], 10),
+      endLine: match[3] ? parseInt(match[3], 10) : parseInt(match[1], 10),
+      endCol: match[4] ? parseInt(match[4], 10) : parseInt(match[2], 10),
+    };
+
+    astToCqlLoc.set(astLine, loc);
+
+    for (let cqlLine = loc.startLine; cqlLine <= loc.endLine; cqlLine++) {
+      const cqlIndex = cqlLine - 1;
+      const existing = cqlToAstLines.get(cqlIndex) ?? [];
+      existing.push(astLine);
+      cqlToAstLines.set(cqlIndex, existing);
+    }
+  }
+
+  return { astToCqlLoc, cqlToAstLines };
+}
+
+export function sortAstBySourceOrder(astContent: string): string {
+  const lines = astContent.split('\n');
+  if (lines.length <= 1) return astContent;
+
+  const rootLine = lines[0];
+
+  interface AstSegment {
+    lines: string[];
+    cqlLine: number;
+    isDefine: boolean;
+  }
+
+  const segments: AstSegment[] = [];
+  let current: string[] = [];
+
+  function commitSegment(segLines: string[]) {
+    const first = segLines[0];
+    const m = first.match(LOC_REGEX);
+    segments.push({
+      lines: segLines,
+      cqlLine: m ? parseInt(m[1], 10) : -1,
+      isDefine: /define:/.test(first),
+    });
+  }
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const isTopLevel = /^[├└]──/.test(line);
+    if (isTopLevel && current.length > 0) {
+      commitSegment(current);
+      current = [];
+    }
+    current.push(line);
+  }
+  if (current.length > 0) commitSegment(current);
+
+  const defineSegs = segments.filter(s => s.isDefine && s.cqlLine > 0);
+  const otherSegs = segments.filter(s => !s.isDefine || s.cqlLine <= 0);
+
+  defineSegs.sort((a, b) => a.cqlLine - b.cqlLine);
+
+  const ordered = [...otherSegs, ...defineSegs];
+
+  const result: string[] = [rootLine];
+  for (let i = 0; i < ordered.length; i++) {
+    const connector = i === ordered.length - 1 ? '└──' : '├──';
+    ordered[i].lines.forEach((l, idx) => {
+      result.push(idx === 0 ? l.replace(/^[├└]──/, connector) : l);
+    });
+  }
+
+  return result.join('\n');
+}
+
+function findNearestForwardLoc(
+  lineIndex: AstLineIndex,
+  astLine: number,
+): AstLoc | undefined {
+  const exact = lineIndex.astToCqlLoc.get(astLine);
+  if (exact) return exact;
+
+  const sortedLines = [...lineIndex.astToCqlLoc.keys()].sort((a, b) => a - b);
+  const next = sortedLines.find(l => l > astLine);
+  return next !== undefined ? lineIndex.astToCqlLoc.get(next) : undefined;
+}
+
+async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
+  try {
+    const cqlDoc = await workspace.openTextDocument(cqlFileUri);
+    const astContent = await getElm(cqlFileUri, 'ast');
+    const sortedAst = sortAstBySourceOrder(astContent);
+    const lineIndex = buildAstLineIndex(sortedAst);
+
+    const cqlEditor = await window.showTextDocument(cqlDoc, ViewColumn.One);
+    const astDoc = await workspace.openTextDocument({ language: 'ast', content: sortedAst });
+    const astEditor = await window.showTextDocument(astDoc, ViewColumn.Two);
+
+    const cqlDecoration = window.createTextEditorDecorationType({
+      backgroundColor: 'rgba(0, 120, 212, 0.15)',
+      isWholeLine: false,
+    });
+    const astDecoration = window.createTextEditorDecorationType({
+      backgroundColor: 'rgba(0, 120, 212, 0.15)',
+      isWholeLine: true,
+    });
+
+    let lastCqlRevealTime = 0;
+    let lastAstRevealTime = 0;
+
+    function syncCqlToAst(cqlLine?: number): void {
+      const effectiveLine = cqlLine ?? cqlEditor.visibleRanges[0]?.start.line;
+      if (effectiveLine === undefined) return;
+
+      const astLines = lineIndex.cqlToAstLines.get(effectiveLine);
+      if (!astLines || astLines.length === 0) return;
+
+      const targetAstLine = Math.min(...astLines);
+      const endAstLine = Math.max(...astLines);
+
+      const astVisibleRanges = astEditor.visibleRanges;
+      if (astVisibleRanges.length > 0) {
+        const astTop = astVisibleRanges[0].start.line;
+        const astBottom = astVisibleRanges[astVisibleRanges.length - 1].end.line;
+        if (targetAstLine >= astTop && targetAstLine <= astBottom) {
+          astEditor.setDecorations(
+            astDecoration,
+            astLines.map(l => new Range(l, 0, l, 0)),
+          );
+          return;
+        }
+      }
+
+      astEditor.revealRange(
+        new Range(targetAstLine, 0, endAstLine, 0),
+        TextEditorRevealType.AtTop,
+      );
+      astEditor.setDecorations(
+        astDecoration,
+        astLines.map(l => new Range(l, 0, l, 0)),
+      );
+    }
+
+    function syncAstToCql(astLine?: number): void {
+      const effectiveLine = astLine ?? astEditor.visibleRanges[0]?.start.line;
+      if (effectiveLine === undefined) return;
+
+      const loc = findNearestForwardLoc(lineIndex, effectiveLine);
+      if (!loc) return;
+
+      const start = new Position(loc.startLine - 1, loc.startCol - 1);
+      const end = new Position(loc.endLine - 1, loc.endCol);
+      const vsRange = new Range(start, end);
+
+      const cqlVisibleRanges = cqlEditor.visibleRanges;
+      if (cqlVisibleRanges.length > 0) {
+        const cqlTop = cqlVisibleRanges[0].start.line;
+        const cqlBottom = cqlVisibleRanges[cqlVisibleRanges.length - 1].end.line;
+        if (start.line >= cqlTop && end.line <= cqlBottom) {
+          cqlEditor.selection = new Selection(start, end);
+          cqlEditor.setDecorations(cqlDecoration, [{ range: vsRange } as DecorationOptions]);
+          return;
+        }
+      }
+
+      cqlEditor.revealRange(vsRange, TextEditorRevealType.AtTop);
+      cqlEditor.selection = new Selection(start, end);
+
+      cqlEditor.setDecorations(cqlDecoration, [{ range: vsRange } as DecorationOptions]);
+    }
+
+    const visibleRangesListener = window.onDidChangeTextEditorVisibleRanges(e => {
+      const now = performance.now();
+      if (e.textEditor === cqlEditor) {
+        if (now - lastAstRevealTime < 100) return;
+        lastCqlRevealTime = now;
+        syncCqlToAst();
+      } else if (e.textEditor === astEditor) {
+        if (now - lastCqlRevealTime < 100) return;
+        lastAstRevealTime = now;
+        syncAstToCql();
+      }
+    });
+
+    const selectionListener = window.onDidChangeTextEditorSelection(e => {
+      const now = performance.now();
+      if (e.textEditor === cqlEditor) {
+        if (now - lastAstRevealTime < 100) return;
+        lastCqlRevealTime = now;
+        syncCqlToAst(e.selections[0].active.line);
+      } else if (e.textEditor === astEditor) {
+        if (now - lastCqlRevealTime < 100) return;
+        lastAstRevealTime = now;
+        syncAstToCql(e.selections[0].active.line);
+      }
+    });
+
+    const closeListener = window.onDidChangeVisibleTextEditors(editors => {
+      if (!editors.includes(cqlEditor) || !editors.includes(astEditor)) {
+        visibleRangesListener.dispose();
+        selectionListener.dispose();
+        closeListener.dispose();
+        cqlDecoration.dispose();
+        astDecoration.dispose();
+      }
+    });
+  } catch (error) {
+    window.showErrorMessage(
+      `Error opening CQL/AST split view for ${cqlFileUri.fsPath}. err: ${error}`,
+    );
   }
 }
 
