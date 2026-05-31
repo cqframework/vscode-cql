@@ -12,7 +12,7 @@ export function register(context: ExtensionContext): void {
 
   context.subscriptions.push(
     commands.registerCommand(Commands.DEBUG_TEST_CASE_COMMAND, async (uri: Uri) => {
-      debugTestCase(uri);
+      await debugTestCase(uri);
     }),
   );
 }
@@ -86,11 +86,6 @@ export async function promptAndDebugTestCase(library: CqlLibrary): Promise<void>
   const testCases = library.TestCases;
   if (testCases.length === 0) {
     window.showInformationMessage('No test cases found.');
-    return;
-  }
-
-  if (testCases.length === 1) {
-    await startDebuggingForTestCase(library, testCases[0]);
     return;
   }
 

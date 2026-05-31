@@ -176,13 +176,13 @@
       },
       {
         "command": "cql.explorer.sort-asc",
-        "title": "Sort A \u2192 Z",
+        "title": "Sort A → Z",
         "icon": "$(arrow-up)",
         "category": "CQL Explorer"
       },
       {
         "command": "cql.explorer.sort-desc",
-        "title": "Sort Z \u2192 A",
+        "title": "Sort Z → A",
         "icon": "$(arrow-down)",
         "category": "CQL Explorer"
       },
@@ -764,25 +764,46 @@
       {
         "type": "cql",
         "label": "CQL Debug",
-        "languages": ["cql"],
+        "languages": [
+          "cql"
+        ],
         "configurationAttributes": {
           "launch": {
-            "required": ["libraryUri", "fhirVersion"],
+            "required": [
+              "libraryUri",
+              "fhirVersion"
+            ],
             "properties": {
-              "libraryUri": { "type": "string" },
-              "fhirVersion": { "type": "string" },
-              "testCaseName": { "type": "string" },
-              "testCaseUri": { "type": "string" },
-              "terminologyUri": { "type": "string" },
-              "rootDir": { "type": "string" },
-              "optionsPath": { "type": "string" }
+              "libraryUri": {
+                "type": "string"
+              },
+              "fhirVersion": {
+                "type": "string"
+              },
+              "testCaseName": {
+                "type": "string"
+              },
+              "testCaseUri": {
+                "type": "string"
+              },
+              "terminologyUri": {
+                "type": "string"
+              },
+              "rootDir": {
+                "type": "string"
+              },
+              "optionsPath": {
+                "type": "string"
+              }
             }
           }
         }
       }
     ],
     "breakpoints": [
-      { "language": "cql" }
+      {
+        "language": "cql"
+      }
     ],
     "jsonValidation": [
       {
@@ -818,6 +839,7 @@
     "@types/mock-fs": "^4.13.4",
     "@types/node": "^16.18.34",
     "@types/node-fetch": "^2.6.2",
+    "@types/sinon": "^21.0.1",
     "@types/vscode": "^1.73.0",
     "@types/winreg": "^1.2.31",
     "@vscode/test-cli": "^0.0.12",
@@ -827,6 +849,7 @@
     "mock-fs": "^5.5.0",
     "nyc": "^17.1.0",
     "prettier": "^3.3.3",
+    "sinon": "^22.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
