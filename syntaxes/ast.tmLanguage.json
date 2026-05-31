@@ -1,0 +1,105 @@
+{
+  "information_for_contributors": [
+    "Initial AST highlighting grammar covering role labels, type names, strings, numbers, and metadata."
+  ],
+  "version": "0.0.0",
+  "name": "CQL ELM AST",
+  "scopeName": "source.ast",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#treePrefix"
+    },
+    {
+      "include": "#libraryDeclaration"
+    },
+    {
+      "include": "#roleLabels"
+    },
+    {
+      "include": "#attributes"
+    },
+    {
+      "include": "#metadata"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#typeNames"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "match": "//.*$",
+      "name": "comment.line.double-slash.ast"
+    },
+    "treePrefix": {
+      "match": "^[│ ]*[├└]── ",
+      "name": "punctuation.separator.tree.ast"
+    },
+    "libraryDeclaration": {
+      "match": "^Library\\b",
+      "name": "entity.name.type.library.ast"
+    },
+    "roleLabels": {
+      "match": "(?<![\\w])(define fluent function|define function|define|translator|schema|using|include|codesystem|valueset|code|concept|parameter|context|source|relationship|suchThat|where|let|return|sort|by|operand|element|comparand|caseItem|when|then|condition|else|low|high|startIndex|endIndex)(?=:)",
+      "name": "keyword.other.role.ast"
+    },
+    "attributes": {
+      "begin": "\\(",
+      "end": "\\)",
+      "name": "meta.attributes.ast",
+      "patterns": [
+        {
+          "include": "#strings"
+        },
+        {
+          "include": "#numbers"
+        },
+        {
+          "include": "#attributeKeywords"
+        },
+        {
+          "include": "#typeNames"
+        }
+      ]
+    },
+    "attributeKeywords": {
+      "match": "\\b(asc|desc|distinct|alias|name|identifier|scope|dataType|version|fluent)\\b",
+      "name": "variable.parameter.ast"
+    },
+    "metadata": {
+      "begin": "\\[",
+      "end": "\\]",
+      "name": "meta.annotation.ast",
+      "patterns": [
+        {
+          "match": "\\b(id|loc)\\b",
+          "name": "variable.parameter.metadata.ast"
+        },
+        {
+          "match": "\\d+",
+          "name": "constant.numeric.ast"
+        }
+      ]
+    },
+    "strings": {
+      "match": "\"([^\"]*)\"",
+      "name": "string.quoted.double.ast"
+    },
+    "numbers": {
+      "match": "\\b\\d+\\b",
+      "name": "constant.numeric.ast"
+    },
+    "typeNames": {
+      "match": "\\b[A-Z]\\w*\\b",
+      "name": "support.type.ast"
+    }
+  }
+}

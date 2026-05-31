@@ -39,6 +39,7 @@ export namespace Commands {
    */
   export const VIEW_ELM_COMMAND_XML = 'cql.editor.view-elm.xml';
   export const VIEW_ELM_COMMAND_JSON = 'cql.editor.view-elm.json';
+  export const VIEW_ELM_COMMAND_AST = 'cql.editor.view-elm.ast';
   export const VIEW_ELM = 'org.opencds.cqf.cql.ls.viewElm';
 
   /*

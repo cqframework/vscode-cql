@@ -11,19 +11,23 @@ export function register(context: ExtensionContext): void {
     commands.registerCommand(Commands.VIEW_ELM_COMMAND_JSON, async (uri: Uri) => {
       viewElm(uri, 'json');
     }),
+    commands.registerCommand(Commands.VIEW_ELM_COMMAND_AST, async (uri: Uri) => {
+      viewElm(uri, 'ast');
+    }),
   );
 }
 
 export async function viewElm(
   cqlFileUri: Uri,
-  elmType: 'xml' | 'json' = 'xml',
-  elmFetcher: (uri: Uri, type: 'xml' | 'json') => Promise<string> = getElm,
+  elmType: 'xml' | 'json' | 'ast' = 'xml',
+  elmFetcher: (uri: Uri, type: 'xml' | 'json' | 'ast') => Promise<string> = getElm,
 ) {
   try {
     log.debug(`attempting to get ELM from [${cqlFileUri}] as ${elmType}`);
     const elm: string = await elmFetcher(cqlFileUri, elmType);
+    const languageId = elmType === 'ast' ? 'ast' : elmType;
     const formatted = elmType === 'json' ? formatJson(elm) : elm;
-    const doc = await workspace.openTextDocument({ language: elmType, content: formatted });
+    const doc = await workspace.openTextDocument({ language: languageId, content: formatted });
     await window.showTextDocument(doc);
     if (elmType === 'xml') {
       await commands.executeCommand('editor.action.formatDocument');

@@ -51,6 +51,16 @@
           "CQL",
           "Cql"
         ]
+      },
+      {
+        "id": "ast",
+        "extensions": [
+          ".ast"
+        ],
+        "configuration": "./language-configuration-ast.json",
+        "aliases": [
+          "CQL ELM AST"
+        ]
       }
     ],
     "snippets": [
@@ -64,6 +74,11 @@
         "language": "cql",
         "scopeName": "source.cql",
         "path": "./syntaxes/cql.tmLanguage.json"
+      },
+      {
+        "language": "ast",
+        "scopeName": "source.ast",
+        "path": "./syntaxes/ast.tmLanguage.json"
       }
     ],
     "commands": [
@@ -85,6 +100,11 @@
       {
         "command": "cql.editor.view-elm.xml",
         "title": "View ELM - XML",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.editor.view-elm.ast",
+        "title": "View ELM - AST",
         "category": "CQL"
       },
       {
@@ -177,6 +197,12 @@
       {
         "command": "cql.explorer.library.elm.xml",
         "title": "View ELM - xml",
+        "category": "CQL Explorer",
+        "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "cql.explorer.library.ast",
+        "title": "View ELM - AST",
         "category": "CQL Explorer",
         "icon": "$(symbol-structure)"
       },
@@ -314,6 +340,10 @@
           "when": "false"
         },
         {
+          "command": "cql.editor.view-elm.ast",
+          "when": "false"
+        },
+        {
           "command": "cql.explorer.refresh",
           "when": "false"
         },
@@ -327,6 +357,10 @@
         },
         {
           "command": "cql.explorer.library.elm.xml",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.library.ast",
           "when": "false"
         },
         {
@@ -450,6 +484,11 @@
           "group": "1_cqlactions"
         },
         {
+          "command": "cql.editor.view-elm.ast",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "group": "1_cqlactions"
+        },
+        {
           "command": "cql.editor.execute",
           "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
@@ -473,6 +512,11 @@
         },
         {
           "command": "cql.explorer.library.elm.xml",
+          "group": "2:library",
+          "when": "view == cql-libraries && viewItem == cql-library"
+        },
+        {
+          "command": "cql.explorer.library.ast",
           "group": "2:library",
           "when": "view == cql-libraries && viewItem == cql-library"
         },

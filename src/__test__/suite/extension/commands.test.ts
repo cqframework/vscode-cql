@@ -7,6 +7,7 @@ const EXPECTED_COMMANDS = [
   'cql.editor.execute.select-test-cases',
   'cql.editor.view-elm.xml',
   'cql.editor.view-elm.json',
+  'cql.editor.view-elm.ast',
   // Global commands
   'cql.execute.select-libraries',
   'cql.open.server-log',
@@ -31,6 +32,7 @@ const EXPECTED_COMMANDS = [
   'cql.explorer.library.execute',
   'cql.explorer.library.elm.json',
   'cql.explorer.library.elm.xml',
+  'cql.explorer.library.ast',
   // Explorer test case node commands
   'cql.explorer.test-case.execute',
   'cql.explorer.test-case.open-resources',

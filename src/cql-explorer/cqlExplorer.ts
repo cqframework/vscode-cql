@@ -238,6 +238,15 @@ export class CqlExplorer {
         },
       ),
 
+      // view ELM as AST
+      vscode.commands.registerCommand(
+        'cql.explorer.library.ast',
+        async (item: CqlLibraryTreeItem) => {
+          logger.debug(`Command cql.explorer.library.ast selected for item: ${item.label}`);
+          await viewElm(item.cqlLibrary.uri, 'ast');
+        },
+      ),
+
       // execute a single test case
       vscode.commands.registerCommand(
         'cql.explorer.test-case.execute',
