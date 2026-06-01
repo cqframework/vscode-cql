@@ -11,10 +11,16 @@ export class CqlDebugAdapterDescriptorFactory
   async createDebugAdapterDescriptor(
     _session: vscode.DebugSession,
   ): Promise<vscode.DebugAdapterDescriptor> {
-    const port = await this.client.sendRequest(ExecuteCommandRequest.type, {
-      command: START_DEBUG_SESSION_CMD,
-      arguments: [],
-    });
-    return new vscode.DebugAdapterServer(port as number);
+    try {
+      const port = await this.client.sendRequest(ExecuteCommandRequest.type, {
+        command: START_DEBUG_SESSION_CMD,
+        arguments: [],
+      });
+      return new vscode.DebugAdapterServer(port as number);
+    } catch (e: any) {
+      const msg = e instanceof Error ? e.message : String(e);
+      vscode.window.showErrorMessage(`CQL debug session failed to start: ${msg}`);
+      throw e;
+    }
   }
 }
