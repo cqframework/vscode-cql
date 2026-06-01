@@ -259,7 +259,7 @@ suite('buildAstLineIndex()', () => {
 ├── translator: CQL-to-ELM ?
 ├── schema: urn:hl7-org:elm r1
 ├── using: System (urn:hl7-org:elm-types:r1)
-└── define: "One" [id=208, loc=3:1-4:5]
+└── define: "One" returns System.Integer [id=208, loc=3:1-4:5]
   └── Literal: 1 [id=209, loc=4:5]`;
 
     const index = buildAstLineIndex(ast);
