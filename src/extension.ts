@@ -17,6 +17,7 @@ import { register as registerLogCommands } from './commands/log-files';
 import { register as registerViewElmCommand } from './commands/view-elm';
 import { cqlLanguageClientInstance } from './cql-language-server/cqlLanguageClient';
 import { CqlDebugAdapterDescriptorFactory } from './debug/cqlDebugAdapterDescriptorFactory';
+import { CqlDebugAstTrackerFactory } from './debug/cqlDebugAstTracker';
 import { CqlEvaluatableExpressionProvider } from './debug/cqlEvaluatableExpressionProvider';
 import { CqlExplorer } from './cql-explorer/cqlExplorer';
 import { ClientStatus } from './extension.api';
@@ -152,6 +153,7 @@ async function startServer(
         'cql',
         new CqlDebugAdapterDescriptorFactory(cqlLanguageClientInstance.getClient()),
       ),
+      debug.registerDebugAdapterTrackerFactory('cql', new CqlDebugAstTrackerFactory()),
       languages.registerEvaluatableExpressionProvider(
         { language: 'cql' },
         new CqlEvaluatableExpressionProvider(),

@@ -1,11 +1,14 @@
 import {
   commands,
+  debug,
   DecorationOptions,
   ExtensionContext,
+  OverviewRulerLane,
   Position,
   Range,
   Selection,
   TextEditorRevealType,
+  ThemeColor,
   Uri,
   ViewColumn,
   window,
@@ -18,6 +21,17 @@ import { Commands } from './commands';
 const LOC_REGEX = /\[.*?loc=(\d+):(\d+)(?:-(\d+):(\d+))?\]/;
 
 let activeSplitSession: { dispose: () => void } | undefined;
+
+export interface ActiveSplitDebugHook {
+  highlightCqlLine(cqlLine0Indexed: number): void;
+  noteExternalReveal(): void;
+}
+
+let activeSplitDebugHook: ActiveSplitDebugHook | undefined;
+
+export function getActiveSplitDebugHook(): ActiveSplitDebugHook | undefined {
+  return activeSplitDebugHook;
+}
 
 export interface AstLoc {
   startLine: number;
@@ -172,13 +186,27 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
     const astDoc = await workspace.openTextDocument({ language: 'ast', content: sortedAst });
     const astEditor = await window.showTextDocument(astDoc, ViewColumn.Two);
 
-    const cqlDecoration = window.createTextEditorDecorationType({
-      backgroundColor: 'rgba(0, 120, 212, 0.15)',
-      isWholeLine: false,
-    });
     const astDecoration = window.createTextEditorDecorationType({
-      backgroundColor: 'rgba(0, 120, 212, 0.15)',
+      backgroundColor: new ThemeColor('editor.findMatchHighlightBackground'),
+      border: '1px solid',
+      borderColor: new ThemeColor('editor.findMatchBorder'),
+      overviewRulerColor: new ThemeColor('editor.findMatchHighlightBackground'),
+      overviewRulerLane: OverviewRulerLane.Center,
       isWholeLine: true,
+    });
+    const cqlLineDecoration = window.createTextEditorDecorationType({
+      backgroundColor: new ThemeColor('editor.findMatchHighlightBackground'),
+      overviewRulerColor: new ThemeColor('editor.findMatchHighlightBackground'),
+      overviewRulerLane: OverviewRulerLane.Center,
+      isWholeLine: true,
+    });
+    const cqlSpanDecoration = window.createTextEditorDecorationType({
+      backgroundColor: new ThemeColor('editor.findMatchBackground'),
+      border: '1px solid',
+      borderColor: new ThemeColor('editor.findMatchBorder'),
+      overviewRulerColor: new ThemeColor('editor.findMatchBackground'),
+      overviewRulerLane: OverviewRulerLane.Center,
+      isWholeLine: false,
     });
 
     let lastCqlRevealTime = 0;
@@ -192,8 +220,10 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
       selectionListener.dispose();
       closeListener.dispose();
       docSaveListener.dispose();
-      cqlDecoration.dispose();
+      cqlLineDecoration.dispose();
+      cqlSpanDecoration.dispose();
       astDecoration.dispose();
+      activeSplitDebugHook = undefined;
     }
 
     function syncCqlToAst(cqlLine?: number): void {
@@ -238,7 +268,8 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
 
       const loc = findNearestForwardLoc(lineIndex, effectiveLine);
       if (!loc) {
-        cqlEditor.setDecorations(cqlDecoration, []);
+        cqlEditor.setDecorations(cqlLineDecoration, []);
+        cqlEditor.setDecorations(cqlSpanDecoration, []);
         return;
       }
 
@@ -252,14 +283,16 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
         const cqlBottom = cqlVisibleRanges[cqlVisibleRanges.length - 1].end.line;
         if (start.line >= cqlTop && end.line <= cqlBottom) {
           cqlEditor.selection = new Selection(start, end);
-          cqlEditor.setDecorations(cqlDecoration, [{ range: vsRange } as DecorationOptions]);
+          cqlEditor.setDecorations(cqlLineDecoration, [new Range(loc.startLine - 1, 0, loc.endLine - 1, 0)]);
+          cqlEditor.setDecorations(cqlSpanDecoration, [{ range: vsRange } as DecorationOptions]);
           return;
         }
       }
 
       cqlEditor.revealRange(vsRange, TextEditorRevealType.InCenterIfOutsideViewport);
       cqlEditor.selection = new Selection(start, end);
-      cqlEditor.setDecorations(cqlDecoration, [{ range: vsRange } as DecorationOptions]);
+      cqlEditor.setDecorations(cqlLineDecoration, [new Range(loc.startLine - 1, 0, loc.endLine - 1, 0)]);
+      cqlEditor.setDecorations(cqlSpanDecoration, [{ range: vsRange } as DecorationOptions]);
     }
 
     const visibleRangesListener = window.onDidChangeTextEditorVisibleRanges(e => {
@@ -312,7 +345,42 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
       }
     });
 
+    activeSplitDebugHook = {
+      highlightCqlLine(cqlLine: number) {
+        lastAstRevealTime = performance.now();
+        syncCqlToAst(cqlLine);
+      },
+      noteExternalReveal() {
+        lastAstRevealTime = performance.now();
+      },
+    };
+
     activeSplitSession = { dispose: disposeSession };
+
+    // Catch up if debugger is already paused when split view opens
+    (async () => {
+      const session = debug.activeDebugSession;
+      if (!session || session.type !== 'cql') return;
+      try {
+        const threadsResp = await session.customRequest('threads');
+        const threads: any[] = threadsResp?.threads ?? [];
+        for (const thread of threads) {
+          if (thread.id === undefined) continue;
+          try {
+            const resp = await session.customRequest('stackTrace', {
+              threadId: thread.id,
+              startFrame: 0,
+              levels: 1,
+            });
+            const top = resp?.stackFrames?.[0];
+            if (top && typeof top.line === 'number') {
+              activeSplitDebugHook?.highlightCqlLine(top.line - 1);
+              return;
+            }
+          } catch { /* try next thread */ }
+        }
+      } catch { /* session ended */ }
+    })();
   } catch (error) {
     window.showErrorMessage(
       `Error opening CQL/AST split view for ${cqlFileUri.fsPath}. err: ${error}`,
