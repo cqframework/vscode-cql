@@ -65,7 +65,7 @@ suite('viewElm()', () => {
 
     const MOCK_AST_ELM = `Library: SimpleMeasure (version 1.0.0)
 ├── define: "Patient"
-│   └── Retrieve (dataType: Patient)`;
+│ └── Retrieve (dataType: Patient)`;
 
     await viewElm(cqlUri, 'ast', async () => MOCK_AST_ELM);
 
@@ -175,7 +175,7 @@ suite('buildAstLineIndex()', () => {
   test('handles multiple nodes with overlapping CQL ranges', () => {
     const ast = `Library: Test (version 1.0.0)
 └── define: "Foo" [id=1, loc=3:1-5:10]
-    └── Query [id=2, loc=4:1-5:10]`;
+  └── Query [id=2, loc=4:1-5:10]`;
 
     const index = buildAstLineIndex(ast);
 
@@ -241,13 +241,26 @@ suite('buildAstLineIndex()', () => {
     });
   });
 
+  test('returns no entry for unmapped CQL lines (blank / header lines)', () => {
+    const ast = `Library: Test (version 1.0.0)
+└── define: "Foo" [id=1, loc=3:1-5:10]`;
+
+    const index = buildAstLineIndex(ast);
+    // CQL line 1 (0-indexed 0 → library header) should have no mapping
+    expect(index.cqlToAstLines.get(0)).to.be.undefined;
+    // CQL line 2 (0-indexed 1) should have no mapping
+    expect(index.cqlToAstLines.get(1)).to.be.undefined;
+    // CQL line 3 (0-indexed 2) should have the mapping
+    expect(index.cqlToAstLines.get(2)).to.deep.equal([1]);
+  });
+
   test('parses real-world format from One.ast test fixture', () => {
     const ast = `Library: One (version unspecified) [id=0]
 ├── translator: CQL-to-ELM ?
 ├── schema: urn:hl7-org:elm r1
 ├── using: System (urn:hl7-org:elm-types:r1)
 └── define: "One" [id=208, loc=3:1-4:5]
-    └── Literal: 1 [id=209, loc=4:5]`;
+  └── Literal: 1 [id=209, loc=4:5]`;
 
     const index = buildAstLineIndex(ast);
 
@@ -286,11 +299,11 @@ suite('sortAstBySourceOrder()', () => {
     expect(lines[3]).to.equal('├── context: Patient');
     // Defines sorted by CQL line: 34, 36, 40
     expect(lines[4]).to.include('define: "Patient"');
-    expect(lines[4]).to.include('[loc=34:');
+    expect(lines[4]).to.include('loc=34:');
     expect(lines[5]).to.include('define: "Initial Population"');
-    expect(lines[5]).to.include('[loc=36:');
+    expect(lines[5]).to.include('loc=36:');
     expect(lines[6]).to.include('define: "Denominator"');
-    expect(lines[6]).to.include('[loc=40:');
+    expect(lines[6]).to.include('loc=40:');
     // Last item uses └──
     expect(lines[6]).to.match(/^└── define/);
   });
@@ -299,9 +312,9 @@ suite('sortAstBySourceOrder()', () => {
     const ast = `Library: Test (version 1.0.0)
 ├── context: Patient
 ├── define: "B" [id=2, loc=10:1-10:5]
-│   └── Literal: 2 [id=3, loc=10:5]
+│ └── Literal: 2 [id=3, loc=10:5]
 └── define: "A" [id=1, loc=5:1-5:5]
-    └── Literal: 1 [id=4, loc=5:5]`;
+  └── Literal: 1 [id=4, loc=5:5]`;
 
     const sorted = sortAstBySourceOrder(ast);
     const lines = sorted.split('\n');
@@ -334,7 +347,7 @@ suite('sortAstBySourceOrder()', () => {
   test('fixes └── connector on last sorted define', () => {
     const ast = `Library: Test (version 1.0.0)
 ├── define: "B" [id=2, loc=10:1-10:5]
-│   └── Literal: 2 [id=3, loc=10:5]
+│ └── Literal: 2 [id=3, loc=10:5]
 ├── define: "C" [id=3, loc=15:1-15:5]
 └── define: "A" [id=1, loc=5:1-5:5]`;
 
@@ -344,11 +357,59 @@ suite('sortAstBySourceOrder()', () => {
     // Last define (highest loc) gets └──
     expect(lines[lines.length - 1]).to.match(/^└── define/);
     expect(lines[lines.length - 1]).to.include('"C"');
-    // Others get ├──
-    expect(lines[lines.length - 3]).to.match(/^├── define/);
-    expect(lines[lines.length - 3]).to.include('"A"');
-    expect(lines[lines.length - 2]).to.match(/^├── define/);
-    expect(lines[lines.length - 2]).to.include('"B"');
+    // Others get ├── (find by content since child lines shift absolute indices)
+    const aIdx = lines.findIndex(l => l.includes('define: "A"'));
+    const bIdx = lines.findIndex(l => l.includes('define: "B"'));
+    expect(lines[aIdx]).to.match(/^├── define/);
+    expect(lines[aIdx]).to.include('"A"');
+    expect(lines[bIdx]).to.match(/^├── define/);
+    expect(lines[bIdx]).to.include('"B"');
+  });
+
+  test('sorts define function segments by CQL line alongside define segments', () => {
+    const ast = `Library: Test (version 1.0.0)
+├── define: "B" [id=1, loc=10:1-10:5]
+├── define function: "Foo" [id=2, loc=5:1-5:5]
+└── define: "A" [id=3, loc=15:1-15:5]`;
+
+    const sorted = sortAstBySourceOrder(ast);
+    const lines = sorted.split('\n');
+
+    const fooIdx = lines.findIndex(l => l.includes('define function: "Foo"'));
+    const bIdx = lines.findIndex(l => l.includes('define: "B"'));
+    const aIdx = lines.findIndex(l => l.includes('define: "A"'));
+    expect(fooIdx).to.be.lessThan(bIdx);
+    expect(bIdx).to.be.lessThan(aIdx);
+    // Last item (highest loc) gets └──
+    expect(lines[lines.length - 1]).to.match(/^└── define/);
+    expect(lines[lines.length - 1]).to.include('"A"');
+  });
+
+  test('sorts fluent function segments by source line', () => {
+    const ast = `Library: Test (version 1.0.0)
+├── define: "B" [id=1, loc=10:1-10:5]
+├── define fluent function: "Bar" [id=2, loc=3:1-3:5]
+└── define: "A" [id=3, loc=15:1-15:5]`;
+
+    const sorted = sortAstBySourceOrder(ast);
+    const lines = sorted.split('\n');
+
+    const barIdx = lines.findIndex(l => l.includes('define fluent function: "Bar"'));
+    const bIdx = lines.findIndex(l => l.includes('define: "B"'));
+    expect(barIdx).to.be.lessThan(bIdx);
+  });
+
+  test('fixes └── connector after sort when last segment is a function def', () => {
+    const ast = `Library: Test (version 1.0.0)
+├── define: "A" [id=1, loc=5:1-5:5]
+└── define function: "Foo" [id=2, loc=10:1-10:5]`;
+
+    const sorted = sortAstBySourceOrder(ast);
+    const lines = sorted.split('\n');
+
+    const lastLine = lines[lines.length - 1];
+    expect(lastLine).to.match(/^└── define function/);
+    expect(lastLine).to.include('"Foo"');
   });
 
   test('returns input unchanged for empty or single-line content', () => {

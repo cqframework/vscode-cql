@@ -17,6 +17,8 @@ import { Commands } from './commands';
 
 const LOC_REGEX = /\[.*?loc=(\d+):(\d+)(?:-(\d+):(\d+))?\]/;
 
+let activeSplitSession: { dispose: () => void } | undefined;
+
 export interface AstLoc {
   startLine: number;
   startCol: number;
@@ -104,7 +106,6 @@ export function sortAstBySourceOrder(astContent: string): string {
   interface AstSegment {
     lines: string[];
     cqlLine: number;
-    isDefine: boolean;
   }
 
   const segments: AstSegment[] = [];
@@ -116,7 +117,6 @@ export function sortAstBySourceOrder(astContent: string): string {
     segments.push({
       lines: segLines,
       cqlLine: m ? parseInt(m[1], 10) : -1,
-      isDefine: /define:/.test(first),
     });
   }
 
@@ -131,12 +131,10 @@ export function sortAstBySourceOrder(astContent: string): string {
   }
   if (current.length > 0) commitSegment(current);
 
-  const defineSegs = segments.filter(s => s.isDefine && s.cqlLine > 0);
-  const otherSegs = segments.filter(s => !s.isDefine || s.cqlLine <= 0);
-
-  defineSegs.sort((a, b) => a.cqlLine - b.cqlLine);
-
-  const ordered = [...otherSegs, ...defineSegs];
+  const sortableSegs = segments.filter(s => s.cqlLine > 0);
+  const otherSegs = segments.filter(s => s.cqlLine <= 0);
+  sortableSegs.sort((a, b) => a.cqlLine - b.cqlLine);
+  const ordered = [...otherSegs, ...sortableSegs];
 
   const result: string[] = [rootLine];
   for (let i = 0; i < ordered.length; i++) {
@@ -162,11 +160,13 @@ function findNearestForwardLoc(
 }
 
 async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
+  activeSplitSession?.dispose();
+
   try {
     const cqlDoc = await workspace.openTextDocument(cqlFileUri);
     const astContent = await getElm(cqlFileUri, 'ast');
     const sortedAst = sortAstBySourceOrder(astContent);
-    const lineIndex = buildAstLineIndex(sortedAst);
+    let lineIndex = buildAstLineIndex(sortedAst);
 
     const cqlEditor = await window.showTextDocument(cqlDoc, ViewColumn.One);
     const astDoc = await workspace.openTextDocument({ language: 'ast', content: sortedAst });
@@ -183,13 +183,28 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
 
     let lastCqlRevealTime = 0;
     let lastAstRevealTime = 0;
+    let disposed = false;
+
+    function disposeSession(): void {
+      if (disposed) return;
+      disposed = true;
+      visibleRangesListener.dispose();
+      selectionListener.dispose();
+      closeListener.dispose();
+      docSaveListener.dispose();
+      cqlDecoration.dispose();
+      astDecoration.dispose();
+    }
 
     function syncCqlToAst(cqlLine?: number): void {
       const effectiveLine = cqlLine ?? cqlEditor.visibleRanges[0]?.start.line;
       if (effectiveLine === undefined) return;
 
       const astLines = lineIndex.cqlToAstLines.get(effectiveLine);
-      if (!astLines || astLines.length === 0) return;
+      if (!astLines || astLines.length === 0) {
+        astEditor.setDecorations(astDecoration, []);
+        return;
+      }
 
       const targetAstLine = Math.min(...astLines);
       const endAstLine = Math.max(...astLines);
@@ -209,7 +224,7 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
 
       astEditor.revealRange(
         new Range(targetAstLine, 0, endAstLine, 0),
-        TextEditorRevealType.AtTop,
+        TextEditorRevealType.InCenterIfOutsideViewport,
       );
       astEditor.setDecorations(
         astDecoration,
@@ -222,7 +237,10 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
       if (effectiveLine === undefined) return;
 
       const loc = findNearestForwardLoc(lineIndex, effectiveLine);
-      if (!loc) return;
+      if (!loc) {
+        cqlEditor.setDecorations(cqlDecoration, []);
+        return;
+      }
 
       const start = new Position(loc.startLine - 1, loc.startCol - 1);
       const end = new Position(loc.endLine - 1, loc.endCol);
@@ -239,9 +257,8 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
         }
       }
 
-      cqlEditor.revealRange(vsRange, TextEditorRevealType.AtTop);
+      cqlEditor.revealRange(vsRange, TextEditorRevealType.InCenterIfOutsideViewport);
       cqlEditor.selection = new Selection(start, end);
-
       cqlEditor.setDecorations(cqlDecoration, [{ range: vsRange } as DecorationOptions]);
     }
 
@@ -271,15 +288,31 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
       }
     });
 
-    const closeListener = window.onDidChangeVisibleTextEditors(editors => {
-      if (!editors.includes(cqlEditor) || !editors.includes(astEditor)) {
-        visibleRangesListener.dispose();
-        selectionListener.dispose();
-        closeListener.dispose();
-        cqlDecoration.dispose();
-        astDecoration.dispose();
+    const docSaveListener = workspace.onDidSaveTextDocument(async saved => {
+      if (saved.uri.toString() !== cqlFileUri.toString()) return;
+      if (disposed) return;
+      try {
+        const newAst = await getElm(cqlFileUri, 'ast');
+        const newSorted = sortAstBySourceOrder(newAst);
+        lineIndex = buildAstLineIndex(newSorted);
+        await astEditor.edit(edit => {
+          const lastLine = astEditor.document.lineAt(astEditor.document.lineCount - 1);
+          const fullRange = new Range(0, 0, lastLine.lineNumber, lastLine.text.length);
+          edit.replace(fullRange, newSorted);
+        });
+      } catch (error) {
+        log.debug(`Failed to refresh AST after save: ${error}`);
       }
     });
+
+    const closeListener = window.onDidChangeVisibleTextEditors(editors => {
+      if (!editors.includes(cqlEditor) || !editors.includes(astEditor)) {
+        if (disposed) return;
+        disposeSession();
+      }
+    });
+
+    activeSplitSession = { dispose: disposeSession };
   } catch (error) {
     window.showErrorMessage(
       `Error opening CQL/AST split view for ${cqlFileUri.fsPath}. err: ${error}`,
