@@ -339,6 +339,11 @@
         "title": "Hide Layout Warnings",
         "icon": "$(warning)",
         "category": "CQL Explorer"
+      },
+      {
+        "command": "cql.debug.toggle-step-granularity",
+        "title": "CQL: Toggle Step Granularity (CQL ↔ AST)",
+        "category": "CQL"
       }
     ],
     "menus": {
@@ -794,6 +799,12 @@
               },
               "optionsPath": {
                 "type": "string"
+              },
+              "stepGranularity": {
+                "type": "string",
+                "enum": ["cql", "ast"],
+                "default": "cql",
+                "description": "Whether step requests advance through CQL source lines (default) or individual ELM/AST nodes."
               }
             }
           }

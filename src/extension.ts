@@ -19,6 +19,7 @@ import { cqlLanguageClientInstance } from './cql-language-server/cqlLanguageClie
 import { CqlDebugAdapterDescriptorFactory } from './debug/cqlDebugAdapterDescriptorFactory';
 import { CqlDebugAstTrackerFactory } from './debug/cqlDebugAstTracker';
 import { CqlEvaluatableExpressionProvider } from './debug/cqlEvaluatableExpressionProvider';
+import { activateStepGranularityToggle } from './debug/stepGranularityToggle';
 import { CqlExplorer } from './cql-explorer/cqlExplorer';
 import { ClientStatus } from './extension.api';
 import * as requirements from './java-support/requirements';
@@ -129,6 +130,7 @@ export function activate(context: ExtensionContext): Promise<void> {
       registerDebugTestCase(context);
       registerLogCommands(context);
       registerViewElmCommand(context);
+      activateStepGranularityToggle(context);
       context.subscriptions.push(statusBar);
 
       await startServer(context, requirements, clientOptions, workspacePath);

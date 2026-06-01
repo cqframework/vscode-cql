@@ -47,9 +47,10 @@ async function syncFromStackTrace(
   }
 }
 
-function applyTopFrame(frame: { line?: number }): void {
+function applyTopFrame(frame: { line?: number; source?: { path?: string } }): void {
   const hook = getActiveSplitDebugHook();
   if (!hook) return;
   if (typeof frame.line !== 'number') return;
+  if (frame.source?.path && !frame.source.path.toLowerCase().endsWith('.cql')) return;
   hook.highlightCqlLine(frame.line - 1);
 }
