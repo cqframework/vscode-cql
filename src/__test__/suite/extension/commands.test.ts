@@ -10,6 +10,8 @@ const EXPECTED_COMMANDS = [
   'cql.editor.view-elm.json',
   'cql.editor.view-elm.ast',
   'cql.editor.view-elm.ast.split',
+  // Debug commands
+  'cql.debug.toggle-step-granularity',
   // Global commands
   'cql.execute.select-libraries',
   'cql.open.server-log',

@@ -7,6 +7,8 @@ import {
   Position,
   Range,
   Selection,
+  TextDocument,
+  TextEditor,
   TextEditorRevealType,
   ThemeColor,
   Uri,
@@ -20,7 +22,9 @@ import { Commands } from './commands';
 
 const LOC_REGEX = /\[.*?loc=(\d+):(\d+)(?:-(\d+):(\d+))?\]/;
 
-let activeSplitSession: { dispose: () => void } | undefined;
+let activeSplitSession:
+  | { dispose: () => void; astEditor: TextEditor; cqlUri: string }
+  | undefined;
 
 export interface ActiveSplitDebugHook {
   highlightCqlLine(cqlLine0Indexed: number): void;
@@ -32,6 +36,8 @@ let activeSplitDebugHook: ActiveSplitDebugHook | undefined;
 export function getActiveSplitDebugHook(): ActiveSplitDebugHook | undefined {
   return activeSplitDebugHook;
 }
+
+const openAstDocs = new Map<string, TextDocument>();
 
 export interface AstLoc {
   startLine: number;
@@ -59,6 +65,14 @@ export function register(context: ExtensionContext): void {
     commands.registerCommand(Commands.VIEW_ELM_COMMAND_AST_SPLIT, async (uri: Uri) => {
       await viewElmSplit(uri);
     }),
+    workspace.onDidCloseTextDocument(doc => {
+      for (const [key, tracked] of openAstDocs) {
+        if (tracked === doc) {
+          openAstDocs.delete(key);
+          break;
+        }
+      }
+    }),
   );
 }
 
@@ -72,6 +86,28 @@ export async function viewElm(
     const elm: string = await elmFetcher(cqlFileUri, elmType);
     const languageId = elmType === 'ast' ? 'ast' : elmType;
     const formatted = elmType === 'json' ? formatJson(elm) : elm;
+    if (elmType === 'ast') {
+      const uriKey = cqlFileUri.toString();
+      const existing = openAstDocs.get(uriKey);
+      let reused = false;
+      if (existing && !existing.isClosed) {
+        try {
+          const editor = await window.showTextDocument(existing);
+          reused = await replaceDocumentContent(editor, formatted);
+          if (!reused) {
+            openAstDocs.delete(uriKey);
+          }
+        } catch {
+          openAstDocs.delete(uriKey);
+        }
+      }
+      if (!reused) {
+        const doc = await workspace.openTextDocument({ language: 'ast', content: formatted });
+        openAstDocs.set(uriKey, doc);
+        await window.showTextDocument(doc);
+      }
+      return;
+    }
     const doc = await workspace.openTextDocument({ language: languageId, content: formatted });
     await window.showTextDocument(doc);
     if (elmType === 'xml') {
@@ -173,8 +209,18 @@ function findNearestForwardLoc(
   return next !== undefined ? lineIndex.astToCqlLoc.get(next) : undefined;
 }
 
+async function replaceDocumentContent(editor: TextEditor, content: string): Promise<boolean> {
+  const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+  return editor.edit(edit =>
+    edit.replace(new Range(0, 0, lastLine.lineNumber, lastLine.text.length), content),
+  );
+}
+
 async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
+  const prevAstEditor = activeSplitSession?.astEditor;
+  const prevCqlUri = activeSplitSession?.cqlUri;
   activeSplitSession?.dispose();
+  activeSplitSession = undefined;
 
   try {
     const cqlDoc = await workspace.openTextDocument(cqlFileUri);
@@ -183,8 +229,18 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
     let lineIndex = buildAstLineIndex(sortedAst);
 
     const cqlEditor = await window.showTextDocument(cqlDoc, ViewColumn.One);
-    const astDoc = await workspace.openTextDocument({ language: 'ast', content: sortedAst });
-    const astEditor = await window.showTextDocument(astDoc, ViewColumn.Two);
+    const canReuse = prevAstEditor !== undefined && prevCqlUri === cqlFileUri.toString() && !prevAstEditor.document.isClosed;
+    const reuseOk = canReuse
+      ? await replaceDocumentContent(prevAstEditor!, sortedAst).catch(() => false)
+      : false;
+    let astEditor: TextEditor;
+    if (reuseOk) {
+      astEditor = prevAstEditor!;
+      await window.showTextDocument(astEditor.document, ViewColumn.Two);
+    } else {
+      const astDoc = await workspace.openTextDocument({ language: 'ast', content: sortedAst });
+      astEditor = await window.showTextDocument(astDoc, ViewColumn.Two);
+    }
 
     const astDecoration = window.createTextEditorDecorationType({
       backgroundColor: new ThemeColor('editor.findMatchHighlightBackground'),
@@ -328,11 +384,7 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
         const newAst = await getElm(cqlFileUri, 'ast');
         const newSorted = sortAstBySourceOrder(newAst);
         lineIndex = buildAstLineIndex(newSorted);
-        await astEditor.edit(edit => {
-          const lastLine = astEditor.document.lineAt(astEditor.document.lineCount - 1);
-          const fullRange = new Range(0, 0, lastLine.lineNumber, lastLine.text.length);
-          edit.replace(fullRange, newSorted);
-        });
+        await replaceDocumentContent(astEditor, newSorted);
       } catch (error) {
         log.debug(`Failed to refresh AST after save: ${error}`);
       }
@@ -355,7 +407,7 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
       },
     };
 
-    activeSplitSession = { dispose: disposeSession };
+    activeSplitSession = { dispose: disposeSession, astEditor, cqlUri: cqlFileUri.toString() };
 
     // Catch up if debugger is already paused when split view opens
     (async () => {

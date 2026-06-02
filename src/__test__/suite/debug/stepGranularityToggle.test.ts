@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
+import { Commands } from '../../../commands/commands';
+import * as viewElm from '../../../commands/view-elm';
 import { activateStepGranularityToggle } from '../../../debug/stepGranularityToggle';
 
 suite('stepGranularityToggle', () => {
@@ -21,6 +23,10 @@ suite('stepGranularityToggle', () => {
       subscriptions: [],
     } as any;
     sandbox.stub(vscode.window, 'createStatusBarItem').returns(statusBarItemStub as any);
+    sandbox.stub(vscode.commands, 'registerCommand').callsFake((command, handler) => {
+      context.subscriptions.push({ command, execute: handler } as any);
+      return { dispose: sandbox.spy() };
+    });
   });
 
   teardown(() => {
@@ -38,11 +44,12 @@ suite('stepGranularityToggle', () => {
       callback(sessionMock);
       return { dispose: sandbox.spy() };
     });
+    sandbox.stub(vscode.debug, 'activeDebugSession').get(() => sessionMock);
 
     activateStepGranularityToggle(context);
 
     const toggleCommand = context.subscriptions.find(
-      (sub) => (sub as any).command === 'cql.debug.toggle-step-granularity',
+      (sub: any) => sub.command === 'cql.debug.toggle-step-granularity' && typeof sub.execute === 'function',
     );
     expect(toggleCommand).to.exist;
 
@@ -65,5 +72,69 @@ suite('stepGranularityToggle', () => {
     activateStepGranularityToggle(context);
 
     expect(statusBarItemStub.hide.called).to.be.true;
+  });
+
+  test('opens split view when toggling to ast with no active split session', async () => {
+    sandbox.stub(viewElm, 'getActiveSplitDebugHook').returns(undefined);
+    sandbox.stub(vscode.window, 'visibleTextEditors').get(() => [
+      { document: { uri: { fsPath: '/test/file.cql' } } } as any,
+    ]);
+    const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand').resolves(undefined);
+
+    const sessionMock = {
+      type: 'cql',
+      configuration: { stepGranularity: 'cql' },
+      customRequest: sandbox.stub().resolves(undefined),
+    } as any;
+
+    sandbox.stub(vscode.debug, 'onDidStartDebugSession').callsFake((callback: (e: vscode.DebugSession) => void) => {
+      callback(sessionMock);
+      return { dispose: sandbox.spy() };
+    });
+    sandbox.stub(vscode.debug, 'activeDebugSession').get(() => sessionMock);
+
+    activateStepGranularityToggle(context);
+
+    const toggleCommand = context.subscriptions.find(
+      (sub: any) => sub.command === 'cql.debug.toggle-step-granularity' && typeof sub.execute === 'function',
+    );
+    expect(toggleCommand).to.exist;
+
+    await (toggleCommand as any).execute();
+
+    expect(executeCommandStub.calledOnce).to.be.true;
+    expect(executeCommandStub.firstCall.args[0]).to.equal(Commands.VIEW_ELM_COMMAND_AST_SPLIT);
+    expect(executeCommandStub.firstCall.args[1].fsPath).to.equal('/test/file.cql');
+  });
+
+  test('does not open split view when toggling to ast if split session already active', async () => {
+    sandbox.stub(viewElm, 'getActiveSplitDebugHook').returns({
+      highlightCqlLine: sandbox.spy(),
+      noteExternalReveal: sandbox.spy(),
+    });
+    const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand').resolves(undefined);
+
+    const sessionMock = {
+      type: 'cql',
+      configuration: { stepGranularity: 'cql' },
+      customRequest: sandbox.stub().resolves(undefined),
+    } as any;
+
+    sandbox.stub(vscode.debug, 'onDidStartDebugSession').callsFake((callback: (e: vscode.DebugSession) => void) => {
+      callback(sessionMock);
+      return { dispose: sandbox.spy() };
+    });
+    sandbox.stub(vscode.debug, 'activeDebugSession').get(() => sessionMock);
+
+    activateStepGranularityToggle(context);
+
+    const toggleCommand = context.subscriptions.find(
+      (sub: any) => sub.command === 'cql.debug.toggle-step-granularity' && typeof sub.execute === 'function',
+    );
+    expect(toggleCommand).to.exist;
+
+    await (toggleCommand as any).execute();
+
+    expect(executeCommandStub.called).to.be.false;
   });
 });

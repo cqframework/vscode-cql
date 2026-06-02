@@ -417,3 +417,43 @@ suite('sortAstBySourceOrder()', () => {
     expect(sortAstBySourceOrder('Library: Test (version 1.0.0)')).to.equal('Library: Test (version 1.0.0)');
   });
 });
+
+suite('viewElm() AST reuse', () => {
+  const MOCK_AST = `Library: SimpleMeasure (version 1.0.0)
+├── define: "Patient"
+│ └── Retrieve (dataType: Patient)`;
+
+  teardown(async () => {
+    await commands.executeCommand('workbench.action.closeAllEditors');
+  });
+
+  test('reuses existing AST doc on second call', async () => {
+    const cqlUri = Uri.joinPath(
+      workspace.workspaceFolders![0].uri,
+      'input/cql/SimpleMeasure.cql',
+    );
+
+    await viewElm(cqlUri, 'ast', async () => MOCK_AST);
+    const docsAfterFirst = workspace.textDocuments.filter(d => d.languageId === 'ast');
+    expect(docsAfterFirst.length).to.equal(1);
+
+    await viewElm(cqlUri, 'ast', async () => MOCK_AST);
+    const docsAfterSecond = workspace.textDocuments.filter(d => d.languageId === 'ast');
+    expect(docsAfterSecond.length).to.equal(1);
+  });
+
+  test('creates a new AST doc when previous was closed', async () => {
+    const cqlUri = Uri.joinPath(
+      workspace.workspaceFolders![0].uri,
+      'input/cql/SimpleMeasure.cql',
+    );
+
+    await viewElm(cqlUri, 'ast', async () => MOCK_AST);
+    await commands.executeCommand('workbench.action.closeAllEditors');
+
+    await viewElm(cqlUri, 'ast', async () => MOCK_AST);
+    const editor = window.activeTextEditor;
+    expect(editor, 'expected an active text editor').to.not.be.undefined;
+    expect(editor!.document.languageId).to.equal('ast');
+  });
+});

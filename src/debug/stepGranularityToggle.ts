@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { Commands } from '../commands/commands';
+import { getActiveSplitDebugHook } from '../commands/view-elm';
 
 type Granularity = 'cql' | 'ast';
 const sessionGranularity = new WeakMap<vscode.DebugSession, Granularity>();
@@ -27,6 +29,17 @@ export function activateStepGranularityToggle(context: vscode.ExtensionContext) 
       await s.customRequest('setStepGranularity', { granularity: next });
       sessionGranularity.set(s, next);
       refresh(s);
+      if (next === 'ast' && !getActiveSplitDebugHook()) {
+        const cqlEditor = vscode.window.visibleTextEditors.find(
+          e => e.document.uri.fsPath.toLowerCase().endsWith('.cql'),
+        );
+        if (cqlEditor) {
+          await vscode.commands.executeCommand(
+            Commands.VIEW_ELM_COMMAND_AST_SPLIT,
+            cqlEditor.document.uri,
+          );
+        }
+      }
     }),
   );
 }
