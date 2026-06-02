@@ -19,7 +19,10 @@ export function activateStepGranularityToggle(context: vscode.ExtensionContext) 
       sessionGranularity.set(s, initial);
       refresh(s);
     }),
-    vscode.debug.onDidTerminateDebugSession(() => refresh(vscode.debug.activeDebugSession)),
+    vscode.debug.onDidTerminateDebugSession(() => {
+      console.log(`[cql-debug] ${Date.now()} onDidTerminateDebugSession fired`);
+      refresh(vscode.debug.activeDebugSession);
+    }),
     vscode.debug.onDidChangeActiveDebugSession((s) => refresh(s)),
     vscode.commands.registerCommand('cql.debug.toggle-step-granularity', async () => {
       const s = vscode.debug.activeDebugSession;

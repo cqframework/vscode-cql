@@ -9,6 +9,15 @@ export class CqlDebugAstTrackerFactory implements vscode.DebugAdapterTrackerFact
       onDidSendMessage: async (message: any) => {
         if (!message || typeof message !== 'object') return;
 
+        if (message.type === 'event' && message.event === 'terminated') {
+          console.log(`[cql-debug] ${Date.now()} DAP terminated event received`);
+          return;
+        }
+        if (message.type === 'event' && message.event === 'exited') {
+          console.log(`[cql-debug] ${Date.now()} DAP exited event received (exitCode=${message.body?.exitCode})`);
+          return;
+        }
+
         if (message.type === 'event' && message.event === 'stopped') {
           lastStoppedThreadId = message.body?.threadId;
           await syncFromStackTrace(session, lastStoppedThreadId);
