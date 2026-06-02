@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { TextDocument, Uri, commands, window, workspace } from 'vscode';
-import { viewElm, buildAstLineIndex, sortAstBySourceOrder } from '../../../commands/view-elm';
+import { viewElm, buildAstLineIndex, buildLocatorKey, sortAstBySourceOrder } from '../../../commands/view-elm';
 
 const MOCK_JSON_ELM = JSON.stringify({
   library: {
@@ -276,6 +276,37 @@ suite('buildAstLineIndex()', () => {
     expect(index.cqlToAstLines.get(2)).to.deep.equal([4]);
     // CQL line 4 (0-indexed 3) → both AST lines 4 and 5
     expect(index.cqlToAstLines.get(3)).to.deep.equal([4, 5]);
+  });
+
+  suite('locatorToAstLines', () => {
+    test('populates locatorToAstLines for a normal range annotation', () => {
+      const ast = `└── define: "Foo" [id=1, loc=4:1-4:20]`;
+      const index = buildAstLineIndex(ast);
+      const key = buildLocatorKey(4, 1, 4, 20);
+      expect(index.locatorToAstLines.get(key)).to.deep.equal([0]);
+    });
+
+    test('maps multiple AST lines to the same key when their locators match', () => {
+      const ast = `└── define: "Foo" [id=1, loc=4:1-4:20]
+  └── Query [id=2, loc=4:1-4:20]`;
+      const index = buildAstLineIndex(ast);
+      const key = buildLocatorKey(4, 1, 4, 20);
+      expect(index.locatorToAstLines.get(key)).to.deep.equal([0, 1]);
+    });
+
+    test('handles a single-position annotation (loc=4:5) using startLine:startCol twice', () => {
+      const ast = `└── Literal: 1 [id=1, loc=4:5]`;
+      const index = buildAstLineIndex(ast);
+      const key = buildLocatorKey(4, 5, 4, 5);
+      expect(index.locatorToAstLines.get(key)).to.deep.equal([0]);
+    });
+
+    test('cqlToAstLines still populated correctly (regression guard)', () => {
+      const ast = `└── define: "Foo" [id=1, loc=4:1-4:20]
+  └── Query [id=2, loc=4:1-4:20]`;
+      const index = buildAstLineIndex(ast);
+      expect(index.cqlToAstLines.get(3)).to.deep.equal([0, 1]);
+    });
   });
 });
 

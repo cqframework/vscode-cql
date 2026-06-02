@@ -109,7 +109,7 @@ suite('stepGranularityToggle', () => {
 
   test('does not open split view when toggling to ast if split session already active', async () => {
     sandbox.stub(viewElm, 'getActiveSplitDebugHook').returns({
-      highlightCqlLine: sandbox.spy(),
+      highlightCqlSpan: sandbox.spy(),
       noteExternalReveal: sandbox.spy(),
     });
     const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand').resolves(undefined);

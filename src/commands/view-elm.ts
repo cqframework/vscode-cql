@@ -9,6 +9,7 @@ import {
   Selection,
   TextDocument,
   TextEditor,
+  TextEditorDecorationType,
   TextEditorRevealType,
   ThemeColor,
   Uri,
@@ -22,12 +23,25 @@ import { Commands } from './commands';
 
 const LOC_REGEX = /\[.*?loc=(\d+):(\d+)(?:-(\d+):(\d+))?\]/;
 
+export function buildLocatorKey(
+  line: number, col: number, endLine: number, endCol: number,
+): string {
+  return `${line}:${col}-${endLine}:${endCol}`;
+}
+
+export interface CqlSpan {
+  line: number;
+  column: number;
+  endLine: number;
+  endColumn: number;
+}
+
 let activeSplitSession:
   | { dispose: () => void; astEditor: TextEditor; cqlUri: string }
   | undefined;
 
 export interface ActiveSplitDebugHook {
-  highlightCqlLine(cqlLine0Indexed: number): void;
+  highlightCqlSpan(span: CqlSpan): void;
   noteExternalReveal(): void;
 }
 
@@ -49,6 +63,7 @@ export interface AstLoc {
 export interface AstLineIndex {
   astToCqlLoc: Map<number, AstLoc>;
   cqlToAstLines: Map<number, number[]>;
+  locatorToAstLines: Map<string, number[]>;
 }
 
 export function register(context: ExtensionContext): void {
@@ -121,6 +136,7 @@ export async function viewElm(
 export function buildAstLineIndex(astContent: string): AstLineIndex {
   const astToCqlLoc = new Map<number, AstLoc>();
   const cqlToAstLines = new Map<number, number[]>();
+  const locatorToAstLines = new Map<string, number[]>();
 
   const lines = astContent.split('\n');
   for (let astLine = 0; astLine < lines.length; astLine++) {
@@ -142,9 +158,14 @@ export function buildAstLineIndex(astContent: string): AstLineIndex {
       existing.push(astLine);
       cqlToAstLines.set(cqlIndex, existing);
     }
+
+    const locKey = buildLocatorKey(loc.startLine, loc.startCol, loc.endLine, loc.endCol);
+    const existing2 = locatorToAstLines.get(locKey) ?? [];
+    existing2.push(astLine);
+    locatorToAstLines.set(locKey, existing2);
   }
 
-  return { astToCqlLoc, cqlToAstLines };
+  return { astToCqlLoc, cqlToAstLines, locatorToAstLines };
 }
 
 export function sortAstBySourceOrder(astContent: string): string {
@@ -216,6 +237,60 @@ async function replaceDocumentContent(editor: TextEditor, content: string): Prom
   );
 }
 
+export function applyAstHighlight(
+  astLines: number[],
+  astEditor: TextEditor,
+  astDecoration: TextEditorDecorationType,
+): void {
+  if (astLines.length === 0) {
+    astEditor.setDecorations(astDecoration, []);
+    return;
+  }
+
+  const targetAstLine = Math.min(...astLines);
+  const endAstLine = Math.max(...astLines);
+
+  const astVisibleRanges = astEditor.visibleRanges;
+  if (astVisibleRanges.length > 0) {
+    const astTop = astVisibleRanges[0].start.line;
+    const astBottom = astVisibleRanges[astVisibleRanges.length - 1].end.line;
+    if (targetAstLine >= astTop && targetAstLine <= astBottom) {
+      astEditor.setDecorations(
+        astDecoration,
+        astLines.map(l => new Range(l, 0, l, 0)),
+      );
+      return;
+    }
+  }
+
+  astEditor.revealRange(
+    new Range(targetAstLine, 0, endAstLine, 0),
+    TextEditorRevealType.InCenterIfOutsideViewport,
+  );
+  astEditor.setDecorations(
+    astDecoration,
+    astLines.map(l => new Range(l, 0, l, 0)),
+  );
+}
+
+export function syncCqlToAstBySpan(
+  span: CqlSpan,
+  lineIndex: AstLineIndex,
+  astEditor: TextEditor,
+  astDecoration: TextEditorDecorationType,
+): void {
+  const key = buildLocatorKey(span.line, span.column, span.endLine, span.endColumn);
+  let astLines = lineIndex.locatorToAstLines.get(key);
+  if (!astLines || astLines.length === 0) {
+    astLines = lineIndex.cqlToAstLines.get(span.line - 1);
+  }
+  if (!astLines || astLines.length === 0) {
+    astEditor.setDecorations(astDecoration, []);
+    return;
+  }
+  applyAstHighlight(astLines, astEditor, astDecoration);
+}
+
 async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
   const prevAstEditor = activeSplitSession?.astEditor;
   const prevCqlUri = activeSplitSession?.cqlUri;
@@ -243,11 +318,9 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
     }
 
     const astDecoration = window.createTextEditorDecorationType({
-      backgroundColor: new ThemeColor('editor.findMatchHighlightBackground'),
-      border: '1px solid',
-      borderColor: new ThemeColor('editor.findMatchBorder'),
-      overviewRulerColor: new ThemeColor('editor.findMatchHighlightBackground'),
-      overviewRulerLane: OverviewRulerLane.Center,
+      backgroundColor: new ThemeColor('editor.stackFrameHighlightBackground'),
+      overviewRulerColor: new ThemeColor('editorError.foreground'),
+      overviewRulerLane: OverviewRulerLane.Left,
       isWholeLine: true,
     });
     const cqlLineDecoration = window.createTextEditorDecorationType({
@@ -291,31 +364,7 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
         astEditor.setDecorations(astDecoration, []);
         return;
       }
-
-      const targetAstLine = Math.min(...astLines);
-      const endAstLine = Math.max(...astLines);
-
-      const astVisibleRanges = astEditor.visibleRanges;
-      if (astVisibleRanges.length > 0) {
-        const astTop = astVisibleRanges[0].start.line;
-        const astBottom = astVisibleRanges[astVisibleRanges.length - 1].end.line;
-        if (targetAstLine >= astTop && targetAstLine <= astBottom) {
-          astEditor.setDecorations(
-            astDecoration,
-            astLines.map(l => new Range(l, 0, l, 0)),
-          );
-          return;
-        }
-      }
-
-      astEditor.revealRange(
-        new Range(targetAstLine, 0, endAstLine, 0),
-        TextEditorRevealType.InCenterIfOutsideViewport,
-      );
-      astEditor.setDecorations(
-        astDecoration,
-        astLines.map(l => new Range(l, 0, l, 0)),
-      );
+      applyAstHighlight(astLines, astEditor, astDecoration);
     }
 
     function syncAstToCql(astLine?: number): void {
@@ -398,9 +447,9 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
     });
 
     activeSplitDebugHook = {
-      highlightCqlLine(cqlLine: number) {
+      highlightCqlSpan(span: CqlSpan) {
         lastAstRevealTime = performance.now();
-        syncCqlToAst(cqlLine);
+        syncCqlToAstBySpan(span, lineIndex, astEditor, astDecoration);
       },
       noteExternalReveal() {
         lastAstRevealTime = performance.now();
@@ -426,7 +475,12 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
             });
             const top = resp?.stackFrames?.[0];
             if (top && typeof top.line === 'number') {
-              activeSplitDebugHook?.highlightCqlLine(top.line - 1);
+              activeSplitDebugHook?.highlightCqlSpan({
+                line: top.line,
+                column: top.column ?? 1,
+                endLine: top.endLine ?? top.line,
+                endColumn: top.endColumn ?? top.column ?? 1,
+              });
               return;
             }
           } catch { /* try next thread */ }

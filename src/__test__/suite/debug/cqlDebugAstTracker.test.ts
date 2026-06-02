@@ -6,14 +6,14 @@ import * as viewElm from '../../../commands/view-elm';
 suite('CqlDebugAstTracker', () => {
   let sandbox: sinon.SinonSandbox;
   let factory: CqlDebugAstTrackerFactory;
-  let hookSpy: { highlightCqlLine: sinon.SinonSpy; noteExternalReveal: sinon.SinonSpy };
+  let hookSpy: { highlightCqlSpan: sinon.SinonSpy; noteExternalReveal: sinon.SinonSpy };
   let getActiveSplitDebugHookStub: sinon.SinonStub;
 
   setup(() => {
     sandbox = sinon.createSandbox();
     factory = new CqlDebugAstTrackerFactory();
     hookSpy = {
-      highlightCqlLine: sandbox.spy(),
+      highlightCqlSpan: sandbox.spy(),
       noteExternalReveal: sandbox.spy(),
     };
     getActiveSplitDebugHookStub = sandbox.stub(viewElm, 'getActiveSplitDebugHook');
@@ -23,7 +23,7 @@ suite('CqlDebugAstTracker', () => {
     sandbox.restore();
   });
 
-  test('stopped event triggers stackTrace and hook call with 0-indexed line', async () => {
+  test('stopped event triggers stackTrace and hook call with 1-indexed span', async () => {
     getActiveSplitDebugHookStub.returns(hookSpy);
 
     const sessionMock = {
@@ -45,8 +45,13 @@ suite('CqlDebugAstTracker', () => {
       startFrame: 0,
       levels: 1,
     });
-    expect(hookSpy.highlightCqlLine.calledOnce).to.be.true;
-    expect(hookSpy.highlightCqlLine.firstCall.args[0]).to.equal(6);
+    expect(hookSpy.highlightCqlSpan.calledOnce).to.be.true;
+    expect(hookSpy.highlightCqlSpan.firstCall.args[0]).to.deep.equal({
+      line: 7,
+      column: 1,
+      endLine: 7,
+      endColumn: 1,
+    });
   });
 
   test('piggy-backs on stackTrace response from UI-issued request', () => {
@@ -62,8 +67,13 @@ suite('CqlDebugAstTracker', () => {
       body: { stackFrames: [{ line: 4 }] },
     });
 
-    expect(hookSpy.highlightCqlLine.calledOnce).to.be.true;
-    expect(hookSpy.highlightCqlLine.firstCall.args[0]).to.equal(3);
+    expect(hookSpy.highlightCqlSpan.calledOnce).to.be.true;
+    expect(hookSpy.highlightCqlSpan.firstCall.args[0]).to.deep.equal({
+      line: 4,
+      column: 1,
+      endLine: 4,
+      endColumn: 1,
+    });
   });
 
   test('no active split view: tracker swallows without throwing', async () => {
@@ -101,7 +111,7 @@ suite('CqlDebugAstTracker', () => {
     });
 
     expect(sessionMock.customRequest.called).to.be.false;
-    expect(hookSpy.highlightCqlLine.called).to.be.false;
+    expect(hookSpy.highlightCqlSpan.called).to.be.false;
   });
 
   test('customRequest rejection is caught silently', async () => {
