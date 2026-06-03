@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getActiveSplitDebugHook } from '../commands/view-elm';
+import * as log from '../log-services/logger';
 
 let lastStoppedThreadId: number | undefined;
 
@@ -10,17 +11,18 @@ export class CqlDebugAstTrackerFactory implements vscode.DebugAdapterTrackerFact
         if (!message || typeof message !== 'object') return;
 
         if (message.type === 'event' && message.event === 'terminated') {
-          console.log(`[cql-debug] ${Date.now()} DAP terminated event received`);
+          log.debug('DAP terminated event received');
           return;
         }
         if (message.type === 'event' && message.event === 'exited') {
-          console.log(`[cql-debug] ${Date.now()} DAP exited event received (exitCode=${message.body?.exitCode})`);
+          log.debug('DAP exited event received', { exitCode: message.body?.exitCode });
           return;
         }
 
         if (message.type === 'event' && message.event === 'stopped') {
           lastStoppedThreadId = message.body?.threadId;
           await syncFromStackTrace(session, lastStoppedThreadId);
+          log.debug('DAP stopped event received');
           return;
         }
 
@@ -61,6 +63,7 @@ function applyTopFrame(frame: {
   column?: number;
   endLine?: number;
   endColumn?: number;
+  instructionPointerReference?: string;
   source?: { path?: string };
 }): void {
   const hook = getActiveSplitDebugHook();
@@ -72,5 +75,6 @@ function applyTopFrame(frame: {
     column: frame.column ?? 1,
     endLine: frame.endLine ?? frame.line,
     endColumn: frame.endColumn ?? frame.column ?? 1,
+    ...(frame.instructionPointerReference ? { localId: frame.instructionPointerReference } : {}),
   });
 }

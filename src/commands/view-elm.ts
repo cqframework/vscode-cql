@@ -22,6 +22,7 @@ import * as log from '../log-services/logger';
 import { Commands } from './commands';
 
 const LOC_REGEX = /\[.*?loc=(\d+):(\d+)(?:-(\d+):(\d+))?\]/;
+const ID_REGEX = /\[id=(\d+)/;
 
 export function buildLocatorKey(
   line: number, col: number, endLine: number, endCol: number,
@@ -34,6 +35,7 @@ export interface CqlSpan {
   column: number;
   endLine: number;
   endColumn: number;
+  localId?: string;
 }
 
 let activeSplitSession:
@@ -64,6 +66,7 @@ export interface AstLineIndex {
   astToCqlLoc: Map<number, AstLoc>;
   cqlToAstLines: Map<number, number[]>;
   locatorToAstLines: Map<string, number[]>;
+  localIdToAstLines: Map<string, number[]>;
 }
 
 export function register(context: ExtensionContext): void {
@@ -137,35 +140,44 @@ export function buildAstLineIndex(astContent: string): AstLineIndex {
   const astToCqlLoc = new Map<number, AstLoc>();
   const cqlToAstLines = new Map<number, number[]>();
   const locatorToAstLines = new Map<string, number[]>();
+  const localIdToAstLines = new Map<string, number[]>();
 
   const lines = astContent.split('\n');
   for (let astLine = 0; astLine < lines.length; astLine++) {
     const match = lines[astLine].match(LOC_REGEX);
-    if (!match) continue;
+    if (match) {
+      const loc: AstLoc = {
+        startLine: parseInt(match[1], 10),
+        startCol: parseInt(match[2], 10),
+        endLine: match[3] ? parseInt(match[3], 10) : parseInt(match[1], 10),
+        endCol: match[4] ? parseInt(match[4], 10) : parseInt(match[2], 10),
+      };
 
-    const loc: AstLoc = {
-      startLine: parseInt(match[1], 10),
-      startCol: parseInt(match[2], 10),
-      endLine: match[3] ? parseInt(match[3], 10) : parseInt(match[1], 10),
-      endCol: match[4] ? parseInt(match[4], 10) : parseInt(match[2], 10),
-    };
+      astToCqlLoc.set(astLine, loc);
 
-    astToCqlLoc.set(astLine, loc);
+      for (let cqlLine = loc.startLine; cqlLine <= loc.endLine; cqlLine++) {
+        const cqlIndex = cqlLine - 1;
+        const existing = cqlToAstLines.get(cqlIndex) ?? [];
+        existing.push(astLine);
+        cqlToAstLines.set(cqlIndex, existing);
+      }
 
-    for (let cqlLine = loc.startLine; cqlLine <= loc.endLine; cqlLine++) {
-      const cqlIndex = cqlLine - 1;
-      const existing = cqlToAstLines.get(cqlIndex) ?? [];
-      existing.push(astLine);
-      cqlToAstLines.set(cqlIndex, existing);
+      const locKey = buildLocatorKey(loc.startLine, loc.startCol, loc.endLine, loc.endCol);
+      const existing2 = locatorToAstLines.get(locKey) ?? [];
+      existing2.push(astLine);
+      locatorToAstLines.set(locKey, existing2);
     }
 
-    const locKey = buildLocatorKey(loc.startLine, loc.startCol, loc.endLine, loc.endCol);
-    const existing2 = locatorToAstLines.get(locKey) ?? [];
-    existing2.push(astLine);
-    locatorToAstLines.set(locKey, existing2);
+    const idMatch = lines[astLine].match(ID_REGEX);
+    if (idMatch) {
+      const id = idMatch[1];
+      const existing3 = localIdToAstLines.get(id) ?? [];
+      existing3.push(astLine);
+      localIdToAstLines.set(id, existing3);
+    }
   }
 
-  return { astToCqlLoc, cqlToAstLines, locatorToAstLines };
+  return { astToCqlLoc, cqlToAstLines, locatorToAstLines, localIdToAstLines };
 }
 
 export function sortAstBySourceOrder(astContent: string): string {
@@ -279,8 +291,15 @@ export function syncCqlToAstBySpan(
   astEditor: TextEditor,
   astDecoration: TextEditorDecorationType,
 ): void {
-  const key = buildLocatorKey(span.line, span.column, span.endLine, span.endColumn);
-  let astLines = lineIndex.locatorToAstLines.get(key);
+  let astLines: number[] | undefined;
+
+  if (span.localId) {
+    astLines = lineIndex.localIdToAstLines.get(span.localId);
+  }
+  if (!astLines || astLines.length === 0) {
+    const key = buildLocatorKey(span.line, span.column, span.endLine, span.endColumn);
+    astLines = lineIndex.locatorToAstLines.get(key);
+  }
   if (!astLines || astLines.length === 0) {
     astLines = lineIndex.cqlToAstLines.get(span.line - 1);
   }
@@ -480,6 +499,7 @@ async function viewElmSplit(cqlFileUri: Uri): Promise<void> {
                 column: top.column ?? 1,
                 endLine: top.endLine ?? top.line,
                 endColumn: top.endColumn ?? top.column ?? 1,
+                ...(top.instructionPointerReference ? { localId: top.instructionPointerReference } : {}),
               });
               return;
             }

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Commands } from '../commands/commands';
 import { getActiveSplitDebugHook } from '../commands/view-elm';
+import * as log from '../log-services/logger';
 
 type Granularity = 'cql' | 'ast';
 const sessionGranularity = new WeakMap<vscode.DebugSession, Granularity>();
@@ -18,9 +19,10 @@ export function activateStepGranularityToggle(context: vscode.ExtensionContext) 
       const initial: Granularity = (s.configuration.stepGranularity as Granularity) ?? 'cql';
       sessionGranularity.set(s, initial);
       refresh(s);
+      log.debug('onDidStartDebugSession fired', {sessionGranularity: s});
     }),
     vscode.debug.onDidTerminateDebugSession(() => {
-      console.log(`[cql-debug] ${Date.now()} onDidTerminateDebugSession fired`);
+      log.debug('onDidTerminateDebugSession fired');
       refresh(vscode.debug.activeDebugSession);
     }),
     vscode.debug.onDidChangeActiveDebugSession((s) => refresh(s)),

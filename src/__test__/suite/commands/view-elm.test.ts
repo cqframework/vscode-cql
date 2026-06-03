@@ -308,6 +308,30 @@ suite('buildAstLineIndex()', () => {
       expect(index.cqlToAstLines.get(3)).to.deep.equal([0, 1]);
     });
   });
+
+  suite('localIdToAstLines', () => {
+    test('populates localIdToAstLines for a node with id and loc', () => {
+      const ast = `└── define: "One" [id=208, loc=3:1-4:5]`;
+      const index = buildAstLineIndex(ast);
+      expect(index.localIdToAstLines.get('208')).to.deep.equal([0]);
+    });
+
+    test('maps each AST line to its unique localId', () => {
+      const ast = `Library: One (version unspecified) [id=0]
+└── define: "One" returns System.Integer [id=208, loc=3:1-4:5]
+  └── Literal: 1 [id=209, loc=4:5]`;
+      const index = buildAstLineIndex(ast);
+      expect(index.localIdToAstLines.get('0')).to.deep.equal([0]);
+      expect(index.localIdToAstLines.get('208')).to.deep.equal([1]);
+      expect(index.localIdToAstLines.get('209')).to.deep.equal([2]);
+    });
+
+    test('locatorToAstLines still populated correctly when localId is present (regression guard)', () => {
+      const ast = `└── define: "One" [id=208, loc=3:1-4:5]`;
+      const index = buildAstLineIndex(ast);
+      expect(index.locatorToAstLines.size).to.equal(1);
+    });
+  });
 });
 
 suite('sortAstBySourceOrder()', () => {

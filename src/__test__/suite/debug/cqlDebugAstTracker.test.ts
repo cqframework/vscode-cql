@@ -54,6 +54,33 @@ suite('CqlDebugAstTracker', () => {
     });
   });
 
+  test('passes instructionPointerReference as localId on span', async () => {
+    getActiveSplitDebugHookStub.returns(hookSpy);
+
+    const sessionMock = {
+      customRequest: sandbox.stub().resolves({
+        stackFrames: [{ line: 5, column: 3, endLine: 8, endColumn: 10, instructionPointerReference: '208' }],
+      }),
+    } as any;
+
+    const tracker = factory.createDebugAdapterTracker(sessionMock);
+
+    await tracker.onDidSendMessage!({
+      type: 'event',
+      event: 'stopped',
+      body: { threadId: 1 },
+    });
+
+    expect(hookSpy.highlightCqlSpan.calledOnce).to.be.true;
+    expect(hookSpy.highlightCqlSpan.firstCall.args[0]).to.deep.equal({
+      line: 5,
+      column: 3,
+      endLine: 8,
+      endColumn: 10,
+      localId: '208',
+    });
+  });
+
   test('piggy-backs on stackTrace response from UI-issued request', () => {
     getActiveSplitDebugHookStub.returns(hookSpy);
 
