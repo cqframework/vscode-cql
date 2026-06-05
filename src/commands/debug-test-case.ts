@@ -1,9 +1,9 @@
 import { commands, debug, ExtensionContext, Uri, window, workspace } from 'vscode';
 import { Commands } from '../commands/commands';
-import { CqlLibrary, CqlTestCase } from '../model/cqlProject';
-import { CqlSolution } from '../model/cqlSolution';
 import { getCqlPaths, getFhirVersion, loadTestConfig, waitForTestCasesLoaded } from '../helpers/cqlHelpers';
 import { resolveParameters } from '../helpers/parametersHelper';
+import { CqlLibrary, CqlTestCase } from '../model/cqlProject';
+import { CqlSolution } from '../model/cqlSolution';
 
 let _context: ExtensionContext | undefined;
 
@@ -93,31 +93,41 @@ export async function promptAndDebugTestCase(library: CqlLibrary): Promise<void>
   const saved = _context?.workspaceState.get<string>(stateKey);
 
   const quickPick = window.createQuickPick();
-  quickPick.items = testCases.map(tc => ({ label: tc.name }));
+  quickPick.items = [...testCases]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(tc => ({ label: tc.name }));
   quickPick.canSelectMany = false;
   quickPick.placeholder = 'Select a test case to debug';
   quickPick.title = `Debug — ${library.name}`;
 
-  if (saved) {
-    const match = quickPick.items.find(item => item.label === saved);
-    if (match) {
-      quickPick.selectedItems = [match];
-      quickPick.activeItems = [match];
-    }
-  }
+  const savedMatch = saved
+    ? quickPick.items.find(item => item.label === saved)
+    : undefined;
 
   const selectedTestCase = await new Promise<CqlTestCase | undefined>(resolve => {
+    let accepted = false;
+
     quickPick.onDidAccept(() => {
+      accepted = true;
       const selected = quickPick.selectedItems[0];
       quickPick.hide();
-      if (selected) {
-        resolve(testCases.find(tc => tc.name === selected.label));
-      } else {
-        resolve(undefined);
-      }
+      resolve(
+        selected
+          ? testCases.find(tc => tc.name === selected.label)
+          : undefined,
+      );
     });
-    quickPick.onDidHide(() => resolve(undefined));
-    quickPick.show();
+
+    quickPick.onDidHide(() => {
+      if (!accepted) resolve(undefined);
+    });
+
+    setTimeout(() => {
+      quickPick.show();
+      if (savedMatch) {
+        quickPick.activeItems = [savedMatch];
+      }
+    }, 0);
   });
 
   if (!selectedTestCase) return;
