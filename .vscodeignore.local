@@ -1,11 +1,12 @@
 .vscode
 .idea
+.github
+.claude
 src/
 *.vsix
 .gitignore
 tsconfig.json
 dist/jars
-dist/java-support/jars
 dist/test
 
 .vscode-test
@@ -14,3 +15,5 @@ dist/test
 tests
 .eslintrc.js
 test-workspaces
+scripts
+node_modules

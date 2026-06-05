@@ -830,6 +830,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "package:local": "npm run compile && node scripts/download-jar.js && npx @vscode/vsce package --ignoreFile .vscodeignore.local",
     "pretest": "node scripts/clean-dist.js && npm run compile",
     "test": "vscode-test",
     "changelog": "node scripts/update-changelog.js"

@@ -12,8 +12,8 @@ interface MavenCoords {
   type?: string;
 }
 
-function getJarHome(): string {
-  return path.join(__dirname, 'jars');
+function getJarHome(extensionPath: string): string {
+  return path.join(extensionPath, 'dist', 'java-support', 'jars');
 }
 
 export function getServicePath(context: ExtensionContext, serviceName: string): string {
@@ -23,7 +23,7 @@ export function getServicePath(context: ExtensionContext, serviceName: string): 
     throw Error(`Maven coordinates not found for ${serviceName}`);
   }
 
-  return getServicePathFromCoords(serviceCoords);
+  return getServicePathFromCoords(context.extensionPath, serviceCoords);
 }
 
 function getCoords(context: ExtensionContext): {
@@ -36,22 +36,23 @@ function getCoords(context: ExtensionContext): {
   return javaDependencies as { [serviceName: string]: MavenCoords };
 }
 
-function getServicePathFromCoords(coords: MavenCoords): string {
-  const jarHome = getJarHome();
+function getServicePathFromCoords(extensionPath: string, coords: MavenCoords): string {
+  const jarHome = getJarHome(extensionPath);
   const jarName = getLocalName(coords);
   return path.join(jarHome, jarName);
 }
 
 export async function installJavaDependencies(context: ExtensionContext): Promise<void> {
   const coords = getCoords(context);
-  await installJavaDependenciesFromCoords(coords);
+  await installJavaDependenciesFromCoords(context.extensionPath, coords);
 }
 
-async function installJavaDependenciesFromCoords(coordsMaps: {
-  [serviceName: string]: MavenCoords;
-}): Promise<void> {
+async function installJavaDependenciesFromCoords(
+  extensionPath: string,
+  coordsMaps: { [serviceName: string]: MavenCoords },
+): Promise<void> {
   for (const [key, value] of Object.entries(coordsMaps)) {
-    await installServiceIfMissing(key, value);
+    await installServiceIfMissing(extensionPath, key, value);
   }
 }
 
@@ -66,8 +67,12 @@ function getSearchUrl(coords: MavenCoords): string {
   return `https://repo1.maven.org/maven2/${groupIdAsDirectory}/${coords.artifactId}/${coords.version}/${getLocalName(coords)}`;
 }
 
-async function installServiceIfMissing(serviceName: string, coords: MavenCoords): Promise<void> {
-  const doesExist = isServiceInstalled(coords);
+async function installServiceIfMissing(
+  extensionPath: string,
+  serviceName: string,
+  coords: MavenCoords,
+): Promise<void> {
+  const doesExist = isServiceInstalled(extensionPath, coords);
   if (!doesExist) {
     return window.withProgress(
       {
@@ -76,14 +81,14 @@ async function installServiceIfMissing(serviceName: string, coords: MavenCoords)
         title: `Installing ${serviceName}`,
       },
       async progress => {
-        await installJar(serviceName, coords, progress);
+        await installJar(extensionPath, serviceName, coords, progress);
       },
     );
   }
 }
 
-function isServiceInstalled(coords: MavenCoords): boolean {
-  const jarPath = getServicePathFromCoords(coords);
+function isServiceInstalled(extensionPath: string, coords: MavenCoords): boolean {
+  const jarPath = getServicePathFromCoords(extensionPath, coords);
   try {
     const stats = fs.lstatSync(jarPath);
     return stats != null;
@@ -94,12 +99,13 @@ function isServiceInstalled(coords: MavenCoords): boolean {
 
 // Installs a jar using maven coordinates
 async function installJar(
+  extensionPath: string,
   serviceName: string,
   coords: MavenCoords,
   progress?: Progress<{ message?: string; increment?: number }>,
 ): Promise<void> {
-  const jarPath = getServicePathFromCoords(coords);
-  const jarHome = getJarHome();
+  const jarPath = getServicePathFromCoords(extensionPath, coords);
+  const jarHome = getJarHome(extensionPath);
 
   if (progress) {
     progress.report({ message: `Starting download` });
