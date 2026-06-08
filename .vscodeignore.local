@@ -16,4 +16,3 @@ tests
 .eslintrc.js
 test-workspaces
 scripts
-node_modules
