@@ -91,6 +91,90 @@ suite('CqlLibraryRootTreeItem.rebuildTestCases', () => {
     expect(getTestCaseNames(item)).to.have.members(['1111', '2222']);
   });
 
+  test('constructor sorts test cases alphabetically', () => {
+    const freshLib = new CqlLibrary(
+      Uri.joinPath(
+        workspace.workspaceFolders![0].uri,
+        'input/cql/SimpleMeasure.cql',
+      ),
+    );
+    freshLib.testCaseLoadState = 'loaded';
+    // Add test cases in reverse alphabetical order
+    freshLib.addTestCase(
+      new CqlTestCase(
+        Uri.joinPath(
+          workspace.workspaceFolders![0].uri,
+          'input/tests/Measure/SimpleMeasure/3333',
+        ),
+      ),
+    );
+    freshLib.addTestCase(
+      new CqlTestCase(
+        Uri.joinPath(
+          workspace.workspaceFolders![0].uri,
+          'input/tests/Measure/SimpleMeasure/1111',
+        ),
+      ),
+    );
+    freshLib.addTestCase(
+      new CqlTestCase(
+        Uri.joinPath(
+          workspace.workspaceFolders![0].uri,
+          'input/tests/Measure/SimpleMeasure/2222',
+        ),
+      ),
+    );
+
+    const item = new CqlLibraryRootTreeItem(
+      freshLib,
+      vscode.TreeItemCollapsibleState.Collapsed,
+    );
+    expect(getTestCaseNames(item)).to.deep.equal(['1111', '2222', '3333']);
+  });
+
+  test('rebuildTestCases preserves alphabetical order', () => {
+    const freshLib = new CqlLibrary(
+      Uri.joinPath(
+        workspace.workspaceFolders![0].uri,
+        'input/cql/SimpleMeasure.cql',
+      ),
+    );
+    freshLib.testCaseLoadState = 'loaded';
+    // Add test cases in reverse alphabetical order
+    freshLib.addTestCase(
+      new CqlTestCase(
+        Uri.joinPath(
+          workspace.workspaceFolders![0].uri,
+          'input/tests/Measure/SimpleMeasure/3333',
+        ),
+      ),
+    );
+    freshLib.addTestCase(
+      new CqlTestCase(
+        Uri.joinPath(
+          workspace.workspaceFolders![0].uri,
+          'input/tests/Measure/SimpleMeasure/1111',
+        ),
+      ),
+    );
+    freshLib.addTestCase(
+      new CqlTestCase(
+        Uri.joinPath(
+          workspace.workspaceFolders![0].uri,
+          'input/tests/Measure/SimpleMeasure/2222',
+        ),
+      ),
+    );
+
+    const item = new CqlLibraryRootTreeItem(
+      freshLib,
+      vscode.TreeItemCollapsibleState.Collapsed,
+    );
+    // Rebuild with same filter
+    item.rebuildTestCases('');
+    expect(getTestCaseNames(item)).to.deep.equal(['1111', '2222', '3333']);
+  });
+
   test('rebuildTestCases adds Results node when result is added', () => {
     const item = new CqlLibraryRootTreeItem(lib, vscode.TreeItemCollapsibleState.Collapsed);
     // Initially no result

@@ -104,4 +104,21 @@ suite('CqlTestCaseRootTreeItem filtering', () => {
     const root = makeRoot('cancer');
     expect(root.description).to.equal('cancer');
   });
+
+  test('resetChildren sorts test cases alphabetically', () => {
+    // Add test cases to library in reverse alphabetical order
+    lib.addTestCase(tc2222);
+    lib.addTestCase(tc1111);
+
+    const root = makeRoot();
+    root.addTestCase(tc2222);
+    root.addTestCase(tc1111);
+
+    // children match insertion order before reset
+    expect(root.children.map(c => (c as any).cqlTestCase.name)).to.deep.equal(['2222', '1111']);
+
+    // resetChildren re-sorts via library TestCases
+    root.resetChildren();
+    expect(root.children.map(c => (c as any).cqlTestCase.name)).to.deep.equal(['1111', '2222']);
+  });
 });
