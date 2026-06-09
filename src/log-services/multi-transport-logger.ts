@@ -112,9 +112,9 @@ export class MultiTransportLogger implements LogOutputChannel {
     const lines = value.split('\n');
 
     // Logback server stderr pattern:
-    // %-4relative [%thread] %-5level %logger{35} %msg %n
-    // e.g. "1234 [main] WARN  org.opencds.SomeClass Some message"
-    const logbackPattern = /^\d+\s+\[\S+\]\s+(TRACE|DEBUG|INFO|WARN|ERROR)\s+/i;
+    // %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{35} %msg %n
+    // e.g. "2026-06-09 14:30:01.123 [main] WARN  org.opencds.SomeClass Some message"
+    const logbackPattern = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3}\s+\[\S+\]\s+(TRACE|DEBUG|INFO|WARN|ERROR)\s+/i;
 
     // vscode-languageclient LSP trace pattern: "[Trace - HH:MM:SS AM] ..."
     // The header and its params body arrive in separate appendLine() calls, so
