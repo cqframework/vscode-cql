@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { CqlDebugAstTrackerFactory } from '../../../debug/cqlDebugAstTracker';
-import * as viewElm from '../../../commands/view-elm';
+import * as sessionMgr from '../../../views/astSplitSession';
 
 suite('CqlDebugAstTracker', () => {
   let sandbox: sinon.SinonSandbox;
@@ -16,7 +16,7 @@ suite('CqlDebugAstTracker', () => {
       highlightCqlSpan: sandbox.spy(),
       noteExternalReveal: sandbox.spy(),
     };
-    getActiveSplitDebugHookStub = sandbox.stub(viewElm, 'getActiveSplitDebugHook');
+    getActiveSplitDebugHookStub = sandbox.stub(sessionMgr.AstSplitSessionManager, 'getActiveSession');
   });
 
   teardown(() => {

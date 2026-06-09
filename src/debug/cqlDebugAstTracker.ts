@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import { getActiveSplitDebugHook } from '../commands/view-elm';
 import * as log from '../log-services/logger';
+import { AstSplitSessionManager } from '../views/astSplitSession';
 
 let lastStoppedThreadId: number | undefined;
+let activeCqlPath: string | undefined;
 
 export class CqlDebugAstTrackerFactory implements vscode.DebugAdapterTrackerFactory {
   createDebugAdapterTracker(session: vscode.DebugSession): vscode.DebugAdapterTracker {
@@ -12,10 +13,12 @@ export class CqlDebugAstTrackerFactory implements vscode.DebugAdapterTrackerFact
 
         if (message.type === 'event' && message.event === 'terminated') {
           log.debug('DAP terminated event received');
+          activeCqlPath = undefined;
           return;
         }
         if (message.type === 'event' && message.event === 'exited') {
           log.debug('DAP exited event received', { exitCode: message.body?.exitCode });
+          activeCqlPath = undefined;
           return;
         }
 
@@ -33,7 +36,7 @@ export class CqlDebugAstTrackerFactory implements vscode.DebugAdapterTrackerFact
           Array.isArray(message.body?.stackFrames) &&
           message.body.stackFrames.length > 0
         ) {
-          applyTopFrame(message.body.stackFrames[0]);
+          await applyTopFrame(message.body.stackFrames[0], session);
         }
       },
     };
@@ -52,24 +55,36 @@ async function syncFromStackTrace(
       levels: 1,
     });
     const top = resp?.stackFrames?.[0];
-    if (top) applyTopFrame(top);
+    if (top) await applyTopFrame(top, session);
   } catch {
     // Session may have ended between stopped event and our request.
   }
 }
 
-function applyTopFrame(frame: {
-  line?: number;
-  column?: number;
-  endLine?: number;
-  endColumn?: number;
-  instructionPointerReference?: string;
-  source?: { path?: string };
-}): void {
-  const hook = getActiveSplitDebugHook();
+async function applyTopFrame(
+  frame: {
+    line?: number;
+    column?: number;
+    endLine?: number;
+    endColumn?: number;
+    instructionPointerReference?: string;
+    source?: { path?: string };
+  },
+  session: vscode.DebugSession,
+): Promise<void> {
+  const hook = AstSplitSessionManager.getActiveSession();
   if (!hook) return;
   if (typeof frame.line !== 'number') return;
-  if (frame.source?.path && !frame.source.path.toLowerCase().endsWith('.cql')) return;
+
+  const sourcePath = frame.source?.path;
+  if (sourcePath && !sourcePath.toLowerCase().endsWith('.cql')) return;
+
+  if (sourcePath && sourcePath !== activeCqlPath) {
+    const swapped = await hook.swapLibrary(sourcePath);
+    if (!swapped) return; // swap failed — don't highlight stale content
+    activeCqlPath = sourcePath;
+  }
+
   hook.highlightCqlSpan({
     line: frame.line,
     column: frame.column ?? 1,

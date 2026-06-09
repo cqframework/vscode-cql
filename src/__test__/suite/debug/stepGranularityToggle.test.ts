@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { Commands } from '../../../commands/commands';
-import * as viewElm from '../../../commands/view-elm';
+import * as sessionMgr from '../../../views/astSplitSession';
 import { activateStepGranularityToggle } from '../../../debug/stepGranularityToggle';
 
 suite('stepGranularityToggle', () => {
@@ -75,7 +75,7 @@ suite('stepGranularityToggle', () => {
   });
 
   test('opens split view when toggling to ast with no active split session', async () => {
-    sandbox.stub(viewElm, 'getActiveSplitDebugHook').returns(undefined);
+    sandbox.stub(sessionMgr.AstSplitSessionManager, 'getActiveSession').returns(undefined);
     sandbox.stub(vscode.window, 'visibleTextEditors').get(() => [
       { document: { uri: { fsPath: '/test/file.cql' } } } as any,
     ]);
@@ -108,9 +108,10 @@ suite('stepGranularityToggle', () => {
   });
 
   test('does not open split view when toggling to ast if split session already active', async () => {
-    sandbox.stub(viewElm, 'getActiveSplitDebugHook').returns({
+    sandbox.stub(sessionMgr.AstSplitSessionManager, 'getActiveSession').returns({
       highlightCqlSpan: sandbox.spy(),
       noteExternalReveal: sandbox.spy(),
+      swapLibrary: sandbox.spy(),
     });
     const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand').resolves(undefined);
 
