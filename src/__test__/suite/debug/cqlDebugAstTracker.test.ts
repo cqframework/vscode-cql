@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { CqlDebugAstTrackerFactory } from '../../../debug/cqlDebugAstTracker';
+import { normalizeSpan } from '../../../debug/types';
 import * as sessionMgr from '../../../views/astSplitSession';
 
 suite('CqlDebugAstTracker', () => {
@@ -158,5 +159,37 @@ suite('CqlDebugAstTracker', () => {
 
     expect(sessionMock.customRequest.calledOnce).to.be.true;
     // Should not throw
+  });
+});
+
+suite('normalizeSpan', () => {
+  test('defaults endLine to line when endLine omitted', () => {
+    const result = normalizeSpan({ line: 7, column: 3 });
+    expect(result).to.deep.equal({ line: 7, column: 3, endLine: 7, endColumn: 3 });
+  });
+
+  test('defaults endColumn to column when endColumn omitted', () => {
+    const result = normalizeSpan({ line: 7, column: 3, endLine: 7 });
+    expect(result).to.deep.equal({ line: 7, column: 3, endLine: 7, endColumn: 3 });
+  });
+
+  test('defaults column to 1 when omitted', () => {
+    const result = normalizeSpan({ line: 7 });
+    expect(result).to.deep.equal({ line: 7, column: 1, endLine: 7, endColumn: 1 });
+  });
+
+  test('preserves explicit end coordinates', () => {
+    const result = normalizeSpan({ line: 5, column: 3, endLine: 8, endColumn: 12 });
+    expect(result).to.deep.equal({ line: 5, column: 3, endLine: 8, endColumn: 12 });
+  });
+
+  test('preserves localId when instructionPointerReference is present', () => {
+    const result = normalizeSpan({ line: 5, column: 3, endLine: 8, endColumn: 12, instructionPointerReference: '42' });
+    expect(result).to.deep.equal({ line: 5, column: 3, endLine: 8, endColumn: 12, localId: '42' });
+  });
+
+  test('omits localId when instructionPointerReference is absent', () => {
+    const result = normalizeSpan({ line: 7, column: 5, endLine: 7, endColumn: 10 });
+    expect(result).to.not.have.property('localId');
   });
 });

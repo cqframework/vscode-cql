@@ -127,6 +127,12 @@ export function findNearestForwardLoc(
   return next !== undefined ? lineIndex.astToCqlLoc.get(next) : undefined;
 }
 
+export function hasFullCoordinates(
+  span: { line: number; column: number; endLine: number; endColumn: number },
+): boolean {
+  return span.endLine !== span.line || span.endColumn !== span.column;
+}
+
 export function formatJson(raw: string): string {
   try {
     return JSON.stringify(JSON.parse(raw), null, 2);

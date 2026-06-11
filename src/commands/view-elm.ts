@@ -26,8 +26,8 @@ export function register(context: ExtensionContext): void {
     commands.registerCommand(Commands.VIEW_ELM_COMMAND_AST, async (uri: Uri) => {
       viewElm(uri, 'ast');
     }),
-    commands.registerCommand(Commands.VIEW_ELM_COMMAND_AST_SPLIT, async (uri: Uri) => {
-      await AstSplitSessionManager.createOrUpdateSession(uri);
+    commands.registerCommand(Commands.VIEW_ELM_COMMAND_AST_SPLIT, async (uri: Uri, fetcher?: (uri: Uri, type: 'ast') => Promise<string>) => {
+      await AstSplitSessionManager.createOrUpdateSession(uri, fetcher);
     }),
     workspace.onDidCloseTextDocument(doc => {
       for (const [key, tracked] of openAstDocs) {

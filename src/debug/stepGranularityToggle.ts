@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { Commands } from '../commands/commands';
+import { fetchAstViaDap } from './debugAstFetcher';
 import * as log from '../log-services/logger';
 import { AstSplitSessionManager } from '../views/astSplitSession';
 
@@ -42,6 +43,7 @@ export function activateStepGranularityToggle(context: vscode.ExtensionContext) 
           await vscode.commands.executeCommand(
             Commands.VIEW_ELM_COMMAND_AST_SPLIT,
             cqlEditor.document.uri,
+            fetchAstViaDap,
           );
         }
       }

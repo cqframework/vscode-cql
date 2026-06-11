@@ -16,7 +16,7 @@ import {
   window,
   workspace,
 } from 'vscode';
-import { ActiveSplitDebugHook, CqlSpan } from '../debug/types';
+import { ActiveSplitDebugHook, CqlSpan, normalizeSpan } from '../debug/types';
 import { getElm } from '../cql-service/cqlService.getElm';
 import * as log from '../log-services/logger';
 import {
@@ -24,6 +24,7 @@ import {
   buildAstLineIndex,
   buildLocatorKey,
   findNearestForwardLoc,
+  hasFullCoordinates,
   sortAstBySourceOrder,
 } from '../utils/astIndex';
 
@@ -43,6 +44,7 @@ export class SplitViewSession implements ActiveSplitDebugHook {
   private selectionListener!: { dispose(): void };
   private closeListener!: { dispose(): void };
   private docSaveListener!: { dispose(): void };
+  private fetcher: (uri: Uri, type: 'ast') => Promise<string>;
 
   private constructor(
     cqlUri: Uri,
@@ -53,6 +55,7 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     astDecoration: TextEditorDecorationType,
     cqlLineDecoration: TextEditorDecorationType,
     cqlSpanDecoration: TextEditorDecorationType,
+    fetcher: (uri: Uri, type: 'ast') => Promise<string>,
   ) {
     this.cqlUri = cqlUri;
     this.currentCqlUri = currentCqlUri;
@@ -62,6 +65,7 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     this.astDecoration = astDecoration;
     this.cqlLineDecoration = cqlLineDecoration;
     this.cqlSpanDecoration = cqlSpanDecoration;
+    this.fetcher = fetcher;
   }
 
   static async create(
@@ -103,6 +107,7 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     const session = new SplitViewSession(
       cqlUri, cqlUri, cqlEditor, astEditor, lineIndex,
       astDecoration, cqlLineDecoration, cqlSpanDecoration,
+      fetcher,
     );
 
     session.setupSyncListeners();
@@ -124,20 +129,25 @@ export class SplitViewSession implements ActiveSplitDebugHook {
 
   async swapLibrary(newCqlPath: string): Promise<boolean> {
     const newCqlUri = Uri.file(newCqlPath);
+    log.debug('swapLibrary: enter newCqlPath={} currentCqlUri={}', newCqlPath, this.currentCqlUri.toString());
 
     let newAst: string;
     try {
-      newAst = await getElm(newCqlUri, 'ast');
+      newAst = await this.fetcher(newCqlUri, 'ast');
+      log.debug('swapLibrary: AST fetched successfully ({} chars) for {}', newAst.length, newCqlPath);
     } catch (error) {
-      log.debug(`swapLibrary: getElm failed for ${newCqlPath}: ${error}`);
+      log.debug(`swapLibrary: fetcher failed for ${newCqlPath}: ${error}`);
       window.showWarningMessage(
         `CQL debugger: could not load AST for ${path.basename(newCqlPath)}`,
       );
       return false;
     }
 
+    this.teardownListeners();
+
     const newSorted = sortAstBySourceOrder(newAst);
     this.lineIndex = buildAstLineIndex(newSorted);
+    log.debug('swapLibrary: AST sorted, lineIndex built ({} cqlToAstLines)', this.lineIndex.cqlToAstLines.size);
     await this.replaceDocumentContent(this.astEditor, newSorted);
 
     const newCqlDoc = await workspace.openTextDocument(newCqlUri);
@@ -146,11 +156,11 @@ export class SplitViewSession implements ActiveSplitDebugHook {
       { viewColumn: this.cqlEditor.viewColumn, preserveFocus: true, preview: false },
     );
 
-    this.teardownListeners();
     this.cqlEditor = newCqlEditor;
     this.currentCqlUri = newCqlUri;
     this.setupSyncListeners();
 
+    log.debug('swapLibrary: completed successfully for {}', newCqlPath);
     return true;
   }
 
@@ -160,8 +170,6 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     if (this.disposed) return;
     this.disposed = true;
     this.teardownListeners();
-    this.closeListener.dispose();
-    this.docSaveListener.dispose();
     this.cqlLineDecoration.dispose();
     this.cqlSpanDecoration.dispose();
     this.astDecoration.dispose();
@@ -254,21 +262,30 @@ export class SplitViewSession implements ActiveSplitDebugHook {
 
   private syncCqlToAstBySpan(span: CqlSpan): void {
     let astLines: number[] | undefined;
+    let matchSource: string | undefined;
 
     if (span.localId) {
       astLines = this.lineIndex.localIdToAstLines.get(span.localId);
+      if (astLines && astLines.length > 0) matchSource = 'localId';
     }
     if (!astLines || astLines.length === 0) {
-      const key = buildLocatorKey(span.line, span.column, span.endLine, span.endColumn);
-      astLines = this.lineIndex.locatorToAstLines.get(key);
+      if (hasFullCoordinates(span)) {
+        const key = buildLocatorKey(span.line, span.column, span.endLine, span.endColumn);
+        astLines = this.lineIndex.locatorToAstLines.get(key);
+        if (astLines && astLines.length > 0) matchSource = `locator:${key}`;
+      }
     }
     if (!astLines || astLines.length === 0) {
       astLines = this.lineIndex.cqlToAstLines.get(span.line - 1);
+      if (astLines && astLines.length > 0) matchSource = 'cqlLine';
     }
     if (!astLines || astLines.length === 0) {
+      log.debug('syncCqlToAstBySpan: no match for span={} (localId={}, locator, cqlLine all failed)',
+        span, span.localId);
       this.astEditor.setDecorations(this.astDecoration, []);
       return;
     }
+    log.debug('syncCqlToAstBySpan: match source={} span={} astLines={}', matchSource, span, astLines);
     this.applyAstHighlight(astLines, this.astEditor, this.astDecoration);
   }
 
@@ -305,7 +322,7 @@ export class SplitViewSession implements ActiveSplitDebugHook {
       if (saved.uri.toString() !== this.currentCqlUri.toString()) return;
       if (this.disposed) return;
       try {
-        const newAst = await getElm(this.currentCqlUri, 'ast');
+        const newAst = await this.fetcher(this.currentCqlUri, 'ast');
         const newSorted = sortAstBySourceOrder(newAst);
         this.lineIndex = buildAstLineIndex(newSorted);
         await this.replaceDocumentContent(this.astEditor, newSorted);
@@ -325,21 +342,30 @@ export class SplitViewSession implements ActiveSplitDebugHook {
   private teardownListeners(): void {
     this.visibleRangesListener?.dispose();
     this.selectionListener?.dispose();
+    this.closeListener?.dispose();
+    this.docSaveListener?.dispose();
   }
 
   private async replaceDocumentContent(editor: TextEditor, content: string): Promise<boolean> {
     const lastLine = editor.document.lineAt(editor.document.lineCount - 1);
-    return (await editor.edit(edit =>
+    const ok = (await editor.edit(edit =>
       edit.replace(new Range(0, 0, lastLine.lineNumber, lastLine.text.length), content),
     )) ?? false;
+    log.debug('replaceDocumentContent: success={} uri={} ({} lines replaced)',
+      ok, editor.document.uri.toString(), content.split('\n').length);
+    return ok;
   }
 
   private async catchUpToDebugger(): Promise<void> {
     const session = debug.activeDebugSession;
-    if (!session || session.type !== 'cql') return;
+    if (!session || session.type !== 'cql') {
+      log.debug('catchUpToDebugger: no active CQL session');
+      return;
+    }
     try {
       const threadsResp = await session.customRequest('threads');
       const threads: any[] = threadsResp?.threads ?? [];
+      log.debug('catchUpToDebugger: {} threads found', threads.length);
       for (const thread of threads) {
         if (thread.id === undefined) continue;
         try {
@@ -350,18 +376,23 @@ export class SplitViewSession implements ActiveSplitDebugHook {
           });
           const top = resp?.stackFrames?.[0];
           if (top && typeof top.line === 'number') {
-            this.highlightCqlSpan({
-              line: top.line,
-              column: top.column ?? 1,
-              endLine: top.endLine ?? top.line,
-              endColumn: top.endColumn ?? top.column ?? 1,
-              ...(top.instructionPointerReference ? { localId: top.instructionPointerReference } : {}),
-            });
+            const sourcePath = top.source?.path;
+            log.debug('catchUpToDebugger: thread={} line={} source={} localId={}',
+              thread.id, top.line, sourcePath, top.instructionPointerReference);
+            if (sourcePath && sourcePath.toLowerCase().endsWith('.cql') &&
+                Uri.file(sourcePath).toString() !== this.currentCqlUri.toString()) {
+              await this.swapLibrary(sourcePath);
+            }
+            this.highlightCqlSpan(normalizeSpan(top));
             return;
           }
-        } catch { /* try next thread */ }
+        } catch (e) {
+          log.debug('catchUpToDebugger: stackTrace error thread={} err={}', thread.id, e);
+        }
       }
-    } catch { /* session ended */ }
+    } catch (e) {
+      log.debug('catchUpToDebugger: threads error err={}', e);
+    }
   }
 }
 
@@ -372,9 +403,12 @@ export class AstSplitSessionManager {
     return AstSplitSessionManager.activeSession;
   }
 
-  static async createOrUpdateSession(cqlUri: Uri): Promise<ActiveSplitDebugHook> {
+  static async createOrUpdateSession(
+    cqlUri: Uri,
+    fetcher?: (uri: Uri, type: 'ast') => Promise<string>,
+  ): Promise<ActiveSplitDebugHook> {
     AstSplitSessionManager.activeSession?.dispose();
-    const session = await SplitViewSession.create(cqlUri);
+    const session = await SplitViewSession.create(cqlUri, fetcher);
     AstSplitSessionManager.activeSession = session;
     return session;
   }

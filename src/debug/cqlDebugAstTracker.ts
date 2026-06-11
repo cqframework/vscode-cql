@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as log from '../log-services/logger';
+import { normalizeSpan } from './types';
 import { AstSplitSessionManager } from '../views/astSplitSession';
 
 let lastStoppedThreadId: number | undefined;
@@ -55,9 +56,12 @@ async function syncFromStackTrace(
       levels: 1,
     });
     const top = resp?.stackFrames?.[0];
+    log.debug('syncFromStackTrace: threadId={} topFrame={}', threadId, top ? {
+      line: top.line, column: top.column, source: top.source?.path, localId: top.instructionPointerReference,
+    } : null);
     if (top) await applyTopFrame(top, session);
-  } catch {
-    // Session may have ended between stopped event and our request.
+  } catch (e) {
+    log.debug('syncFromStackTrace: error threadId={} err={}', threadId, e);
   }
 }
 
@@ -73,23 +77,32 @@ async function applyTopFrame(
   session: vscode.DebugSession,
 ): Promise<void> {
   const hook = AstSplitSessionManager.getActiveSession();
-  if (!hook) return;
-  if (typeof frame.line !== 'number') return;
+  if (!hook) {
+    log.debug('applyTopFrame: no active split session');
+    return;
+  }
+  if (typeof frame.line !== 'number') {
+    log.debug('applyTopFrame: no line in frame');
+    return;
+  }
 
   const sourcePath = frame.source?.path;
-  if (sourcePath && !sourcePath.toLowerCase().endsWith('.cql')) return;
+  if (sourcePath && !sourcePath.toLowerCase().endsWith('.cql')) {
+    log.debug('applyTopFrame: non-CQL source path={}', sourcePath);
+    return;
+  }
+
+  log.debug('applyTopFrame: sourcePath={} line={} activeCqlPath={} needsSwap={}',
+    sourcePath, frame.line, activeCqlPath, sourcePath && sourcePath !== activeCqlPath);
 
   if (sourcePath && sourcePath !== activeCqlPath) {
     const swapped = await hook.swapLibrary(sourcePath);
+    log.debug('applyTopFrame: swapLibrary result={} for path={}', swapped, sourcePath);
     if (!swapped) return; // swap failed — don't highlight stale content
     activeCqlPath = sourcePath;
   }
 
-  hook.highlightCqlSpan({
-    line: frame.line,
-    column: frame.column ?? 1,
-    endLine: frame.endLine ?? frame.line,
-    endColumn: frame.endColumn ?? frame.column ?? 1,
-    ...(frame.instructionPointerReference ? { localId: frame.instructionPointerReference } : {}),
-  });
+  const span = normalizeSpan(frame);
+  log.debug('applyTopFrame: highlighting span={}', span);
+  hook.highlightCqlSpan(span);
 }
