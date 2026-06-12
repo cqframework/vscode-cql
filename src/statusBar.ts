@@ -1,5 +1,6 @@
 import { MarkdownString, StatusBarAlignment, StatusBarItem, window } from 'vscode';
 import { Disposable } from 'vscode-languageclient';
+import { VersionInfo } from './protocol';
 
 class StatusBar implements Disposable {
   private statusBarItem: StatusBarItem;
@@ -28,10 +29,15 @@ class StatusBar implements Disposable {
     this.statusBarItem.tooltip = StatusTooltip.Error;
   }
 
-  public setReady(version?: string): void {
+  public setReady(version?: string, componentVersions?: VersionInfo): void {
     this.statusBarItem.text = StatusIcon.Ready;
     const tooltip = new MarkdownString(StatusTooltip.Ready);
-    if (version) {
+    if (componentVersions) {
+      if (componentVersions.translator) tooltip.appendMarkdown(`\n\nTranslator: ${componentVersions.translator}`);
+      if (componentVersions.engine) tooltip.appendMarkdown(`\n\nEngine: ${componentVersions.engine}`);
+      if (componentVersions.clinicalReasoning) tooltip.appendMarkdown(`\n\nClinical Reasoning: ${componentVersions.clinicalReasoning}`);
+      if (componentVersions.languageServer) tooltip.appendMarkdown(`\n\nLanguage Server: ${componentVersions.languageServer}`);
+    } else if (version) {
       tooltip.appendMarkdown(`\n\nVersion: ${version}`);
     }
     this.statusBarItem.tooltip = tooltip;

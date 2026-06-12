@@ -39,6 +39,11 @@ export namespace Commands {
   export const VIEW_ELM = 'org.opencds.cqf.cql.ls.viewElm';
 
   /*
+   * Get Version Info
+   */
+  export const GET_VERSION_INFO = 'org.opencds.cqf.cql.ls.getVersionInfo';
+
+  /*
    * Execute CQL
    */
   export const EXECUTE_CQL_COMMAND = 'cql.editor.execute';

@@ -47,6 +47,13 @@ export interface ActionableMessage {
   data?: any;
   commands?: Command[];
 }
+
+export interface VersionInfo {
+  translator?: string;
+  engine?: string;
+  clinicalReasoning?: string;
+  languageServer?: string;
+}
 export namespace StatusNotification {
   export const type = new NotificationType<StatusReport>('language/status');
 }

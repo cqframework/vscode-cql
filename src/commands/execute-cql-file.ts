@@ -14,6 +14,7 @@ import {
 import { Utils } from 'vscode-uri';
 import { Commands } from '../commands/commands';
 import { ExecuteCqlResponse, ExpressionResult, executeCql } from '../cql-service/cqlService.executeCql';
+import { VersionInfo } from '../protocol';
 import { CqlSolution } from '../model/cqlSolution';
 import { extractLibraryVersion } from '../helpers/fileHelper';
 import { resolveParameters } from '../helpers/parametersHelper';
@@ -39,6 +40,7 @@ export interface TestCaseResult {
   parameters: ResultParameterEntry[];
   results: ExpressionResult[];
   errors: string[];
+  versions?: VersionInfo;
 }
 
 export function register(context: ExtensionContext): void {
@@ -185,6 +187,17 @@ export async function executeCQLFile(
     );
 
     const cqlMessage = `CQL: ${cqlPaths.libraryDirectoryPath.fsPath}`;
+
+
+    const versionMessage: string[] = [];
+    const versions = response.versions;
+    if (versions) {
+      if (versions.translator) versionMessage.push(`Translator version: ${versions.translator}`);
+      if (versions.engine) versionMessage.push(`Engine version: ${versions.engine}`);
+      if (versions.clinicalReasoning) versionMessage.push(`Clinical Reasoning version: ${versions.clinicalReasoning}`);
+      if (versions.languageServer) versionMessage.push(`Language Server version: ${versions.languageServer}`);
+    }
+
     const terminologyMessage = fs.existsSync(cqlPaths.terminologyDirectoryPath.fsPath)
       ? `Terminology: ${cqlPaths.terminologyDirectoryPath.fsPath}`
       : `No terminology found at ${cqlPaths.terminologyDirectoryPath.fsPath}. Evaluation may fail if terminology is required.`;
@@ -209,6 +222,7 @@ export async function executeCQLFile(
     }
 
     await insertLineAtEnd(textEditor, cqlMessage);
+    await insertLineAtEnd(textEditor, `${versionMessage.join('\n')}\n`);
     await insertLineAtEnd(textEditor, terminologyMessage);
     await insertLineAtEnd(textEditor, `${testMessage.join('\n')}\n`);
 
@@ -225,6 +239,7 @@ export async function executeCQLFile(
 
 export function formatResponse(response: ExecuteCqlResponse): string {
   const lines: string[] = [];
+
   for (let i = 0; i < response.results.length; i++) {
     if (i > 0) {
       lines.push('');
@@ -287,6 +302,7 @@ export function writeIndividualResultFiles(
       parameters,
       results,
       errors,
+      versions: response.versions,
     };
 
     const patientId = testCaseName ?? 'no-context';
