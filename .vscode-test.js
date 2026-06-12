@@ -12,5 +12,6 @@ module.exports = defineConfig({
     '--skip-welcome',
     '--skip-release-notes',
     '--disable-workspace-trust',
+    '--user-data-dir=/tmp/vscode-test-userdata',
   ],
 });

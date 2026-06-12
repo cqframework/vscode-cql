@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
 import * as log from '../log-services/logger';
-import { normalizeSpan } from './types';
-import { AstSplitSessionManager } from '../views/astSplitSession';
+import { getControllerInstance } from './cqlAstDebugViewController';
 
 let lastStoppedThreadId: number | undefined;
-let activeCqlPath: string | undefined;
 
 export class CqlDebugAstTrackerFactory implements vscode.DebugAdapterTrackerFactory {
   createDebugAdapterTracker(session: vscode.DebugSession): vscode.DebugAdapterTracker {
@@ -14,19 +12,17 @@ export class CqlDebugAstTrackerFactory implements vscode.DebugAdapterTrackerFact
 
         if (message.type === 'event' && message.event === 'terminated') {
           log.debug('DAP terminated event received');
-          activeCqlPath = undefined;
           return;
         }
         if (message.type === 'event' && message.event === 'exited') {
           log.debug('DAP exited event received', { exitCode: message.body?.exitCode });
-          activeCqlPath = undefined;
           return;
         }
 
         if (message.type === 'event' && message.event === 'stopped') {
           lastStoppedThreadId = message.body?.threadId;
+          log.debug('DAP stopped event received threadId={}', lastStoppedThreadId);
           await syncFromStackTrace(session, lastStoppedThreadId);
-          log.debug('DAP stopped event received');
           return;
         }
 
@@ -76,9 +72,9 @@ async function applyTopFrame(
   },
   session: vscode.DebugSession,
 ): Promise<void> {
-  const hook = AstSplitSessionManager.getActiveSession();
-  if (!hook) {
-    log.debug('applyTopFrame: no active split session');
+  const controller = getControllerInstance();
+  if (!controller) {
+    log.debug('applyTopFrame: no controller instance');
     return;
   }
   if (typeof frame.line !== 'number') {
@@ -92,17 +88,6 @@ async function applyTopFrame(
     return;
   }
 
-  log.debug('applyTopFrame: sourcePath={} line={} activeCqlPath={} needsSwap={}',
-    sourcePath, frame.line, activeCqlPath, sourcePath && sourcePath !== activeCqlPath);
-
-  if (sourcePath && sourcePath !== activeCqlPath) {
-    const swapped = await hook.swapLibrary(sourcePath);
-    log.debug('applyTopFrame: swapLibrary result={} for path={}', swapped, sourcePath);
-    if (!swapped) return; // swap failed — don't highlight stale content
-    activeCqlPath = sourcePath;
-  }
-
-  const span = normalizeSpan(frame);
-  log.debug('applyTopFrame: highlighting span={}', span);
-  hook.highlightCqlSpan(span);
+  log.debug('applyTopFrame: sourcePath={} line={}', sourcePath, frame.line);
+  await controller.onFrameStopped(frame, session);
 }

@@ -2,31 +2,28 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { CqlDebugAstTrackerFactory } from '../../../debug/cqlDebugAstTracker';
 import { normalizeSpan } from '../../../debug/types';
-import * as sessionMgr from '../../../views/astSplitSession';
+import * as controllerModule from '../../../debug/cqlAstDebugViewController';
 
 suite('CqlDebugAstTracker', () => {
   let sandbox: sinon.SinonSandbox;
   let factory: CqlDebugAstTrackerFactory;
-  let hookSpy: { highlightCqlSpan: sinon.SinonSpy; noteExternalReveal: sinon.SinonSpy };
-  let getActiveSplitDebugHookStub: sinon.SinonStub;
+  let controllerStub: { onFrameStopped: sinon.SinonStub };
+  let getControllerInstanceStub: sinon.SinonStub;
 
   setup(() => {
     sandbox = sinon.createSandbox();
     factory = new CqlDebugAstTrackerFactory();
-    hookSpy = {
-      highlightCqlSpan: sandbox.spy(),
-      noteExternalReveal: sandbox.spy(),
+    controllerStub = {
+      onFrameStopped: sandbox.stub().resolves(undefined),
     };
-    getActiveSplitDebugHookStub = sandbox.stub(sessionMgr.AstSplitSessionManager, 'getActiveSession');
+    getControllerInstanceStub = sandbox.stub(controllerModule, 'getControllerInstance').returns(controllerStub as any);
   });
 
   teardown(() => {
     sandbox.restore();
   });
 
-  test('stopped event triggers stackTrace and hook call with 1-indexed span', async () => {
-    getActiveSplitDebugHookStub.returns(hookSpy);
-
+  test('stopped event triggers stackTrace and controller call with frame', async () => {
     const sessionMock = {
       customRequest: sandbox.stub().resolves({ stackFrames: [{ line: 7 }] }),
     } as any;
@@ -46,21 +43,20 @@ suite('CqlDebugAstTracker', () => {
       startFrame: 0,
       levels: 1,
     });
-    expect(hookSpy.highlightCqlSpan.calledOnce).to.be.true;
-    expect(hookSpy.highlightCqlSpan.firstCall.args[0]).to.deep.equal({
-      line: 7,
-      column: 1,
-      endLine: 7,
-      endColumn: 1,
-    });
+    expect(controllerStub.onFrameStopped.calledOnce).to.be.true;
+    const frameArg = controllerStub.onFrameStopped.firstCall.args[0];
+    expect(frameArg.line).to.equal(7);
+    expect(frameArg.source).to.be.undefined;
   });
 
-  test('passes instructionPointerReference as localId on span', async () => {
-    getActiveSplitDebugHookStub.returns(hookSpy);
-
+  test('passes full frame to controller (instructionPointerReference, source path)', async () => {
     const sessionMock = {
       customRequest: sandbox.stub().resolves({
-        stackFrames: [{ line: 5, column: 3, endLine: 8, endColumn: 10, instructionPointerReference: '208' }],
+        stackFrames: [{
+          line: 5, column: 3, endLine: 8, endColumn: 10,
+          instructionPointerReference: '208',
+          source: { path: '/test/file.cql' },
+        }],
       }),
     } as any;
 
@@ -72,19 +68,17 @@ suite('CqlDebugAstTracker', () => {
       body: { threadId: 1 },
     });
 
-    expect(hookSpy.highlightCqlSpan.calledOnce).to.be.true;
-    expect(hookSpy.highlightCqlSpan.firstCall.args[0]).to.deep.equal({
-      line: 5,
-      column: 3,
-      endLine: 8,
-      endColumn: 10,
-      localId: '208',
-    });
+    expect(controllerStub.onFrameStopped.calledOnce).to.be.true;
+    const frameArg = controllerStub.onFrameStopped.firstCall.args[0];
+    expect(frameArg.line).to.equal(5);
+    expect(frameArg.column).to.equal(3);
+    expect(frameArg.endLine).to.equal(8);
+    expect(frameArg.endColumn).to.equal(10);
+    expect(frameArg.instructionPointerReference).to.equal('208');
+    expect(frameArg.source.path).to.equal('/test/file.cql');
   });
 
   test('piggy-backs on stackTrace response from UI-issued request', () => {
-    getActiveSplitDebugHookStub.returns(hookSpy);
-
     const sessionMock = {} as any;
     const tracker = factory.createDebugAdapterTracker(sessionMock);
 
@@ -95,17 +89,13 @@ suite('CqlDebugAstTracker', () => {
       body: { stackFrames: [{ line: 4 }] },
     });
 
-    expect(hookSpy.highlightCqlSpan.calledOnce).to.be.true;
-    expect(hookSpy.highlightCqlSpan.firstCall.args[0]).to.deep.equal({
-      line: 4,
-      column: 1,
-      endLine: 4,
-      endColumn: 1,
-    });
+    expect(controllerStub.onFrameStopped.calledOnce).to.be.true;
+    expect(controllerStub.onFrameStopped.firstCall.args[0].line).to.equal(4);
   });
 
-  test('no active split view: tracker swallows without throwing', async () => {
-    getActiveSplitDebugHookStub.returns(undefined);
+  test('no controller: tracker swallows without throwing', async () => {
+    // Re-stub from setup to return undefined instead of the controllerStub
+    getControllerInstanceStub.returns(undefined);
 
     const sessionMock = {
       customRequest: sandbox.stub().resolves({ stackFrames: [{ line: 7 }] }),
@@ -120,12 +110,9 @@ suite('CqlDebugAstTracker', () => {
     });
 
     expect(sessionMock.customRequest.calledOnce).to.be.true;
-    // No error should be thrown
   });
 
   test('stopped event without threadId: does not call customRequest', async () => {
-    getActiveSplitDebugHookStub.returns(hookSpy);
-
     const sessionMock = {
       customRequest: sandbox.stub(),
     } as any;
@@ -139,12 +126,10 @@ suite('CqlDebugAstTracker', () => {
     });
 
     expect(sessionMock.customRequest.called).to.be.false;
-    expect(hookSpy.highlightCqlSpan.called).to.be.false;
+    expect(controllerStub.onFrameStopped.called).to.be.false;
   });
 
   test('customRequest rejection is caught silently', async () => {
-    getActiveSplitDebugHookStub.returns(hookSpy);
-
     const sessionMock = {
       customRequest: sandbox.stub().rejects(new Error('session ended')),
     } as any;
@@ -158,7 +143,6 @@ suite('CqlDebugAstTracker', () => {
     });
 
     expect(sessionMock.customRequest.calledOnce).to.be.true;
-    // Should not throw
   });
 });
 

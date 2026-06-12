@@ -6,12 +6,6 @@ export interface CqlSpan {
   localId?: string;
 }
 
-export interface ActiveSplitDebugHook {
-  highlightCqlSpan(span: CqlSpan): void;
-  noteExternalReveal(): void;
-  swapLibrary(newCqlPath: string): Promise<boolean>;
-}
-
 export function normalizeSpan(frame: {
   line?: number;
   column?: number;

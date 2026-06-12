@@ -1,7 +1,4 @@
-import * as path from 'path';
 import {
-  commands,
-  debug,
   DecorationOptions,
   OverviewRulerLane,
   Position,
@@ -16,21 +13,17 @@ import {
   window,
   workspace,
 } from 'vscode';
-import { ActiveSplitDebugHook, CqlSpan, normalizeSpan } from '../debug/types';
 import { getElm } from '../cql-service/cqlService.getElm';
 import * as log from '../log-services/logger';
 import {
   AstLineIndex,
   buildAstLineIndex,
-  buildLocatorKey,
   findNearestForwardLoc,
-  hasFullCoordinates,
   sortAstBySourceOrder,
 } from '../utils/astIndex';
 
-export class SplitViewSession implements ActiveSplitDebugHook {
+export class SplitViewSession {
   private cqlUri: Uri;
-  private currentCqlUri: Uri;
   private astEditor: TextEditor;
   private cqlEditor: TextEditor;
   private lineIndex: AstLineIndex;
@@ -48,7 +41,6 @@ export class SplitViewSession implements ActiveSplitDebugHook {
 
   private constructor(
     cqlUri: Uri,
-    currentCqlUri: Uri,
     cqlEditor: TextEditor,
     astEditor: TextEditor,
     lineIndex: AstLineIndex,
@@ -58,7 +50,6 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     fetcher: (uri: Uri, type: 'ast') => Promise<string>,
   ) {
     this.cqlUri = cqlUri;
-    this.currentCqlUri = currentCqlUri;
     this.cqlEditor = cqlEditor;
     this.astEditor = astEditor;
     this.lineIndex = lineIndex;
@@ -105,63 +96,14 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     });
 
     const session = new SplitViewSession(
-      cqlUri, cqlUri, cqlEditor, astEditor, lineIndex,
+      cqlUri, cqlEditor, astEditor, lineIndex,
       astDecoration, cqlLineDecoration, cqlSpanDecoration,
       fetcher,
     );
 
     session.setupSyncListeners();
-    session.catchUpToDebugger();
 
     return session;
-  }
-
-  // ─── ActiveSplitDebugHook implementation ───
-
-  highlightCqlSpan(span: CqlSpan): void {
-    this.lastAstRevealTime = performance.now();
-    this.syncCqlToAstBySpan(span);
-  }
-
-  noteExternalReveal(): void {
-    this.lastAstRevealTime = performance.now();
-  }
-
-  async swapLibrary(newCqlPath: string): Promise<boolean> {
-    const newCqlUri = Uri.file(newCqlPath);
-    log.debug('swapLibrary: enter newCqlPath={} currentCqlUri={}', newCqlPath, this.currentCqlUri.toString());
-
-    let newAst: string;
-    try {
-      newAst = await this.fetcher(newCqlUri, 'ast');
-      log.debug('swapLibrary: AST fetched successfully ({} chars) for {}', newAst.length, newCqlPath);
-    } catch (error) {
-      log.debug(`swapLibrary: fetcher failed for ${newCqlPath}: ${error}`);
-      window.showWarningMessage(
-        `CQL debugger: could not load AST for ${path.basename(newCqlPath)}`,
-      );
-      return false;
-    }
-
-    this.teardownListeners();
-
-    const newSorted = sortAstBySourceOrder(newAst);
-    this.lineIndex = buildAstLineIndex(newSorted);
-    log.debug('swapLibrary: AST sorted, lineIndex built ({} cqlToAstLines)', this.lineIndex.cqlToAstLines.size);
-    await this.replaceDocumentContent(this.astEditor, newSorted);
-
-    const newCqlDoc = await workspace.openTextDocument(newCqlUri);
-    const newCqlEditor = await window.showTextDocument(
-      newCqlDoc,
-      { viewColumn: this.cqlEditor.viewColumn, preserveFocus: true, preview: false },
-    );
-
-    this.cqlEditor = newCqlEditor;
-    this.currentCqlUri = newCqlUri;
-    this.setupSyncListeners();
-
-    log.debug('swapLibrary: completed successfully for {}', newCqlPath);
-    return true;
   }
 
   // ─── Lifecycle ───
@@ -173,7 +115,6 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     this.cqlLineDecoration.dispose();
     this.cqlSpanDecoration.dispose();
     this.astDecoration.dispose();
-    AstSplitSessionManager.clearSession();
   }
 
   // ─── Private sync helpers ───
@@ -260,35 +201,6 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     );
   }
 
-  private syncCqlToAstBySpan(span: CqlSpan): void {
-    let astLines: number[] | undefined;
-    let matchSource: string | undefined;
-
-    if (span.localId) {
-      astLines = this.lineIndex.localIdToAstLines.get(span.localId);
-      if (astLines && astLines.length > 0) matchSource = 'localId';
-    }
-    if (!astLines || astLines.length === 0) {
-      if (hasFullCoordinates(span)) {
-        const key = buildLocatorKey(span.line, span.column, span.endLine, span.endColumn);
-        astLines = this.lineIndex.locatorToAstLines.get(key);
-        if (astLines && astLines.length > 0) matchSource = `locator:${key}`;
-      }
-    }
-    if (!astLines || astLines.length === 0) {
-      astLines = this.lineIndex.cqlToAstLines.get(span.line - 1);
-      if (astLines && astLines.length > 0) matchSource = 'cqlLine';
-    }
-    if (!astLines || astLines.length === 0) {
-      log.debug('syncCqlToAstBySpan: no match for span={} (localId={}, locator, cqlLine all failed)',
-        span, span.localId);
-      this.astEditor.setDecorations(this.astDecoration, []);
-      return;
-    }
-    log.debug('syncCqlToAstBySpan: match source={} span={} astLines={}', matchSource, span, astLines);
-    this.applyAstHighlight(astLines, this.astEditor, this.astDecoration);
-  }
-
   // ─── Private lifecycle helpers ───
 
   private setupSyncListeners(): void {
@@ -319,10 +231,10 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     });
 
     this.docSaveListener = workspace.onDidSaveTextDocument(async saved => {
-      if (saved.uri.toString() !== this.currentCqlUri.toString()) return;
+      if (saved.uri.toString() !== this.cqlUri.toString()) return;
       if (this.disposed) return;
       try {
-        const newAst = await this.fetcher(this.currentCqlUri, 'ast');
+        const newAst = await this.fetcher(this.cqlUri, 'ast');
         const newSorted = sortAstBySourceOrder(newAst);
         this.lineIndex = buildAstLineIndex(newSorted);
         await this.replaceDocumentContent(this.astEditor, newSorted);
@@ -356,61 +268,17 @@ export class SplitViewSession implements ActiveSplitDebugHook {
     return ok;
   }
 
-  private async catchUpToDebugger(): Promise<void> {
-    const session = debug.activeDebugSession;
-    if (!session || session.type !== 'cql') {
-      log.debug('catchUpToDebugger: no active CQL session');
-      return;
-    }
-    try {
-      const threadsResp = await session.customRequest('threads');
-      const threads: any[] = threadsResp?.threads ?? [];
-      log.debug('catchUpToDebugger: {} threads found', threads.length);
-      for (const thread of threads) {
-        if (thread.id === undefined) continue;
-        try {
-          const resp = await session.customRequest('stackTrace', {
-            threadId: thread.id,
-            startFrame: 0,
-            levels: 1,
-          });
-          const top = resp?.stackFrames?.[0];
-          if (top && typeof top.line === 'number') {
-            const sourcePath = top.source?.path;
-            log.debug('catchUpToDebugger: thread={} line={} source={} localId={}',
-              thread.id, top.line, sourcePath, top.instructionPointerReference);
-            if (sourcePath && sourcePath.toLowerCase().endsWith('.cql') &&
-                Uri.file(sourcePath).toString() !== this.currentCqlUri.toString()) {
-              await this.swapLibrary(sourcePath);
-            }
-            this.highlightCqlSpan(normalizeSpan(top));
-            return;
-          }
-        } catch (e) {
-          log.debug('catchUpToDebugger: stackTrace error thread={} err={}', thread.id, e);
-        }
-      }
-    } catch (e) {
-      log.debug('catchUpToDebugger: threads error err={}', e);
-    }
-  }
 }
 
 export class AstSplitSessionManager {
   private static activeSession: SplitViewSession | undefined;
 
-  static getActiveSession(): ActiveSplitDebugHook | undefined {
-    return AstSplitSessionManager.activeSession;
-  }
-
   static async createOrUpdateSession(
     cqlUri: Uri,
     fetcher?: (uri: Uri, type: 'ast') => Promise<string>,
-  ): Promise<ActiveSplitDebugHook> {
+  ): Promise<void> {
     AstSplitSessionManager.activeSession?.dispose();
-    const session = await SplitViewSession.create(cqlUri, fetcher);
-    AstSplitSessionManager.activeSession = session;
-    return session;
+    AstSplitSessionManager.activeSession = await SplitViewSession.create(cqlUri, fetcher);
   }
 
   static clearSession(): void {

@@ -12,6 +12,7 @@ const EXPECTED_COMMANDS = [
   'cql.editor.view-elm.ast.split',
   // Debug commands
   'cql.debug.toggle-step-granularity',
+  'cql.debug.ast.reveal-cql',
   // Global commands
   'cql.execute.select-libraries',
   'cql.open.server-log',
@@ -55,6 +56,10 @@ const EXPECTED_COMMANDS = [
   'cql.explorer.resource.copy',
   'cql.explorer.resource.cut',
   'cql.explorer.resource.delete',
+  // Auto-generated view commands (from contributes.views)
+  'cql.debug.ast.open',
+  'cql.debug.ast.focus',
+  'cql.debug.ast.resetViewLocation',
 ];
 
 suite('CQL command registration', () => {

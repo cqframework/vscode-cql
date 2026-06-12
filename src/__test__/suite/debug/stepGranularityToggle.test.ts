@@ -1,8 +1,6 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { Commands } from '../../../commands/commands';
-import * as sessionMgr from '../../../views/astSplitSession';
 import { activateStepGranularityToggle } from '../../../debug/stepGranularityToggle';
 
 suite('stepGranularityToggle', () => {
@@ -74,11 +72,7 @@ suite('stepGranularityToggle', () => {
     expect(statusBarItemStub.hide.called).to.be.true;
   });
 
-  test('opens split view when toggling to ast with no active split session', async () => {
-    sandbox.stub(sessionMgr.AstSplitSessionManager, 'getActiveSession').returns(undefined);
-    sandbox.stub(vscode.window, 'visibleTextEditors').get(() => [
-      { document: { uri: { fsPath: '/test/file.cql' } } } as any,
-    ]);
+  test('focuses AST tree view when toggling to ast', async () => {
     const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand').resolves(undefined);
 
     const sessionMock = {
@@ -103,38 +97,24 @@ suite('stepGranularityToggle', () => {
     await (toggleCommand as any).execute();
 
     expect(executeCommandStub.calledOnce).to.be.true;
-    expect(executeCommandStub.firstCall.args[0]).to.equal(Commands.VIEW_ELM_COMMAND_AST_SPLIT);
-    expect(executeCommandStub.firstCall.args[1].fsPath).to.equal('/test/file.cql');
+    expect(executeCommandStub.firstCall.args[0]).to.equal('cql.debug.ast.focus');
   });
 
-  test('does not open split view when toggling to ast if split session already active', async () => {
-    sandbox.stub(sessionMgr.AstSplitSessionManager, 'getActiveSession').returns({
-      highlightCqlSpan: sandbox.spy(),
-      noteExternalReveal: sandbox.spy(),
-      swapLibrary: sandbox.spy(),
-    });
+  test('non-CQL session does not trigger focus', async () => {
     const executeCommandStub = sandbox.stub(vscode.commands, 'executeCommand').resolves(undefined);
 
     const sessionMock = {
-      type: 'cql',
-      configuration: { stepGranularity: 'cql' },
+      type: 'not-cql',
+      configuration: {},
       customRequest: sandbox.stub().resolves(undefined),
     } as any;
 
     sandbox.stub(vscode.debug, 'onDidStartDebugSession').callsFake((callback: (e: vscode.DebugSession) => void) => {
-      callback(sessionMock);
       return { dispose: sandbox.spy() };
     });
-    sandbox.stub(vscode.debug, 'activeDebugSession').get(() => sessionMock);
+    sandbox.stub(vscode.debug, 'activeDebugSession').get(() => undefined);
 
     activateStepGranularityToggle(context);
-
-    const toggleCommand = context.subscriptions.find(
-      (sub: any) => sub.command === 'cql.debug.toggle-step-granularity' && typeof sub.execute === 'function',
-    );
-    expect(toggleCommand).to.exist;
-
-    await (toggleCommand as any).execute();
 
     expect(executeCommandStub.called).to.be.false;
   });

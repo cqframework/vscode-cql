@@ -1,8 +1,5 @@
 import * as vscode from 'vscode';
-import { Commands } from '../commands/commands';
-import { fetchAstViaDap } from './debugAstFetcher';
 import * as log from '../log-services/logger';
-import { AstSplitSessionManager } from '../views/astSplitSession';
 
 type Granularity = 'cql' | 'ast';
 const sessionGranularity = new WeakMap<vscode.DebugSession, Granularity>();
@@ -35,16 +32,11 @@ export function activateStepGranularityToggle(context: vscode.ExtensionContext) 
       await s.customRequest('setStepGranularity', { granularity: next });
       sessionGranularity.set(s, next);
       refresh(s);
-      if (next === 'ast' && !AstSplitSessionManager.getActiveSession()) {
-        const cqlEditor = vscode.window.visibleTextEditors.find(
-          e => e.document.uri.fsPath.toLowerCase().endsWith('.cql'),
-        );
-        if (cqlEditor) {
-          await vscode.commands.executeCommand(
-            Commands.VIEW_ELM_COMMAND_AST_SPLIT,
-            cqlEditor.document.uri,
-            fetchAstViaDap,
-          );
+      if (next === 'ast') {
+        try {
+          await vscode.commands.executeCommand('cql.debug.ast.focus');
+        } catch (e) {
+          log.debug('toggle-step-granularity: could not focus AST view err={}', e);
         }
       }
     }),

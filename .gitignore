@@ -7,4 +7,5 @@ target
 dist
 bin
 .vscode-test
+coverage
 src/__test__/resources/simple-project/input/tests/results
