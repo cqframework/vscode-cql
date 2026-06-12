@@ -32,6 +32,7 @@ const EXPECTED_COMMANDS = [
   // Explorer project node commands
   'cql.explorer.project.execute-all',
   'cql.explorer.project.execute-select',
+  'cql.explorer.edit-config',
   // Explorer library node commands
   'cql.explorer.library.execute-all',
   'cql.explorer.library.execute',

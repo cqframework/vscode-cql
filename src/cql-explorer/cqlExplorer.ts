@@ -18,6 +18,7 @@ import { CqlProject, CqlTestCase } from '../model/cqlProject';
 import { CqlSolution } from '../model/cqlSolution';
 import { DeviationKind } from '../model/igLayoutDetector';
 import { cloneTestCase } from './testCaseCloner';
+import { ConfigEditorWebview } from '../views/configEditorWebview';
 import {
   copyResources,
   deleteResources,
@@ -749,6 +750,28 @@ export class CqlExplorer {
           await promptAndDebugTestCase(item.cqlLibrary);
         },
       ),
+
+      // Edit project configuration
+      vscode.commands.registerCommand('cql.explorer.edit-config', async () => {
+        const projects = CqlSolution.getCurrent().projects;
+        if (projects.length === 0) {
+          vscode.window.showInformationMessage('No CQL projects found.');
+          return;
+        }
+        let project: CqlProject;
+        if (projects.length === 1) {
+          project = projects[0];
+        } else {
+          const pick = await vscode.window.showQuickPick(
+            projects.map(p => ({ label: p.name, project: p })),
+            { placeHolder: 'Select a project to configure' },
+          );
+          if (!pick) return;
+          project = pick.project;
+        }
+        logger.debug(`Command cql.explorer.edit-config selected for project: ${project.name}`);
+        ConfigEditorWebview.createOrShow(project);
+      }),
     );
   }
 

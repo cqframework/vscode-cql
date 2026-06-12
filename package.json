@@ -346,6 +346,12 @@
         "category": "CQL Explorer"
       },
       {
+        "command": "cql.explorer.edit-config",
+        "title": "Edit Configuration",
+        "icon": "$(gear)",
+        "category": "CQL Explorer"
+      },
+      {
         "command": "cql.debug.toggle-step-granularity",
         "title": "CQL: Toggle Step Granularity (CQL ↔ AST)",
         "category": "CQL"
@@ -699,6 +705,11 @@
         }
       ],
       "view/title": [
+        {
+          "command": "cql.explorer.edit-config",
+          "when": "view == cql-libraries && cql.solutionLoaded",
+          "group": "navigation@0"
+        },
         {
           "command": "cql.execute.select-libraries",
           "when": "view == cql-libraries && cql.solutionLoaded",
