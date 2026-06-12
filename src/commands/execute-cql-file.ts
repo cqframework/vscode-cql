@@ -6,37 +6,33 @@ import {
   Position,
   ProgressLocation,
   Range,
-  TextEditor,
   Uri,
   window,
-  workspace,
+  workspace
 } from 'vscode';
 import { Utils } from 'vscode-uri';
 import { Commands } from '../commands/commands';
-import { ExecuteCqlResponse, ExpressionResult, executeCql } from '../cql-service/cqlService.executeCql';
-import { VersionInfo } from '../protocol';
-import { CqlSolution } from '../model/cqlSolution';
-import { extractLibraryVersion } from '../helpers/fileHelper';
-import { resolveParameters } from '../helpers/parametersHelper';
-import * as log from '../log-services/logger';
-import { CqlParametersConfig, ParameterEntry, ResultParameterEntry } from '../model/parameters';
-import { getMeasureReportData, getTestCases, TestCase } from '../model/testCase';
+import { executeCql, ExecuteCqlResponse, ExpressionResult } from '../cql-service/cqlService.executeCql';
 import {
   CqlPaths,
   getCqlPaths,
   getExcludedTestCases,
   getFhirVersion,
   loadTestConfig,
-  TestConfig,
-  waitForTestCasesLoaded,
+  waitForTestCasesLoaded
 } from '../helpers/cqlHelpers';
+import { extractLibraryVersion } from '../helpers/fileHelper';
+import { resolveParameters } from '../helpers/parametersHelper';
+import { CqlSolution } from '../model/cqlSolution';
+import { CqlParametersConfig, ParameterEntry, ResultParameterEntry } from '../model/parameters';
+import { getMeasureReportData, getTestCases, TestCase } from '../model/testCase';
+import { VersionInfo } from '../protocol';
 
 export interface TestCaseResult {
   executedAt: string;
   libraryName: string;
   testCaseName: string | null;
   testCaseDescription: string | null;
-  /** All parameters for this evaluation — config-supplied and CQL-declared defaults — ordered config first, defaults appended. Differentiate by the `source` field. */
   parameters: ResultParameterEntry[];
   results: ExpressionResult[];
   errors: string[];
@@ -51,6 +47,9 @@ export function register(context: ExtensionContext): void {
   );
 }
 
+/**
+ * Main command entry point orchestrating execution flow.
+ */
 export async function executeCQLFile(
   cqlFileUri: Uri,
   testCases: Array<TestCase> | undefined = undefined,
@@ -71,10 +70,10 @@ export async function executeCQLFile(
 
   const libraryName = Utils.basename(cqlFileUri).replace('.cql', '').split('-')[0];
   const libraryDisplayName = Utils.basename(cqlFileUri).replace('.cql', '');
-
   const testConfig = loadTestConfig(cqlPaths.testConfigPath);
   const excludedTestCases = getExcludedTestCases(libraryName, testConfig.testCasesToExclude);
 
+  // Sync / Wait for projects if required
   if (testCases === undefined) {
     const project = CqlSolution.getCurrent().findProjectForUri(cqlFileUri);
     const library = project?.Libraries.find(lib => lib.uri.fsPath === cqlFileUri.fsPath);
@@ -93,14 +92,12 @@ export async function executeCQLFile(
 
   const cqlSource = fs.readFileSync(cqlFileUri.fsPath, 'utf-8');
   const determinedFhirVersion = getFhirVersion(cqlSource);
-  const fhirVersion: string = determinedFhirVersion ?? 'R4';
+  const fhirVersion = determinedFhirVersion ?? 'R4';
   if (!determinedFhirVersion) {
     window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
   }
   const libraryVersion = extractLibraryVersion(cqlSource);
-
-  const resultFormat = resultFormatOverride
-    ?? testConfig.resultFormat
+  const resultFormat = resultFormatOverride ?? testConfig.resultFormat;
 
   const doExecute = () =>
     executeCql(
@@ -116,8 +113,8 @@ export async function executeCQLFile(
     );
 
   const startExecution = Date.now();
-
   let response: ExecuteCqlResponse | undefined;
+
   if (showProgress) {
     response = await window.withProgress(
       {
@@ -134,124 +131,194 @@ export async function executeCQLFile(
     response = await doExecute();
   }
 
-  const endExecution = Date.now();
-  const elapsedSeconds = (endExecution - startExecution) / 1000;
+  const elapsedSeconds = (Date.now() - startExecution) / 1000;
 
+  if (!response) return;
+
+  // Delegate based on format layout strategy
   if (resultFormat === 'individual') {
-    if (response) {
-      writeIndividualResultFiles(
-        libraryName,
-        libraryVersion,
-        effectiveTestCases,
-        response,
-        cqlPaths.resultDirectoryPath,
-        startExecution,
-        testConfig.parameters,
-      );
-    }
-    if (showCompletion && response) {
-      if (effectiveTestCases.length === 1) {
-        const patientId = effectiveTestCases[0].name ?? 'no-context';
-        const outputPath = Utils.resolvePath(
-          cqlPaths.resultDirectoryPath,
-          libraryName,
-          `TestCaseResult-${patientId}.json`,
-        );
-        const textDocument = await workspace.openTextDocument(outputPath);
-        await window.showTextDocument(textDocument);
-      } else {
-        const count = effectiveTestCases.length;
-        window.showInformationMessage(
-          `CQL execution complete — ${count} test cases written (${elapsedSeconds.toFixed(1)}s)`,
-        );
-      }
-    }
+    await handleIndividualResults(
+      libraryName,
+      libraryVersion,
+      effectiveTestCases,
+      response,
+      cqlPaths,
+      startExecution,
+      testConfig.parameters,
+      showCompletion,
+      elapsedSeconds
+    );
   } else {
-    const outputPath = Utils.resolvePath(cqlPaths.resultDirectoryPath, `${libraryName}.txt`);
-    fse.ensureDirSync(cqlPaths.resultDirectoryPath.fsPath);
-    if (!fs.existsSync(outputPath.fsPath)) {
-      fs.writeFileSync(outputPath.fsPath, '');
-    }
-    const textDocument = await workspace.openTextDocument(outputPath);
-    const textEditor = await window.showTextDocument(textDocument);
-    await textEditor.edit(
-      editBuilder => {
-        editBuilder.delete(
-          new Range(
-            new Position(0, 0),
-            textDocument.lineAt(Math.max(0, textDocument.lineCount - 1)).range.end,
-          ),
-        );
-      },
-      { undoStopBefore: false, undoStopAfter: false },
+    await handleAggregatedTextReport(
+      libraryName,
+      effectiveTestCases,
+      excludedTestCases,
+      response,
+      cqlPaths,
+      elapsedSeconds
     );
-
-    const cqlMessage = `CQL: ${cqlPaths.libraryDirectoryPath.fsPath}`;
-
-
-    const versionMessage: string[] = [];
-    const versions = response.versions;
-    if (versions) {
-      if (versions.translator) versionMessage.push(`Translator version: ${versions.translator}`);
-      if (versions.engine) versionMessage.push(`Engine version: ${versions.engine}`);
-      if (versions.clinicalReasoning) versionMessage.push(`Clinical Reasoning version: ${versions.clinicalReasoning}`);
-      if (versions.languageServer) versionMessage.push(`Language Server version: ${versions.languageServer}`);
-    }
-
-    const terminologyMessage = fs.existsSync(cqlPaths.terminologyDirectoryPath.fsPath)
-      ? `Terminology: ${cqlPaths.terminologyDirectoryPath.fsPath}`
-      : `No terminology found at ${cqlPaths.terminologyDirectoryPath.fsPath}. Evaluation may fail if terminology is required.`;
-
-    const testMessage: string[] = [];
-    if (effectiveTestCases.length === 1 && !effectiveTestCases[0].name) {
-      testMessage.push(
-        `No data found at ${cqlPaths.testDirectoryPath.fsPath}. Evaluation may fail if data is required.`,
-      );
-    } else {
-      testMessage.push(`Test cases:`);
-      for (const p of effectiveTestCases) {
-        testMessage.push(`${p.name} - ${p.path?.fsPath}`);
-      }
-    }
-
-    if (excludedTestCases.size > 0) {
-      testMessage.push('\nExcluded test cases:');
-      for (const [testCase, reason] of excludedTestCases.entries()) {
-        testMessage.push(`${testCase} - ${reason}`);
-      }
-    }
-
-    await insertLineAtEnd(textEditor, cqlMessage);
-    await insertLineAtEnd(textEditor, `${versionMessage.join('\n')}\n`);
-    await insertLineAtEnd(textEditor, terminologyMessage);
-    await insertLineAtEnd(textEditor, `${testMessage.join('\n')}\n`);
-
-    if (response) {
-      await insertLineAtEnd(textEditor, formatResponse(response));
-    }
-    await insertLineAtEnd(
-      textEditor,
-      `\nelapsed: ${elapsedSeconds.toString()} seconds\n`,
-    );
-    await textDocument.save();
   }
+}
+
+/**
+ * Format Handler: Individual JSON Outputs
+ */
+async function handleIndividualResults(
+  libraryName: string,
+  libraryVersion: string | undefined,
+  effectiveTestCases: TestCase[],
+  response: ExecuteCqlResponse,
+  cqlPaths: CqlPaths,
+  startExecution: number,
+  parameters: CqlParametersConfig | undefined,
+  showCompletion: boolean,
+  elapsedSeconds: number
+) {
+  writeIndividualResultFiles(
+    libraryName,
+    libraryVersion,
+    effectiveTestCases,
+    response,
+    cqlPaths.resultDirectoryPath,
+    startExecution,
+    parameters,
+  );
+
+  if (!showCompletion) return;
+
+  if (effectiveTestCases.length === 1) {
+    const patientId = effectiveTestCases[0].name ?? 'no-context';
+    const outputPath = Utils.resolvePath(
+      cqlPaths.resultDirectoryPath,
+      libraryName,
+      `TestCaseResult-${patientId}.json`,
+    );
+    const textDocument = await workspace.openTextDocument(outputPath);
+    await window.showTextDocument(textDocument);
+  } else {
+    window.showInformationMessage(
+      `CQL execution complete — ${effectiveTestCases.length} test cases written (${elapsedSeconds.toFixed(1)}s)`,
+    );
+  }
+}
+
+/**
+ * Format Handler: Consolidated Text Output
+ */
+async function handleAggregatedTextReport(
+  libraryName: string,
+  effectiveTestCases: TestCase[],
+  excludedTestCases: Map<string, string>,
+  response: ExecuteCqlResponse,
+  cqlPaths: CqlPaths,
+  elapsedSeconds: number
+) {
+  const outputPath = Utils.resolvePath(cqlPaths.resultDirectoryPath, `${libraryName}.txt`);
+  fse.ensureDirSync(cqlPaths.resultDirectoryPath.fsPath);
+  
+  if (!fs.existsSync(outputPath.fsPath)) {
+    fs.writeFileSync(outputPath.fsPath, '');
+  }
+
+  const textDocument = await workspace.openTextDocument(outputPath);
+  const textEditor = await window.showTextDocument(textDocument);
+
+  // Generate complete unified report buffer
+  const reportText = generateTextReport(
+    cqlPaths,
+    effectiveTestCases,
+    excludedTestCases,
+    response,
+    elapsedSeconds
+  );
+
+  // Atomic replace execution
+  const entireDocRange = new Range(
+    new Position(0, 0),
+    textDocument.lineAt(Math.max(0, textDocument.lineCount - 1)).range.end,
+  );
+
+  await textEditor.edit(
+    editBuilder => {
+      editBuilder.replace(entireDocRange, reportText);
+    },
+    { undoStopBefore: false, undoStopAfter: false },
+  );
+
+  await textDocument.save();
+}
+
+/**
+ * String Assembler: Composes entire plaintext dashboard view
+ */
+function generateTextReport(
+  cqlPaths: CqlPaths,
+  effectiveTestCases: TestCase[],
+  excludedTestCases: Map<string, string>,
+  response: ExecuteCqlResponse,
+  elapsedSeconds: number
+): string {
+  const lines: string[] = [];
+
+  lines.push(`CQL: ${cqlPaths.libraryDirectoryPath.fsPath}`);
+
+  // Map system variations cleanly via configuration definitions
+  if (response.versions) {
+    const versionKeys: Array<[keyof VersionInfo, string]> = [
+      ['translator', 'Translator version'],
+      ['engine', 'Engine version'],
+      ['clinicalReasoning', 'Clinical Reasoning version'],
+      ['languageServer', 'Language Server version']
+    ];
+    for (const [key, label] of versionKeys) {
+      if (response.versions[key]) {
+        lines.push(`${label}: ${response.versions[key]}`);
+      }
+    }
+  }
+
+  const termPath = cqlPaths.terminologyDirectoryPath.fsPath;
+  lines.push(
+    fs.existsSync(termPath)
+      ? `Terminology: ${termPath}`
+      : `No terminology found at ${termPath}. Evaluation may fail if terminology is required.`
+  );
+
+  if (effectiveTestCases.length === 1 && !effectiveTestCases[0].name) {
+    lines.push(`No data found at ${cqlPaths.testDirectoryPath.fsPath}. Evaluation may fail if data is required.`);
+  } else {
+    lines.push('Test cases:');
+    for (const p of effectiveTestCases) {
+      lines.push(`${p.name} - ${p.path?.fsPath}`);
+    }
+  }
+
+  if (excludedTestCases.size > 0) {
+    lines.push('\nExcluded test cases:');
+    for (const [testCase, reason] of excludedTestCases.entries()) {
+      lines.push(`${testCase} - ${reason}`);
+    }
+  }
+
+  lines.push('');
+  lines.push(formatResponse(response));
+  lines.push(`\nelapsed: ${elapsedSeconds.toString()} seconds\n`);
+
+  return lines.join('\n');
 }
 
 export function formatResponse(response: ExecuteCqlResponse): string {
   const lines: string[] = [];
 
-  for (let i = 0; i < response.results.length; i++) {
-    if (i > 0) {
-      lines.push('');
-    }
-    for (const expr of response.results[i].expressions) {
+  response.results.forEach((result, i) => {
+    if (i > 0) lines.push('');
+    for (const expr of result.expressions) {
       lines.push(`${expr.name}=${expr.value}`);
     }
-  }
+  });
+
   if (response.logs.length > 0) {
-    lines.push('');
-    lines.push('Evaluation logs:');
-    lines.push(...response.logs);
+    lines.push('', 'Evaluation logs:', ...response.logs);
   }
   return lines.join('\n');
 }
@@ -313,14 +380,4 @@ export function writeIndividualResultFiles(
     );
     fse.outputFileSync(outputPath.fsPath, JSON.stringify(result, null, 2));
   }
-}
-
-async function insertLineAtEnd(textEditor: TextEditor, text: string) {
-  const document = textEditor.document;
-  await textEditor.edit(
-    editBuilder => {
-      editBuilder.insert(new Position(document.lineCount, 0), text + '\n');
-    },
-    { undoStopBefore: false, undoStopAfter: false },
-  );
 }
