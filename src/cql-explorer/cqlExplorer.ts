@@ -189,7 +189,11 @@ export class CqlExplorer {
         const filter = this.nameFilter.toLowerCase();
         const libs = this.cqlProjects
           .flatMap(p => p.Libraries)
-          .filter(l => filter === '' || l.name.toLowerCase().includes(filter));
+          .filter(
+            l =>
+              (!this.hideEmpty || l.TestCases.length > 0) &&
+              (filter === '' || l.name.toLowerCase().includes(filter)),
+          );
         if (libs.length === 0) {
           return;
         }
