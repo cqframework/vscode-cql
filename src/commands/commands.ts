@@ -58,9 +58,4 @@ export namespace Commands {
    * Open settings.json
    */
   export const OPEN_JSON_SETTINGS = 'workbench.action.openSettingsJson';
-
-  /*
-   * Edit Project Configuration
-   */
-  export const EDIT_CONFIG = 'cql.explorer.edit-config';
 }

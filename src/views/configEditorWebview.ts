@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Disposable, Uri, ViewColumn, WebviewPanel, window } from 'vscode';
 import { Utils } from 'vscode-uri';
 import { loadTestConfig, resolveTestConfigPath, TestConfig } from '../helpers/cqlHelpers';
@@ -26,7 +27,11 @@ export class ConfigEditorWebview {
     this.configPath = configPath;
     this.config = config;
     panel.onDidDispose(() => this.dispose(), null, this.disposables);
-    panel.webview.onDidReceiveMessage(msg => this.handleMessage(msg), null, this.disposables);
+    panel.webview.onDidReceiveMessage(
+      msg => { this.handleMessage(msg).catch(err => log.error('handleMessage error', err)); },
+      null,
+      this.disposables,
+    );
   }
 
   static createOrShow(project: CqlProject): void {
@@ -134,6 +139,7 @@ export class ConfigEditorWebview {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 :root {
@@ -279,14 +285,14 @@ const TYPES = ${JSON.stringify(paramTypes)};
 
 let rowIndex = ${exclusions.length};
 
-function addRow(library, testCase, reason) {
+function addRow() {
   const body = document.getElementById('exclusionsBody');
   const i = rowIndex++;
   const tr = document.createElement('tr');
   tr.innerHTML = \`
-    <td><input name="library-\${i}" value="\${library || ''}" placeholder="Library name" /></td>
-    <td><input name="testCase-\${i}" value="\${testCase || ''}" placeholder="Patient UUID" /></td>
-    <td><input name="reason-\${i}" value="\${reason || ''}" placeholder="Reason" /></td>
+    <td><input name="library-\${i}" value="" placeholder="Library name" /></td>
+    <td><input name="testCase-\${i}" value="" placeholder="Patient UUID" /></td>
+    <td><input name="reason-\${i}" value="" placeholder="Reason" /></td>
     <td><button class="remove" data-index="\${i}">✕</button></td>\`;
   tr.querySelector('.remove').onclick = () => tr.remove();
   body.appendChild(tr);
@@ -309,7 +315,7 @@ function makeParamRow(name, type, value) {
 }
 
 function escHtml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
 function gatherParams(container) {
@@ -455,12 +461,20 @@ window.addEventListener('message', event => {
   }
 
   private async saveConfig(updated: TestConfig): Promise<boolean> {
+    if (this.configPath.fsPath.endsWith('.jsonc')) {
+      const confirmed = await window.showWarningMessage(
+        `Saving will permanently remove all comments from ${path.basename(this.configPath.fsPath)}. Continue?`,
+        { modal: true },
+        'Save',
+      );
+      if (confirmed !== 'Save') {
+        void this.panel.webview.postMessage({ type: 'save-result', ok: false });
+        return false;
+      }
+    }
     const data = JSON.stringify(updated, null, 2);
     try {
       await fs.promises.writeFile(this.configPath.fsPath, data, 'utf-8');
-      if (this.configPath.fsPath.endsWith('.jsonc')) {
-        log.warn(`Comments stripped on save to ${this.configPath.fsPath}`);
-      }
       this.config = updated;
       window.showInformationMessage(`Configuration saved for ${this.project.name}`);
       return true;
