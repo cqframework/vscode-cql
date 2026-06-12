@@ -11,13 +11,13 @@ import {
 } from '../model/cqlProject';
 import { DeviationKind } from '../model/igLayoutDetector';
 
-interface LibraryNameParts {
+interface CmsNameParts {
   isCms: boolean;
   measureNumber: number;
   suffix: string;
 }
 
-function parseLibraryName(name: string): LibraryNameParts {
+function parseCmsName(name: string): CmsNameParts {
   const cmsMatch = name.match(/^CMS(?:FHIR)?(\d+)(.*)$/);
   if (cmsMatch) {
     return {
@@ -29,14 +29,25 @@ function parseLibraryName(name: string): LibraryNameParts {
   return { isCms: false, measureNumber: 0, suffix: name };
 }
 
-function compareLibraryNames(a: string, b: string, descending: boolean): number {
-  const pa = parseLibraryName(a);
-  const pb = parseLibraryName(b);
+function compareCmsNames(a: string, b: string, descending: boolean): number {
+  const pa = parseCmsName(a);
+  const pb = parseCmsName(b);
 
-  // CMS group always comes first (ascending and descending)
-  if (pa.isCms !== pb.isCms) return pa.isCms ? -1 : 1;
+  function group(p: CmsNameParts, name: string): number {
+    if (p.isCms) return 1;
+    return name.localeCompare('CMS') < 0 ? 0 : 2;
+  }
 
-  if (pa.isCms) {
+  const ga = group(pa, a);
+  const gb = group(pb, b);
+
+  if (ga !== gb) {
+    // Ascending groups: 0 (< CMS), 1 (CMS), 2 (> CMS)
+    // Descending groups: 2, 1, 0
+    return descending ? gb - ga : ga - gb;
+  }
+
+  if (ga === 1) {
     // Both CMS: sort by measure number numerically
     const numDiff = descending
       ? pb.measureNumber - pa.measureNumber
@@ -48,7 +59,7 @@ function compareLibraryNames(a: string, b: string, descending: boolean): number 
       : pa.suffix.localeCompare(pb.suffix);
   }
 
-  // Neither is CMS: standard localeCompare
+  // Both non-CMS (group 0 or 2): standard localeCompare
   return descending ? b.localeCompare(a) : a.localeCompare(b);
 }
 
@@ -129,7 +140,7 @@ export class CqlTestCaseRootTreeItem extends vscode.TreeItem {
 
   public resetChildren(): void {
     this._children.length = 0;
-    const testCases = this.cqlLibrary.TestCases.sort((a, b) => a.name.localeCompare(b.name));
+    const testCases = this.cqlLibrary.TestCases.sort((a, b) => compareCmsNames(a.name, b.name, false));
     testCases.forEach(tc => this.addTestCase(tc));
   }
 
@@ -215,7 +226,7 @@ export class CqlLibraryRootTreeItem extends vscode.TreeItem {
     this.cqlLibraryTreeItem = new CqlLibraryTreeItem(cqlLibrary);
     this._children.push(this.cqlLibraryTreeItem);
 
-    const testCases = cqlLibrary.TestCases.sort((a, b) => a.name.localeCompare(b.name));
+    const testCases = cqlLibrary.TestCases.sort((a, b) => compareCmsNames(a.name, b.name, false));
     testCases.forEach(tc => this.addTestCase(tc));
 
     if (cqlLibrary.resultUris.length > 0) {
@@ -260,7 +271,7 @@ export class CqlLibraryRootTreeItem extends vscode.TreeItem {
     }
     this._cqlTestCaseRootTreeItem = undefined;
 
-    const testCases = this.cqlLibrary.TestCases.sort((a, b) => a.name.localeCompare(b.name));
+    const testCases = this.cqlLibrary.TestCases.sort((a, b) => compareCmsNames(a.name, b.name, false));
     testCases.forEach(tc => this.addTestCase(tc));
 
     if (this.cqlLibrary.resultUris.length > 0) {
@@ -631,7 +642,7 @@ export class CqlProjectTreeDataProvider implements vscode.TreeDataProvider<vscod
   private sortRootItemsInPlace(): void {
     if (this.cqlProjects.length === 1) {
       (this.rootItems as CqlLibraryRootTreeItem[]).sort((a, b) =>
-        compareLibraryNames(a.cqlLibrary.name, b.cqlLibrary.name, this.sortDescending),
+        compareCmsNames(a.cqlLibrary.name, b.cqlLibrary.name, this.sortDescending),
       );
     } else {
       // Multi-project: full rebuild is acceptable (rare case)
@@ -845,7 +856,7 @@ export function buildTree(
         !hideEmpty || lib.testCaseLoadState !== 'loaded' || lib.TestCases.length > 0,
     )
       .filter(lib => filter === '' || lib.name.toLowerCase().includes(filter))
-      .sort((a, b) => compareLibraryNames(a.name, b.name, sortDescending))
+      .sort((a, b) => compareCmsNames(a.name, b.name, sortDescending))
       .map(
         lib =>
           new CqlLibraryRootTreeItem(

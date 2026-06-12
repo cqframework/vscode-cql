@@ -6,6 +6,7 @@ import {
   CqlLibraryRootTreeItem,
   CqlProjectRootTreeItem,
   CqlProjectTreeDataProvider,
+  CqlTestCaseRootTreeItem,
   CqlTestCasesLoadingTreeItem,
 } from '../../../cql-explorer/cqlProjectTreeDataProvider';
 import { DeviationKind } from '../../../model/igLayoutDetector';
@@ -251,7 +252,7 @@ suite('CqlProjectTreeDataProvider.sortRootItemsInPlace', () => {
     expect(order).to.deep.equal(['CMS2FHIR', 'CMSFHIR529Hybrid']);
   });
 
-  test('ascending sort puts CMS libraries before non-CMS libraries', () => {
+  test('ascending sort puts non-CMS (before CMS alphabetically), then CMS by number, then non-CMS (after CMS alphabetically)', () => {
     const libCMS2 = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/CMS2.cql'));
     const libApple = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/Apple.cql'));
     const libBanana = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/Banana.cql'));
@@ -261,7 +262,7 @@ suite('CqlProjectTreeDataProvider.sortRootItemsInPlace', () => {
     );
 
     const order = provider.getRootItems().map(i => i.label as string);
-    expect(order).to.deep.equal(['CMS2', 'Apple', 'Banana']);
+    expect(order).to.deep.equal(['Apple', 'Banana', 'CMS2']);
   });
 
   test('descending sort reverses CMS measure order and non-CMS alphabetical order', () => {
