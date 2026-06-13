@@ -90,6 +90,17 @@ export function activate(context: ExtensionContext): Promise<void> {
     new CqlExplorer(context);
   }
 
+  registerSelectLibraries(context);
+  registerExecuteCqlFile(context);
+  registerSelectTestCases(context);
+  registerDebugTestCase(context);
+  registerLogCommands(context);
+  registerViewElmCommand(context);
+  activateStepGranularityToggle(context);
+  const controller = activateController(context);
+  context.subscriptions.push(controller);
+  context.subscriptions.push(statusBar);
+
   return requirements
     .resolveRequirements(context)
     .catch(error => {
@@ -124,17 +135,6 @@ export function activate(context: ExtensionContext): Promise<void> {
         outputChannel: outputChannel,
         outputChannelName: EXTENSION_NAME,
       };
-
-      registerSelectLibraries(context);
-      registerExecuteCqlFile(context);
-      registerSelectTestCases(context);
-      registerDebugTestCase(context);
-      registerLogCommands(context);
-      registerViewElmCommand(context);
-      activateStepGranularityToggle(context);
-      const controller = activateController(context);
-      context.subscriptions.push(controller);
-      context.subscriptions.push(statusBar);
 
       await startServer(context, requirements, clientOptions, workspacePath);
     });

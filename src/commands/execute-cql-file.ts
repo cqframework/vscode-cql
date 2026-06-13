@@ -310,8 +310,24 @@ function generateTextReport(
 export function formatResponse(response: ExecuteCqlResponse): string {
   const lines: string[] = [];
 
+  const hasVersions = !!response.versions;
+  if (response.versions) {
+    const versionKeys: Array<[keyof VersionInfo, string]> = [
+      ['translator', 'Translator version'],
+      ['engine', 'Engine version'],
+      ['clinicalReasoning', 'Clinical Reasoning version'],
+      ['languageServer', 'Language Server version']
+    ];
+    for (const [key, label] of versionKeys) {
+      if (response.versions[key]) {
+        lines.push(`${label}: ${response.versions[key]}`);
+      }
+    }
+  }
+
   response.results.forEach((result, i) => {
     if (i > 0) lines.push('');
+    else if (hasVersions) lines.push('');
     for (const expr of result.expressions) {
       lines.push(`${expr.name}=${expr.value}`);
     }
