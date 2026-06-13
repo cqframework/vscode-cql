@@ -2,6 +2,26 @@
 
 
 
+
+## v0.9.6 (prerelease)
+
+Date: 2026-06-13
+
+* add cql deugging support
+* debug hover enhancements
+* add webview config editor
+* fix CQL Explorer library sorting
+* fix issue with execute filtered libraries with no test cases
+* add version info to test case result output
+* add timestamp to server logs
+* fix issue with initial debug test case quickpick race condition
+* catch and surface DAP session startup errors to the user
+* fix issue with cql-ls jar getting deleted when running vscode-cql unit tests
+* remove old execute cql (dead-code)
+* add convert CQL to ELM as an AST
+* bump version to 0.9.6
+
+
 ## v0.9.5 (prerelease)
 
 Date: 2026-05-28
