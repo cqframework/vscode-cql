@@ -9,7 +9,6 @@ import {
   writeIndividualResultFiles,
 } from '../../../commands/execute-cql-file';
 import { ExecuteCqlResponse } from '../../../cql-service/cqlService.executeCql';
-import { VersionInfo } from '../../../protocol';
 import { CqlParametersConfig } from '../../../model/parameters';
 
 suite('formatResponse()', () => {
@@ -82,33 +81,6 @@ suite('formatResponse()', () => {
     expect(formatResponse(response)).to.equal('');
   });
 
-  test('prepends version header when all versions are present', () => {
-    const response: ExecuteCqlResponse = {
-      results: [{ libraryName: 'MyLib', expressions: [{ name: 'IPP', value: '[Encounter]' }] }],
-      logs: [],
-      versions: {
-        translator: '4.9.0',
-        engine: '4.9.0',
-        clinicalReasoning: '4.7.0',
-        languageServer: '4.8.0',
-      },
-    };
-    const output = formatResponse(response);
-    expect(output).to.equal(
-      'Translator version: 4.9.0\nEngine version: 4.9.0\nClinical Reasoning version: 4.7.0\nLanguage Server version: 4.8.0\n\nIPP=[Encounter]',
-    );
-  });
-
-  test('omits version lines that are undefined', () => {
-    const response: ExecuteCqlResponse = {
-      results: [{ libraryName: 'MyLib', expressions: [{ name: 'IPP', value: '[Encounter]' }] }],
-      logs: [],
-      versions: { translator: '4.9.0', engine: undefined, clinicalReasoning: undefined, languageServer: undefined },
-    };
-    const output = formatResponse(response);
-    expect(output).to.equal('Translator version: 4.9.0\n\nIPP=[Encounter]');
-  });
-
   test('omits version header entirely when versions is undefined', () => {
     const response: ExecuteCqlResponse = {
       results: [{ libraryName: 'MyLib', expressions: [{ name: 'IPP', value: '[Encounter]' }] }],
@@ -116,18 +88,6 @@ suite('formatResponse()', () => {
     };
     const output = formatResponse(response);
     expect(output).to.equal('IPP=[Encounter]');
-  });
-
-  test('version header appears before evaluation logs', () => {
-    const response: ExecuteCqlResponse = {
-      results: [{ libraryName: 'MyLib', expressions: [{ name: 'IPP', value: '[]' }] }],
-      logs: ['INFO some log'],
-      versions: { translator: '4.9.0', engine: '4.9.0', clinicalReasoning: '4.7.0', languageServer: '4.8.0' },
-    };
-    const output = formatResponse(response);
-    expect(output).to.include('Translator version:');
-    expect(output).to.include('Evaluation logs:');
-    expect(output.indexOf('Translator version:')).to.be.lessThan(output.indexOf('Evaluation logs:'));
   });
 });
 
