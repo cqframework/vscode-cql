@@ -334,18 +334,6 @@
         "category": "CQL Explorer"
       },
       {
-        "command": "cql.explorer.show-layout-warnings",
-        "title": "Show Layout Warnings",
-        "icon": "$(warning)",
-        "category": "CQL Explorer"
-      },
-      {
-        "command": "cql.explorer.hide-layout-warnings",
-        "title": "Hide Layout Warnings",
-        "icon": "$(warning)",
-        "category": "CQL Explorer"
-      },
-      {
         "command": "cql.explorer.edit-config",
         "title": "Edit Configuration",
         "icon": "$(gear)",
@@ -509,14 +497,6 @@
         },
         {
           "command": "cql.explorer.expand-all",
-          "when": "false"
-        },
-        {
-          "command": "cql.explorer.show-layout-warnings",
-          "when": "false"
-        },
-        {
-          "command": "cql.explorer.hide-layout-warnings",
           "when": "false"
         }
       ],
@@ -764,16 +744,6 @@
           "command": "cql.explorer.sort-asc",
           "when": "view == cql-libraries && cql.sortDescending",
           "group": "2_sort@1"
-        },
-        {
-          "command": "cql.explorer.show-layout-warnings",
-          "when": "view == cql-libraries && !cql.showLayoutWarnings",
-          "group": "3_warnings@1"
-        },
-        {
-          "command": "cql.explorer.hide-layout-warnings",
-          "when": "view == cql-libraries && cql.showLayoutWarnings",
-          "group": "3_warnings@1"
         }
       ]
     },

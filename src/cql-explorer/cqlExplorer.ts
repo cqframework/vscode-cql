@@ -644,6 +644,7 @@ export class CqlExplorer {
         this.updateTreeViewDescription();
       }),
 
+      // TODO: Re-evaluate — layout warnings removed from package.json UI surface
       // Enable layout deviation warnings (icons + Problems panel)
       vscode.commands.registerCommand('cql.explorer.show-layout-warnings', () => {
         this.showLayoutWarnings = true;
@@ -652,6 +653,7 @@ export class CqlExplorer {
         this.publishDiagnostics();
       }),
 
+      // TODO: Re-evaluate — layout warnings removed from package.json UI surface
       // Disable layout deviation warnings
       vscode.commands.registerCommand('cql.explorer.hide-layout-warnings', () => {
         this.showLayoutWarnings = false;
