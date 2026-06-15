@@ -155,6 +155,7 @@ export async function executeCQLFile(
       excludedTestCases,
       response,
       cqlPaths,
+      testConfig.flatResultsInSubfolder ?? false,
       elapsedSeconds
     );
   }
@@ -211,10 +212,14 @@ async function handleAggregatedTextReport(
   excludedTestCases: Map<string, string>,
   response: ExecuteCqlResponse,
   cqlPaths: CqlPaths,
+  flatResultsInSubfolder: boolean,
   elapsedSeconds: number
 ) {
-  const outputPath = Utils.resolvePath(cqlPaths.resultDirectoryPath, `${libraryName}.txt`);
-  fse.ensureDirSync(cqlPaths.resultDirectoryPath.fsPath);
+  const outDir = flatResultsInSubfolder
+    ? Utils.resolvePath(cqlPaths.resultDirectoryPath, libraryName)
+    : cqlPaths.resultDirectoryPath;
+  fse.ensureDirSync(outDir.fsPath);
+  const outputPath = Utils.resolvePath(outDir, `${libraryName}.txt`);
   
   if (!fs.existsSync(outputPath.fsPath)) {
     fs.writeFileSync(outputPath.fsPath, '');

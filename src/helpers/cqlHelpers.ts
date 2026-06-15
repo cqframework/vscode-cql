@@ -24,9 +24,10 @@ export interface TestConfig {
   testCasesToExclude: TestCaseExclusion[];
   parameters?: CqlParametersConfig;
   resultFormat: 'individual' | 'flat';
+  flatResultsInSubfolder?: boolean;
 }
 
-const DEFAULT_TEST_CONFIG: TestConfig = { testCasesToExclude: [], resultFormat: 'flat' }
+const DEFAULT_TEST_CONFIG: TestConfig = { testCasesToExclude: [], resultFormat: 'flat', flatResultsInSubfolder: false }
 
 export function resolveTestConfigPath(testDirectoryPath: Uri): Uri {
   const jsoncPath = Utils.resolvePath(testDirectoryPath, 'config.jsonc');
@@ -123,11 +124,12 @@ export function loadTestConfig(testConfigPath: Uri): TestConfig {
     return {
       ...parsed,
       testCasesToExclude: parsed.testCasesToExclude ?? DEFAULT_TEST_CONFIG.testCasesToExclude,
-      resultFormat: parsed.resultFormat ?? DEFAULT_TEST_CONFIG.resultFormat
+      resultFormat: parsed.resultFormat ?? DEFAULT_TEST_CONFIG.resultFormat,
+      flatResultsInSubfolder: parsed.flatResultsInSubfolder ?? DEFAULT_TEST_CONFIG.flatResultsInSubfolder,
     };
   } catch (error) {
     log.error('Error reading config file', error);
-    return { testCasesToExclude: [], resultFormat: DEFAULT_TEST_CONFIG.resultFormat };
+    return { ...DEFAULT_TEST_CONFIG };
   }
 }
 

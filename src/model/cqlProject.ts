@@ -469,7 +469,7 @@ export class CqlProject extends EventEmitter {
     this.configureTestCaseResourceWatcher();
 
     this.resultFolderWatcher = workspace.createFileSystemWatcher(
-      new RelativePattern(this.resultFolder, '*.txt'),
+      new RelativePattern(this.resultFolder, '**/*.txt'),
     );
     this.configureResultFolderWatcher();
 
@@ -510,7 +510,7 @@ export class CqlProject extends EventEmitter {
             matched++;
           }
         } else if (entry.isDirectory()) {
-          // Individual format: {LibraryName}/TestCaseResult-{patientId}.json
+          // {LibraryName}/ — may contain flat .txt and/or individual TestCaseResult-*.json
           const lib = this.findLibraryByName(entry.name);
           if (lib) {
             try {
@@ -519,7 +519,12 @@ export class CqlProject extends EventEmitter {
                 { withFileTypes: true },
               );
               for (const sub of subEntries) {
-                if (
+                if (sub.isFile() && sub.name.endsWith('.txt')) {
+                  lib.addResult(
+                    Uri.file(path.join(this.resultFolder, entry.name, sub.name)),
+                  );
+                  matched++;
+                } else if (
                   sub.isFile() &&
                   sub.name.startsWith('TestCaseResult-') &&
                   sub.name.endsWith('.json')

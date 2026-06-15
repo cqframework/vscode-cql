@@ -247,6 +247,12 @@ ${isJsonc ? '<div class="warning">⚠ Comments in config.jsonc will be removed o
     <option value="flat" ${this.config.resultFormat === 'flat' ? 'selected' : ''}>Flat</option>
     <option value="individual" ${this.config.resultFormat === 'individual' ? 'selected' : ''}>Individual</option>
   </select>
+  <div style="margin-top: 8px">
+    <label>
+      <input type="checkbox" id="flatResultsInSubfolder" ${this.config.flatResultsInSubfolder ? 'checked' : ''} />
+      Store flat results in library-named subfolder
+    </label>
+  </div>
 </div>
 
 <hr class="section-divider" />
@@ -434,7 +440,12 @@ function save() {
     parameters.push(entry);
   });
 
-  const config = { testCasesToExclude: exclusions, resultFormat: document.getElementById('resultFormat').value };
+  const flatInSubfolder = document.getElementById('flatResultsInSubfolder');
+  const config = {
+    testCasesToExclude: exclusions,
+    resultFormat: document.getElementById('resultFormat').value,
+    flatResultsInSubfolder: flatInSubfolder ? flatInSubfolder.checked : false,
+  };
   if (parameters.length > 0) config.parameters = parameters;
 
   vscode.postMessage({ type: 'save', config });

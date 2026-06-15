@@ -192,6 +192,22 @@ suite('loadTestConfig()', () => {
     expect(result.resultFormat).to.equal('flat');
   });
 
+  test('flatResultsInSubfolder defaults to false when not specified', () => {
+    const config = { testCasesToExclude: [], resultFormat: 'flat' };
+    const configPath = path.join(tmpDir, 'config.json');
+    fs.writeFileSync(configPath, JSON.stringify(config));
+    const result = loadTestConfig(Uri.file(configPath));
+    expect(result.flatResultsInSubfolder).to.equal(false);
+  });
+
+  test('flatResultsInSubfolder is read back when set to true', () => {
+    const config = { testCasesToExclude: [], resultFormat: 'flat', flatResultsInSubfolder: true };
+    const configPath = path.join(tmpDir, 'config.json');
+    fs.writeFileSync(configPath, JSON.stringify(config));
+    const result = loadTestConfig(Uri.file(configPath));
+    expect(result.flatResultsInSubfolder).to.equal(true);
+  });
+
   test('strips JSONC comments when parsing', () => {
     const jsonc = `{
       // this is a comment
