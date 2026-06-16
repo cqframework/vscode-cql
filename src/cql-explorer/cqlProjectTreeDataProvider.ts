@@ -11,6 +11,58 @@ import {
 } from '../model/cqlProject';
 import { DeviationKind } from '../model/igLayoutDetector';
 
+interface CmsNameParts {
+  isCms: boolean;
+  measureNumber: number;
+  suffix: string;
+}
+
+function parseCmsName(name: string): CmsNameParts {
+  const cmsMatch = name.match(/^CMS(?:FHIR)?(\d+)(.*)$/);
+  if (cmsMatch) {
+    return {
+      isCms: true,
+      measureNumber: parseInt(cmsMatch[1], 10),
+      suffix: cmsMatch[2],
+    };
+  }
+  return { isCms: false, measureNumber: 0, suffix: name };
+}
+
+function compareCmsNames(a: string, b: string, descending: boolean): number {
+  const pa = parseCmsName(a);
+  const pb = parseCmsName(b);
+
+  function group(p: CmsNameParts, name: string): number {
+    if (p.isCms) return 1;
+    return name.localeCompare('CMS') < 0 ? 0 : 2;
+  }
+
+  const ga = group(pa, a);
+  const gb = group(pb, b);
+
+  if (ga !== gb) {
+    // Ascending groups: 0 (< CMS), 1 (CMS), 2 (> CMS)
+    // Descending groups: 2, 1, 0
+    return descending ? gb - ga : ga - gb;
+  }
+
+  if (ga === 1) {
+    // Both CMS: sort by measure number numerically
+    const numDiff = descending
+      ? pb.measureNumber - pa.measureNumber
+      : pa.measureNumber - pb.measureNumber;
+    if (numDiff !== 0) return numDiff;
+    // Tie: sort alphabetically by suffix
+    return descending
+      ? pb.suffix.localeCompare(pa.suffix)
+      : pa.suffix.localeCompare(pb.suffix);
+  }
+
+  // Both non-CMS (group 0 or 2): standard localeCompare
+  return descending ? b.localeCompare(a) : a.localeCompare(b);
+}
+
 export class CqlTestCaseResourceTreeItem extends vscode.TreeItem {
   constructor(public readonly resource: CqlTestCaseResource) {
     super(resource.name, vscode.TreeItemCollapsibleState.None);
@@ -88,8 +140,8 @@ export class CqlTestCaseRootTreeItem extends vscode.TreeItem {
 
   public resetChildren(): void {
     this._children.length = 0;
-    this.cqlLibrary.TestCases.sort((a, b) => a.name.localeCompare(b.name));
-    this.cqlLibrary.TestCases.forEach(tc => this.addTestCase(tc));
+    const testCases = this.cqlLibrary.TestCases.sort((a, b) => compareCmsNames(a.name, b.name, false));
+    testCases.forEach(tc => this.addTestCase(tc));
   }
 
   public get children(): vscode.TreeItem[] {
@@ -174,8 +226,8 @@ export class CqlLibraryRootTreeItem extends vscode.TreeItem {
     this.cqlLibraryTreeItem = new CqlLibraryTreeItem(cqlLibrary);
     this._children.push(this.cqlLibraryTreeItem);
 
-    cqlLibrary.TestCases.sort((a, b) => a.name.localeCompare(b.name));
-    cqlLibrary.TestCases.forEach(tc => this.addTestCase(tc));
+    const testCases = cqlLibrary.TestCases.sort((a, b) => compareCmsNames(a.name, b.name, false));
+    testCases.forEach(tc => this.addTestCase(tc));
 
     if (cqlLibrary.resultUris.length > 0) {
       this._children.push(new CqlResultsRootTreeItem(cqlLibrary.resultUris));
@@ -219,8 +271,8 @@ export class CqlLibraryRootTreeItem extends vscode.TreeItem {
     }
     this._cqlTestCaseRootTreeItem = undefined;
 
-    this.cqlLibrary.TestCases.sort((a, b) => a.name.localeCompare(b.name));
-    this.cqlLibrary.TestCases.forEach(tc => this.addTestCase(tc));
+    const testCases = this.cqlLibrary.TestCases.sort((a, b) => compareCmsNames(a.name, b.name, false));
+    testCases.forEach(tc => this.addTestCase(tc));
 
     if (this.cqlLibrary.resultUris.length > 0) {
       this._children.push(new CqlResultsRootTreeItem(this.cqlLibrary.resultUris));
@@ -564,9 +616,7 @@ export class CqlProjectTreeDataProvider implements vscode.TreeDataProvider<vscod
 
     // Loaded Event — sort in-place (avoids discarding existing items and the async re-render gap)
     project.on(CqlProjectEvents.LOADED, () => {
-      if (this.sortDescending) {
-        this.sortRootItemsInPlace();
-      }
+      this.sortRootItemsInPlace();
       this.refresh();
     });
 
@@ -592,9 +642,7 @@ export class CqlProjectTreeDataProvider implements vscode.TreeDataProvider<vscod
   private sortRootItemsInPlace(): void {
     if (this.cqlProjects.length === 1) {
       (this.rootItems as CqlLibraryRootTreeItem[]).sort((a, b) =>
-        this.sortDescending
-          ? b.cqlLibrary.name.localeCompare(a.cqlLibrary.name)
-          : a.cqlLibrary.name.localeCompare(b.cqlLibrary.name),
+        compareCmsNames(a.cqlLibrary.name, b.cqlLibrary.name, this.sortDescending),
       );
     } else {
       // Multi-project: full rebuild is acceptable (rare case)
@@ -808,9 +856,7 @@ export function buildTree(
         !hideEmpty || lib.testCaseLoadState !== 'loaded' || lib.TestCases.length > 0,
     )
       .filter(lib => filter === '' || lib.name.toLowerCase().includes(filter))
-      .sort((a, b) =>
-        sortDescending ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name),
-      )
+      .sort((a, b) => compareCmsNames(a.name, b.name, sortDescending))
       .map(
         lib =>
           new CqlLibraryRootTreeItem(

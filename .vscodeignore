@@ -5,6 +5,7 @@ src/
 .gitignore
 tsconfig.json
 dist/jars
+dist/java-support/jars
 dist/test
 
 .vscode-test

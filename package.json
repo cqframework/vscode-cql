@@ -1,6 +1,6 @@
 {
   "name": "cql",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "displayName": "Clinical Quality Language (CQL)",
   "description": "Syntax highlighting, linting, and execution for the HL7 Clinical Quality Language (CQL) for VS Code",
   "publisher": "cqframework",
@@ -51,6 +51,16 @@
           "CQL",
           "Cql"
         ]
+      },
+      {
+        "id": "ast",
+        "extensions": [
+          ".ast"
+        ],
+        "configuration": "./language-configuration-ast.json",
+        "aliases": [
+          "CQL ELM AST"
+        ]
       }
     ],
     "snippets": [
@@ -64,6 +74,11 @@
         "language": "cql",
         "scopeName": "source.cql",
         "path": "./syntaxes/cql.tmLanguage.json"
+      },
+      {
+        "language": "ast",
+        "scopeName": "source.ast",
+        "path": "./syntaxes/ast.tmLanguage.json"
       }
     ],
     "commands": [
@@ -78,6 +93,11 @@
         "category": "CQL"
       },
       {
+        "command": "cql.editor.debug-test-case",
+        "title": "Debug Test Case",
+        "category": "CQL"
+      },
+      {
         "command": "cql.editor.view-elm.json",
         "title": "View ELM - JSON",
         "category": "CQL"
@@ -85,6 +105,21 @@
       {
         "command": "cql.editor.view-elm.xml",
         "title": "View ELM - XML",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.editor.view-elm.ast",
+        "title": "View ELM - AST",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.editor.view-elm.ast.split",
+        "title": "View ELM - AST (Split)",
+        "category": "CQL"
+      },
+      {
+        "command": "cql.debug.ast.reveal-cql",
+        "title": "Reveal in CQL Editor",
         "category": "CQL"
       },
       {
@@ -146,13 +181,13 @@
       },
       {
         "command": "cql.explorer.sort-asc",
-        "title": "Sort A \u2192 Z",
+        "title": "Sort A → Z",
         "icon": "$(arrow-up)",
         "category": "CQL Explorer"
       },
       {
         "command": "cql.explorer.sort-desc",
-        "title": "Sort Z \u2192 A",
+        "title": "Sort Z → A",
         "icon": "$(arrow-down)",
         "category": "CQL Explorer"
       },
@@ -179,6 +214,18 @@
         "title": "View ELM - xml",
         "category": "CQL Explorer",
         "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "cql.explorer.library.ast",
+        "title": "View ELM - AST",
+        "category": "CQL Explorer",
+        "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "cql.explorer.test-case.debug",
+        "title": "Debug Test Case",
+        "category": "CQL Explorer",
+        "icon": "$(debug-alt)"
       },
       {
         "command": "cql.explorer.test-case.execute",
@@ -287,16 +334,15 @@
         "category": "CQL Explorer"
       },
       {
-        "command": "cql.explorer.show-layout-warnings",
-        "title": "Show Layout Warnings",
-        "icon": "$(warning)",
+        "command": "cql.explorer.edit-config",
+        "title": "Edit Configuration",
+        "icon": "$(gear)",
         "category": "CQL Explorer"
       },
       {
-        "command": "cql.explorer.hide-layout-warnings",
-        "title": "Hide Layout Warnings",
-        "icon": "$(warning)",
-        "category": "CQL Explorer"
+        "command": "cql.debug.toggle-step-granularity",
+        "title": "CQL: Toggle Step Granularity (CQL ↔ AST)",
+        "category": "CQL"
       }
     ],
     "menus": {
@@ -306,11 +352,27 @@
           "when": "false"
         },
         {
+          "command": "cql.editor.debug-test-case",
+          "when": "false"
+        },
+        {
           "command": "cql.editor.view-elm.json",
           "when": "false"
         },
         {
           "command": "cql.editor.view-elm.xml",
+          "when": "false"
+        },
+        {
+          "command": "cql.editor.view-elm.ast",
+          "when": "false"
+        },
+        {
+          "command": "cql.debug.ast.reveal-cql",
+          "when": "false"
+        },
+        {
+          "command": "cql.editor.view-elm.ast.split",
           "when": "false"
         },
         {
@@ -327,6 +389,14 @@
         },
         {
           "command": "cql.explorer.library.elm.xml",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.library.ast",
+          "when": "false"
+        },
+        {
+          "command": "cql.explorer.test-case.debug",
           "when": "false"
         },
         {
@@ -428,14 +498,6 @@
         {
           "command": "cql.explorer.expand-all",
           "when": "false"
-        },
-        {
-          "command": "cql.explorer.show-layout-warnings",
-          "when": "false"
-        },
-        {
-          "command": "cql.explorer.hide-layout-warnings",
-          "when": "false"
         }
       ],
       "editor/context": [
@@ -450,12 +512,27 @@
           "group": "1_cqlactions"
         },
         {
+          "command": "cql.editor.view-elm.ast",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "group": "1_cqlactions"
+        },
+        {
+          "command": "cql.editor.view-elm.ast.split",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "group": "1_cqlactions"
+        },
+        {
           "command": "cql.editor.execute",
           "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
         },
         {
           "command": "cql.editor.execute.select-test-cases",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "group": "1_cqlactions"
+        },
+        {
+          "command": "cql.editor.debug-test-case",
           "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
         }
@@ -477,7 +554,17 @@
           "when": "view == cql-libraries && viewItem == cql-library"
         },
         {
+          "command": "cql.explorer.library.ast",
+          "group": "2:library",
+          "when": "view == cql-libraries && viewItem == cql-library"
+        },
+        {
           "command": "cql.explorer.test-case.execute",
+          "group": "1:test-case",
+          "when": "view == cql-libraries && viewItem == cql-testcase"
+        },
+        {
+          "command": "cql.explorer.test-case.debug",
           "group": "1:test-case",
           "when": "view == cql-libraries && viewItem == cql-testcase"
         },
@@ -537,6 +624,21 @@
           "group": "inline@2"
         },
         {
+          "command": "cql.explorer.test-case.debug",
+          "when": "view == cql-libraries && viewItem == cql-testcase",
+          "group": "inline@3"
+        },
+        {
+          "command": "cql.explorer.test-case.debug",
+          "when": "view == cql-libraries && viewItem =~ /cql-testcase-root/",
+          "group": "1:test-case-root"
+        },
+        {
+          "command": "cql.explorer.test-case.debug",
+          "when": "view == cql-libraries && viewItem =~ /cql-testcase-root/",
+          "group": "inline@4"
+        },
+        {
           "command": "cql.explorer.test-case.execute-select",
           "when": "view == cql-libraries && viewItem =~ /cql-testcase-root/",
           "group": "1:test-case-root"
@@ -583,6 +685,11 @@
         }
       ],
       "view/title": [
+        {
+          "command": "cql.explorer.edit-config",
+          "when": "view == cql-libraries && cql.solutionLoaded",
+          "group": "navigation@0"
+        },
         {
           "command": "cql.execute.select-libraries",
           "when": "view == cql-libraries && cql.solutionLoaded",
@@ -637,16 +744,6 @@
           "command": "cql.explorer.sort-asc",
           "when": "view == cql-libraries && cql.sortDescending",
           "group": "2_sort@1"
-        },
-        {
-          "command": "cql.explorer.show-layout-warnings",
-          "when": "view == cql-libraries && !cql.showLayoutWarnings",
-          "group": "3_warnings@1"
-        },
-        {
-          "command": "cql.explorer.hide-layout-warnings",
-          "when": "view == cql-libraries && cql.showLayoutWarnings",
-          "group": "3_warnings@1"
         }
       ]
     },
@@ -656,8 +753,66 @@
           "id": "cql-libraries",
           "name": "CQL Explorer"
         }
+      ],
+      "debug": [
+        {
+          "id": "cql.debug.ast",
+          "name": "CQL AST",
+          "when": "cql.debug.active"
+        }
       ]
     },
+    "debuggers": [
+      {
+        "type": "cql",
+        "label": "CQL Debug",
+        "languages": [
+          "cql"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "libraryUri",
+              "fhirVersion"
+            ],
+            "properties": {
+              "libraryUri": {
+                "type": "string"
+              },
+              "fhirVersion": {
+                "type": "string"
+              },
+              "testCaseName": {
+                "type": "string"
+              },
+              "testCaseUri": {
+                "type": "string"
+              },
+              "terminologyUri": {
+                "type": "string"
+              },
+              "rootDir": {
+                "type": "string"
+              },
+              "optionsPath": {
+                "type": "string"
+              },
+              "stepGranularity": {
+                "type": "string",
+                "enum": ["cql", "ast"],
+                "default": "cql",
+                "description": "Whether step requests advance through CQL source lines (default) or individual ELM/AST nodes."
+              }
+            }
+          }
+        }
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "cql"
+      }
+    ],
     "jsonValidation": [
       {
         "fileMatch": "**/input/tests/config.jsonc",
@@ -672,7 +827,8 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\" && npm run compile",
+    "package:local": "npm run compile && node scripts/download-jar.js && npx @vscode/vsce package --ignoreFile .vscodeignore.local",
+    "pretest": "node scripts/clean-dist.js && npm run compile",
     "test": "vscode-test",
     "changelog": "node scripts/update-changelog.js"
   },
@@ -680,7 +836,7 @@
     "cql-language-server": {
       "groupId": "org.opencds.cqf.cql.ls",
       "artifactId": "cql-ls-server",
-      "version": "4.7.0"
+      "version": "4.8.0"
     }
   },
   "devDependencies": {
@@ -692,6 +848,7 @@
     "@types/mock-fs": "^4.13.4",
     "@types/node": "^16.18.34",
     "@types/node-fetch": "^2.6.2",
+    "@types/sinon": "^21.0.1",
     "@types/vscode": "^1.73.0",
     "@types/winreg": "^1.2.31",
     "@vscode/test-cli": "^0.0.12",
@@ -701,6 +858,7 @@
     "mock-fs": "^5.5.0",
     "nyc": "^17.1.0",
     "prettier": "^3.3.3",
+    "sinon": "^22.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },

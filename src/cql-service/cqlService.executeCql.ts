@@ -7,10 +7,12 @@ import { CqlParametersConfig } from '../model/parameters';
 import { resolveParameters } from '../helpers/parametersHelper';
 import { extractLibraryVersion } from '../helpers/fileHelper';
 import { TestCase } from '../model/testCase';
+import { VersionInfo } from '../protocol';
 
 export interface ExecuteCqlResponse {
   results: LibraryResult[];
   logs: string[];
+  versions?: VersionInfo;
 }
 
 export interface LibraryResult {

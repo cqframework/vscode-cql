@@ -57,6 +57,24 @@ suite('viewElm()', () => {
     expect(editor!.document.getText()).to.equal(MOCK_XML_ELM);
   });
 
+  test('opens an AST document containing the returned ELM', async () => {
+    const cqlUri = Uri.joinPath(
+      workspace.workspaceFolders![0].uri,
+      'input/cql/SimpleMeasure.cql',
+    );
+
+    const MOCK_AST_ELM = `Library: SimpleMeasure (version 1.0.0)
+├── define: "Patient"
+│ └── Retrieve (dataType: Patient)`;
+
+    await viewElm(cqlUri, 'ast', async () => MOCK_AST_ELM);
+
+    const editor = window.activeTextEditor;
+    expect(editor, 'expected an active text editor after viewElm').to.not.be.undefined;
+    expect(editor!.document.languageId).to.equal('ast');
+    expect(editor!.document.getText()).to.equal(MOCK_AST_ELM);
+  });
+
   test('defaults to XML when no type is specified', async () => {
     const cqlUri = Uri.joinPath(
       workspace.workspaceFolders![0].uri,
@@ -74,7 +92,7 @@ suite('viewElm()', () => {
       workspace.workspaceFolders![0].uri,
       'input/cql/SimpleMeasure.cql',
     );
-    const failingFetcher = async (_uri: Uri, _type: 'xml' | 'json'): Promise<string> => {
+    const failingFetcher = async (_uri: Uri, _type: 'xml' | 'json' | 'ast'): Promise<string> => {
       throw new Error('language server unavailable');
     };
 
@@ -90,7 +108,7 @@ suite('viewElm()', () => {
     );
 
     let capturedType: string | undefined;
-    const capturingFetcher = async (_uri: Uri, type: 'xml' | 'json'): Promise<string> => {
+    const capturingFetcher = async (_uri: Uri, type: 'xml' | 'json' | 'ast'): Promise<string> => {
       capturedType = type;
       return MOCK_JSON_ELM;
     };
@@ -109,12 +127,52 @@ suite('viewElm()', () => {
     );
 
     let capturedUri: Uri | undefined;
-    const capturingFetcher = async (uri: Uri, _type: 'xml' | 'json'): Promise<string> => {
+    const capturingFetcher = async (uri: Uri, _type: 'xml' | 'json' | 'ast'): Promise<string> => {
       capturedUri = uri;
       return MOCK_JSON_ELM;
     };
 
     await viewElm(cqlUri, 'json', capturingFetcher);
     expect(capturedUri?.fsPath).to.equal(cqlUri.fsPath);
+  });
+});
+
+suite('viewElm() AST reuse', () => {
+  const MOCK_AST = `Library: SimpleMeasure (version 1.0.0)
+├── define: "Patient"
+│ └── Retrieve (dataType: Patient)`;
+
+  teardown(async () => {
+    await commands.executeCommand('workbench.action.closeAllEditors');
+  });
+
+  test('reuses existing AST doc on second call', async () => {
+    const cqlUri = Uri.joinPath(
+      workspace.workspaceFolders![0].uri,
+      'input/cql/SimpleMeasure.cql',
+    );
+
+    await viewElm(cqlUri, 'ast', async () => MOCK_AST);
+    const docsAfterFirst = workspace.textDocuments.filter(d => d.languageId === 'ast');
+    expect(docsAfterFirst.length).to.equal(1);
+
+    await viewElm(cqlUri, 'ast', async () => MOCK_AST);
+    const docsAfterSecond = workspace.textDocuments.filter(d => d.languageId === 'ast');
+    expect(docsAfterSecond.length).to.equal(1);
+  });
+
+  test('creates a new AST doc when previous was closed', async () => {
+    const cqlUri = Uri.joinPath(
+      workspace.workspaceFolders![0].uri,
+      'input/cql/SimpleMeasure.cql',
+    );
+
+    await viewElm(cqlUri, 'ast', async () => MOCK_AST);
+    await commands.executeCommand('workbench.action.closeAllEditors');
+
+    await viewElm(cqlUri, 'ast', async () => MOCK_AST);
+    const editor = window.activeTextEditor;
+    expect(editor, 'expected an active text editor').to.not.be.undefined;
+    expect(editor!.document.languageId).to.equal('ast');
   });
 });

@@ -1,7 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { executeCQLFile } from '../commands/execute-cql';
+import { executeCQLFile } from '../commands/execute-cql-file';
+import { promptAndDebugTestCase, startDebuggingForTestCase } from '../commands/debug-test-case';
 import { viewElm } from '../commands/view-elm';
 import { logger } from '../extensionLogger';
 import {
@@ -17,6 +18,7 @@ import { CqlProject, CqlTestCase } from '../model/cqlProject';
 import { CqlSolution } from '../model/cqlSolution';
 import { DeviationKind } from '../model/igLayoutDetector';
 import { cloneTestCase } from './testCaseCloner';
+import { ConfigEditorWebview } from '../views/configEditorWebview';
 import {
   copyResources,
   deleteResources,
@@ -188,7 +190,11 @@ export class CqlExplorer {
         const filter = this.nameFilter.toLowerCase();
         const libs = this.cqlProjects
           .flatMap(p => p.Libraries)
-          .filter(l => filter === '' || l.name.toLowerCase().includes(filter));
+          .filter(
+            l =>
+              (!this.hideEmpty || l.TestCases.length > 0) &&
+              (filter === '' || l.name.toLowerCase().includes(filter)),
+          );
         if (libs.length === 0) {
           return;
         }
@@ -235,6 +241,15 @@ export class CqlExplorer {
         async (item: CqlLibraryTreeItem) => {
           logger.debug(`Command cql.explorer.library.elm.xml selected for item: ${item.label}`);
           await viewElm(item.cqlLibrary.uri, 'xml');
+        },
+      ),
+
+      // view ELM as AST
+      vscode.commands.registerCommand(
+        'cql.explorer.library.ast',
+        async (item: CqlLibraryTreeItem) => {
+          logger.debug(`Command cql.explorer.library.ast selected for item: ${item.label}`);
+          await viewElm(item.cqlLibrary.uri, 'ast');
         },
       ),
 
@@ -629,6 +644,7 @@ export class CqlExplorer {
         this.updateTreeViewDescription();
       }),
 
+      // TODO: Re-evaluate — layout warnings removed from package.json UI surface
       // Enable layout deviation warnings (icons + Problems panel)
       vscode.commands.registerCommand('cql.explorer.show-layout-warnings', () => {
         this.showLayoutWarnings = true;
@@ -637,6 +653,7 @@ export class CqlExplorer {
         this.publishDiagnostics();
       }),
 
+      // TODO: Re-evaluate — layout warnings removed from package.json UI surface
       // Disable layout deviation warnings
       vscode.commands.registerCommand('cql.explorer.hide-layout-warnings', () => {
         this.showLayoutWarnings = false;
@@ -713,6 +730,50 @@ export class CqlExplorer {
           this.cqlLibraryTreeProvider.setTestCaseFilter(item.cqlLibrary.uri.fsPath, '');
         },
       ),
+
+      // debug a test case
+      vscode.commands.registerCommand(
+        'cql.explorer.test-case.debug',
+        async (item: CqlTestCaseRootTreeItem | CqlTestCaseTreeItem) => {
+          if (item instanceof CqlTestCaseTreeItem) {
+            const library = this.cqlProjects
+              .flatMap(p => p.Libraries)
+              .find(lib =>
+                lib.TestCases.some(tc => tc.uri.fsPath === item.cqlTestCase.uri.fsPath),
+              );
+            if (!library) {
+              vscode.window.showErrorMessage('Unable to find parent library.');
+              return;
+            }
+            await startDebuggingForTestCase(library, item.cqlTestCase);
+            return;
+          }
+
+          await promptAndDebugTestCase(item.cqlLibrary);
+        },
+      ),
+
+      // Edit project configuration
+      vscode.commands.registerCommand('cql.explorer.edit-config', async () => {
+        const projects = CqlSolution.getCurrent().projects;
+        if (projects.length === 0) {
+          vscode.window.showInformationMessage('No CQL projects found.');
+          return;
+        }
+        let project: CqlProject;
+        if (projects.length === 1) {
+          project = projects[0];
+        } else {
+          const pick = await vscode.window.showQuickPick(
+            projects.map(p => ({ label: p.name, project: p })),
+            { placeHolder: 'Select a project to configure' },
+          );
+          if (!pick) return;
+          project = pick.project;
+        }
+        logger.debug(`Command cql.explorer.edit-config selected for project: ${project.name}`);
+        ConfigEditorWebview.createOrShow(project);
+      }),
     );
   }
 

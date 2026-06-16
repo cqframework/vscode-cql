@@ -6,6 +6,7 @@ import {
   CqlLibraryRootTreeItem,
   CqlProjectRootTreeItem,
   CqlProjectTreeDataProvider,
+  CqlTestCaseRootTreeItem,
   CqlTestCasesLoadingTreeItem,
 } from '../../../cql-explorer/cqlProjectTreeDataProvider';
 import { DeviationKind } from '../../../model/igLayoutDetector';
@@ -210,6 +211,89 @@ suite('CqlProjectTreeDataProvider.sortRootItemsInPlace', () => {
 
     const order = provider.getRootItems().map(i => i.label as string);
     expect(order).to.deep.equal(['Apple', 'Banana']);
+  });
+
+  test('ascending sort puts CMS libraries in numeric measure order', () => {
+    const libCMS2 = new CqlLibrary(
+      Uri.joinPath(wsRoot, 'input/cql/CMS2FHIRPCSDepScreenAndFollowUp.cql'),
+    );
+    const libCMS22 = new CqlLibrary(
+      Uri.joinPath(wsRoot, 'input/cql/CMS22FHIRPCSBPScreeningCollowUp.cql'),
+    );
+    const libCMS128 = new CqlLibrary(
+      Uri.joinPath(wsRoot, 'input/cql/CMS128FHIRHHRF.cql'),
+    );
+    // Libraries provided in reverse numeric order
+    const provider = new CqlProjectTreeDataProvider(
+      fakeProject('P', [libCMS128, libCMS2, libCMS22]),
+    );
+
+    const order = provider.getRootItems().map(i => i.label as string);
+    expect(order).to.deep.equal([
+      'CMS2FHIRPCSDepScreenAndFollowUp',
+      'CMS22FHIRPCSBPScreeningCollowUp',
+      'CMS128FHIRHHRF',
+    ]);
+  });
+
+  test('ascending sort handles CMSFHIR prefix in numeric measure order', () => {
+    const libCMS2 = new CqlLibrary(
+      Uri.joinPath(wsRoot, 'input/cql/CMS2FHIR.cql'),
+    );
+    const libCMSFHIR529 = new CqlLibrary(
+      Uri.joinPath(wsRoot, 'input/cql/CMSFHIR529Hybrid.cql'),
+    );
+    // CMSFHIR529Hybrid has measure 529, sorts after CMS2 (measure 2)
+    const provider = new CqlProjectTreeDataProvider(
+      fakeProject('P', [libCMSFHIR529, libCMS2]),
+    );
+
+    const order = provider.getRootItems().map(i => i.label as string);
+    expect(order).to.deep.equal(['CMS2FHIR', 'CMSFHIR529Hybrid']);
+  });
+
+  test('ascending sort puts non-CMS (before CMS alphabetically), then CMS by number, then non-CMS (after CMS alphabetically)', () => {
+    const libCMS2 = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/CMS2.cql'));
+    const libApple = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/Apple.cql'));
+    const libBanana = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/Banana.cql'));
+    // Libraries in mixed order
+    const provider = new CqlProjectTreeDataProvider(
+      fakeProject('P', [libBanana, libCMS2, libApple]),
+    );
+
+    const order = provider.getRootItems().map(i => i.label as string);
+    expect(order).to.deep.equal(['Apple', 'Banana', 'CMS2']);
+  });
+
+  test('descending sort reverses CMS measure order and non-CMS alphabetical order', () => {
+    const libCMS2 = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/CMS2.cql'));
+    const libCMS22 = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/CMS22.cql'));
+    const libApple = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/Apple.cql'));
+    const provider = new CqlProjectTreeDataProvider(
+      fakeProject('P', [libCMS2, libCMS22, libApple]),
+    );
+
+    (provider as unknown as { sortDescending: boolean }).sortDescending = true;
+    (provider as unknown as { sortRootItemsInPlace: () => void }).sortRootItemsInPlace();
+
+    const order = provider.getRootItems().map(i => i.label as string);
+    expect(order).to.deep.equal(['CMS22', 'CMS2', 'Apple']);
+  });
+
+  test('descending sort with CMS and non-CMS preserves group ordering', () => {
+    const libCMS2 = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/CMS2.cql'));
+    const libCMS22 = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/CMS22.cql'));
+    const libBanana = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/Banana.cql'));
+    const libApple = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/Apple.cql'));
+    const provider = new CqlProjectTreeDataProvider(
+      fakeProject('P', [libApple, libCMS22, libBanana, libCMS2]),
+    );
+
+    (provider as unknown as { sortDescending: boolean }).sortDescending = true;
+    (provider as unknown as { sortRootItemsInPlace: () => void }).sortRootItemsInPlace();
+
+    const order = provider.getRootItems().map(i => i.label as string);
+    expect(order).to.deep.equal(['CMS22', 'CMS2', 'Banana', 'Apple']);
   });
 });
 

@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import * as vscode from 'vscode';
 import { statusBar } from '../../statusBar';
+import { VersionInfo } from '../../protocol';
 
 suite('statusBar', () => {
   teardown(() => {
@@ -35,6 +36,32 @@ suite('statusBar', () => {
     expect(statusBar.text).to.equal('$(check) CQL');
     const tooltip = statusBar.tooltip as vscode.MarkdownString;
     expect(tooltip.value).to.include('4.2.0');
+  });
+
+  test('setReady with VersionInfo shows all component versions', () => {
+    const vi: VersionInfo = {
+      translator: '4.9.0',
+      engine: '4.9.0',
+      clinicalReasoning: '4.7.0',
+      languageServer: '4.8.0',
+    };
+    statusBar.setReady(undefined, vi);
+    expect(statusBar.text).to.equal('$(check) CQL');
+    const tooltip = statusBar.tooltip as vscode.MarkdownString;
+    expect(tooltip.value).to.include('Translator: 4.9.0');
+    expect(tooltip.value).to.include('Engine: 4.9.0');
+    expect(tooltip.value).to.include('Clinical Reasoning: 4.7.0');
+    expect(tooltip.value).to.include('Language Server: 4.8.0');
+  });
+
+  test('setReady with partial VersionInfo omits undefined lines', () => {
+    const vi: VersionInfo = { translator: '4.9.0', engine: undefined, clinicalReasoning: undefined, languageServer: undefined };
+    statusBar.setReady(undefined, vi);
+    const tooltip = statusBar.tooltip as vscode.MarkdownString;
+    expect(tooltip.value).to.include('Translator: 4.9.0');
+    expect(tooltip.value).not.to.include('Engine');
+    expect(tooltip.value).not.to.include('Clinical Reasoning');
+    expect(tooltip.value).not.to.include('Language Server');
   });
 
   test('setError() sets error icon', () => {

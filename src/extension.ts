@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { commands, ExtensionContext, Uri, window, workspace } from 'vscode';
+import { commands, debug, ExtensionContext, languages, Uri, window, workspace } from 'vscode';
 import {
   CloseAction,
   ErrorAction,
@@ -9,10 +9,18 @@ import {
   RevealOutputChannelOn,
 } from 'vscode-languageclient';
 import { Commands } from './commands/commands';
-import { register as registerExecuteCql } from './commands/execute-cql';
+import { register as registerExecuteCqlFile } from './commands/execute-cql-file';
+import { register as registerSelectLibraries } from './commands/select-libraries';
+import { register as registerSelectTestCases } from './commands/select-test-cases';
+import { register as registerDebugTestCase } from './commands/debug-test-case';
 import { register as registerLogCommands } from './commands/log-files';
 import { register as registerViewElmCommand } from './commands/view-elm';
 import { cqlLanguageClientInstance } from './cql-language-server/cqlLanguageClient';
+import { CqlDebugAdapterDescriptorFactory } from './debug/cqlDebugAdapterDescriptorFactory';
+import { CqlDebugAstTrackerFactory } from './debug/cqlDebugAstTracker';
+import { CqlEvaluatableExpressionProvider } from './debug/cqlEvaluatableExpressionProvider';
+import { activateStepGranularityToggle } from './debug/stepGranularityToggle';
+import { activateController } from './debug/cqlAstDebugViewController';
 import { CqlExplorer } from './cql-explorer/cqlExplorer';
 import { ClientStatus } from './extension.api';
 import * as requirements from './java-support/requirements';
@@ -82,6 +90,17 @@ export function activate(context: ExtensionContext): Promise<void> {
     new CqlExplorer(context);
   }
 
+  registerSelectLibraries(context);
+  registerExecuteCqlFile(context);
+  registerSelectTestCases(context);
+  registerDebugTestCase(context);
+  registerLogCommands(context);
+  registerViewElmCommand(context);
+  activateStepGranularityToggle(context);
+  const controller = activateController(context);
+  context.subscriptions.push(controller);
+  context.subscriptions.push(statusBar);
+
   return requirements
     .resolveRequirements(context)
     .catch(error => {
@@ -117,11 +136,6 @@ export function activate(context: ExtensionContext): Promise<void> {
         outputChannelName: EXTENSION_NAME,
       };
 
-      registerExecuteCql(context);
-      registerLogCommands(context);
-      registerViewElmCommand(context);
-      context.subscriptions.push(statusBar);
-
       await startServer(context, requirements, clientOptions, workspacePath);
     });
 }
@@ -139,6 +153,17 @@ async function startServer(
   try {
     await cqlLanguageClientInstance.initialize(context, requirements, clientOptions, workspacePath);
     await cqlLanguageClientInstance.start();
+    context.subscriptions.push(
+      debug.registerDebugAdapterDescriptorFactory(
+        'cql',
+        new CqlDebugAdapterDescriptorFactory(cqlLanguageClientInstance.getClient()),
+      ),
+      debug.registerDebugAdapterTrackerFactory('cql', new CqlDebugAstTrackerFactory()),
+      languages.registerEvaluatableExpressionProvider(
+        { language: 'cql' },
+        new CqlEvaluatableExpressionProvider(),
+      ),
+    );
     statusBar.showStatusBar();
   } catch (error) {
     log.error(`Failed to start server: ${error}`);

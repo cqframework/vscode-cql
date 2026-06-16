@@ -19,6 +19,7 @@ import {
   ActionableNotification,
   ExecuteClientCommandRequest,
   ProgressReportNotification,
+  VersionInfo,
 } from '../protocol';
 import { statusBar } from '../statusBar';
 import { prepareExecutable } from './languageServerStarter';
@@ -131,6 +132,13 @@ export class CqlLanguageClient {
 
       // TODO: Set this once we have the initialization signal from the LS.
       statusBar.setReady(version);
+
+      // Fetch and display all component versions in the status bar tooltip.
+      sendRequest(Commands.GET_VERSION_INFO, []).then((vi: VersionInfo) => {
+        statusBar.setReady(version, vi);
+      }).catch(() => {
+        // Non-fatal; status bar already shows LS version from JAR filename.
+      });
     });
 
     //this.registerCommands(context);

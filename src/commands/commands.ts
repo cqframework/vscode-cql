@@ -10,11 +10,6 @@ export namespace Commands {
   export const OPEN_BROWSER = 'vscode.open';
 
   /**
-   * Execute Workspace Command
-   */
-  export const EXECUTE_WORKSPACE_COMMAND = 'cql.execute.workspaceCommand';
-
-  /**
    * Open CQL Language Server Log file
    */
   export const OPEN_SERVER_LOG = 'cql.open.server-log';
@@ -39,7 +34,14 @@ export namespace Commands {
    */
   export const VIEW_ELM_COMMAND_XML = 'cql.editor.view-elm.xml';
   export const VIEW_ELM_COMMAND_JSON = 'cql.editor.view-elm.json';
+  export const VIEW_ELM_COMMAND_AST = 'cql.editor.view-elm.ast';
+  export const VIEW_ELM_COMMAND_AST_SPLIT = 'cql.editor.view-elm.ast.split';
   export const VIEW_ELM = 'org.opencds.cqf.cql.ls.viewElm';
+
+  /*
+   * Get Version Info
+   */
+  export const GET_VERSION_INFO = 'org.opencds.cqf.cql.ls.getVersionInfo';
 
   /*
    * Execute CQL
@@ -49,6 +51,8 @@ export namespace Commands {
 
   export const EXECUTE_CQL_COMMAND_SELECT_LIBRARIES = 'cql.execute.select-libraries';
   export const EXECUTE_CQL_COMMAND_SELECT_TEST_CASES = 'cql.editor.execute.select-test-cases';
+
+  export const DEBUG_TEST_CASE_COMMAND = 'cql.editor.debug-test-case';
 
   /*
    * Open settings.json
