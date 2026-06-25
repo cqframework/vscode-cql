@@ -1,4 +1,5 @@
 {
   "testCasesToExclude": [],
-  "resultFormat": "flat"
+  "resultFormat": "individual",
+  "flatResultsInSubfolder": false
 }

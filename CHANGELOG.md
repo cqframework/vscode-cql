@@ -3,6 +3,17 @@
 
 
 
+
+## v0.9.7 (prerelease)
+
+Date: 2026-06-25
+
+* fix issue with library name resolution
+* update test config file
+* add extension version details to test case results and status bar hover tool-tip
+* bump version to 0.9.7
+
+
 ## v0.9.6 (prerelease)
 
 Date: 2026-06-13

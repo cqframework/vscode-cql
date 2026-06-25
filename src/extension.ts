@@ -26,6 +26,7 @@ import { ClientStatus } from './extension.api';
 import * as requirements from './java-support/requirements';
 import * as log from './log-services/logger';
 import { statusBar } from './statusBar';
+import { setExtensionVersion } from './extensionState';
 
 export const EXTENSION_NAME = 'Language Support for CQL';
 
@@ -86,6 +87,9 @@ function getStorageUri(context: ExtensionContext): Uri {
 export function activate(context: ExtensionContext): Promise<void> {
   const storageUri = getStorageUri(context);
   const outputChannel = log.initialize(Uri.joinPath(storageUri, 'logs'), EXTENSION_NAME);
+
+  setExtensionVersion(context.extension.packageJSON.version);
+
   if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
     new CqlExplorer(context);
   }

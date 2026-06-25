@@ -248,30 +248,34 @@ suite('writeIndividualResultFiles()', () => {
       results: [{ libraryName: 'MyLib', expressions: [{ name: 'IPP', value: '[]' }] }],
       logs: [],
       versions: {
+        extension: '0.9.7',
         translator: '4.9.0',
         engine: '4.9.0',
-        clinicalReasoning: '4.7.0',
-        languageServer: '4.8.0',
+        clinicalReasoning: '4.8.0',
+        languageServer: '4.9.0',
       },
     };
     writeIndividualResultFiles('MyLib', undefined, [{ name: 'p1' }], response, Uri.file(tmpDir), Date.now());
     const result = readResult('MyLib', 'p1');
     expect(result.versions).to.deep.equal({
+      extension: '0.9.7',
       translator: '4.9.0',
       engine: '4.9.0',
-      clinicalReasoning: '4.7.0',
-      languageServer: '4.8.0',
+      clinicalReasoning: '4.8.0',
+      languageServer: '4.9.0',
     });
   });
 
-  test('omits versions from JSON output when not present in response', () => {
+  test('omits dependency version info from JSON output when not present in response', () => {
     const response: ExecuteCqlResponse = {
       results: [{ libraryName: 'MyLib', expressions: [{ name: 'IPP', value: '[]' }] }],
       logs: [],
     };
     writeIndividualResultFiles('MyLib', undefined, [{ name: 'p1' }], response, Uri.file(tmpDir), Date.now());
     const result = readResult('MyLib', 'p1');
-    expect(result.versions).to.be.undefined;
+    expect(result.versions).to.be.deep.equal({
+      extension: '0.9.7',
+    });
   });
 
   test('overwrites existing file on re-run', () => {
@@ -290,5 +294,23 @@ suite('writeIndividualResultFiles()', () => {
 
     const result = readResult('MyLib', 'p1');
     expect(result.results[0].value).to.equal('[]');
+  });
+
+  // Regression: a hyphenated library name (e.g. SUR716-011Assertion) must not
+  // be truncated at the first hyphen. The output directory and the libraryName
+  // field in the JSON must use the full name.
+  test('writes result files under full hyphenated library name, not truncated at first hyphen', () => {
+    const libraryName = 'SUR716-011Assertion';
+    const response: ExecuteCqlResponse = {
+      results: [{ libraryName, expressions: [{ name: 'IPP', value: '[]' }] }],
+      logs: [],
+    };
+
+    writeIndividualResultFiles(libraryName, undefined, [{ name: 'p1' }], response, Uri.file(tmpDir), Date.now());
+
+    expect(fs.existsSync(path.join(tmpDir, 'SUR716-011Assertion', 'TestCaseResult-p1.json'))).to.be.true;
+    expect(fs.existsSync(path.join(tmpDir, 'SUR716', 'TestCaseResult-p1.json'))).to.be.false;
+    const result = readResult('SUR716-011Assertion', 'p1');
+    expect(result.libraryName).to.equal('SUR716-011Assertion');
   });
 });
