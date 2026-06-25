@@ -248,30 +248,34 @@ suite('writeIndividualResultFiles()', () => {
       results: [{ libraryName: 'MyLib', expressions: [{ name: 'IPP', value: '[]' }] }],
       logs: [],
       versions: {
+        extension: '0.9.7',
         translator: '4.9.0',
         engine: '4.9.0',
-        clinicalReasoning: '4.7.0',
-        languageServer: '4.8.0',
+        clinicalReasoning: '4.8.0',
+        languageServer: '4.9.0',
       },
     };
     writeIndividualResultFiles('MyLib', undefined, [{ name: 'p1' }], response, Uri.file(tmpDir), Date.now());
     const result = readResult('MyLib', 'p1');
     expect(result.versions).to.deep.equal({
+      extension: '0.9.7',
       translator: '4.9.0',
       engine: '4.9.0',
-      clinicalReasoning: '4.7.0',
-      languageServer: '4.8.0',
+      clinicalReasoning: '4.8.0',
+      languageServer: '4.9.0',
     });
   });
 
-  test('omits versions from JSON output when not present in response', () => {
+  test('omits dependency version info from JSON output when not present in response', () => {
     const response: ExecuteCqlResponse = {
       results: [{ libraryName: 'MyLib', expressions: [{ name: 'IPP', value: '[]' }] }],
       logs: [],
     };
     writeIndividualResultFiles('MyLib', undefined, [{ name: 'p1' }], response, Uri.file(tmpDir), Date.now());
     const result = readResult('MyLib', 'p1');
-    expect(result.versions).to.be.undefined;
+    expect(result.versions).to.be.deep.equal({
+      extension: '0.9.7',
+    });
   });
 
   test('overwrites existing file on re-run', () => {
