@@ -291,4 +291,22 @@ suite('writeIndividualResultFiles()', () => {
     const result = readResult('MyLib', 'p1');
     expect(result.results[0].value).to.equal('[]');
   });
+
+  // Regression: a hyphenated library name (e.g. SUR716-011Assertion) must not
+  // be truncated at the first hyphen. The output directory and the libraryName
+  // field in the JSON must use the full name.
+  test('writes result files under full hyphenated library name, not truncated at first hyphen', () => {
+    const libraryName = 'SUR716-011Assertion';
+    const response: ExecuteCqlResponse = {
+      results: [{ libraryName, expressions: [{ name: 'IPP', value: '[]' }] }],
+      logs: [],
+    };
+
+    writeIndividualResultFiles(libraryName, undefined, [{ name: 'p1' }], response, Uri.file(tmpDir), Date.now());
+
+    expect(fs.existsSync(path.join(tmpDir, 'SUR716-011Assertion', 'TestCaseResult-p1.json'))).to.be.true;
+    expect(fs.existsSync(path.join(tmpDir, 'SUR716', 'TestCaseResult-p1.json'))).to.be.false;
+    const result = readResult('SUR716-011Assertion', 'p1');
+    expect(result.libraryName).to.equal('SUR716-011Assertion');
+  });
 });

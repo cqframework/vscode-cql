@@ -28,7 +28,7 @@ export async function selectTestCases(cqlFileUri: Uri): Promise<void> {
   }
 
   const quickPick = window.createQuickPick();
-  const libraryName = Utils.basename(cqlFileUri).replace('.cql', '').split('-')[0];
+  const libraryName = Utils.basename(cqlFileUri).replace('.cql', '');
   const testConfig = loadTestConfig(cqlPaths.testConfigPath);
   const excludedTestCases = getExcludedTestCases(libraryName, testConfig.testCasesToExclude);
   const testCases = getTestCases(
