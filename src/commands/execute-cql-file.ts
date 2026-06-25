@@ -27,6 +27,11 @@ import { CqlSolution } from '../model/cqlSolution';
 import { CqlParametersConfig, ParameterEntry, ResultParameterEntry } from '../model/parameters';
 import { getMeasureReportData, getTestCases, TestCase } from '../model/testCase';
 import { VersionInfo } from '../protocol';
+import { getExtensionVersion } from '../extensionState';
+
+export interface VersionInfoWithExtension extends VersionInfo {
+  extension?: string;
+}
 
 export interface TestCaseResult {
   executedAt: string;
@@ -36,7 +41,7 @@ export interface TestCaseResult {
   parameters: ResultParameterEntry[];
   results: ExpressionResult[];
   errors: string[];
-  versions?: VersionInfo;
+  versions?: VersionInfoWithExtension;
 }
 
 export function register(context: ExtensionContext): void {
@@ -68,7 +73,7 @@ export async function executeCQLFile(
     return;
   }
 
-  const libraryName = Utils.basename(cqlFileUri).replace('.cql', '').split('-')[0];
+  const libraryName = Utils.basename(cqlFileUri).replace('.cql', '');
   const libraryDisplayName = Utils.basename(cqlFileUri).replace('.cql', '');
   const testConfig = loadTestConfig(cqlPaths.testConfigPath);
   const excludedTestCases = getExcludedTestCases(libraryName, testConfig.testCasesToExclude);
@@ -266,6 +271,7 @@ function generateTextReport(
   const lines: string[] = [];
 
   lines.push(`CQL: ${cqlPaths.libraryDirectoryPath.fsPath}`);
+  lines.push(`Extension version: ${getExtensionVersion()}`);
 
   // Map system variations cleanly via configuration definitions
   if (response.versions) {
@@ -374,7 +380,9 @@ export function writeIndividualResultFiles(
       parameters,
       results,
       errors,
-      versions: response.versions,
+      versions: {
+        extension: getExtensionVersion(),
+        ...response.versions},
     };
 
     const patientId = testCaseName ?? 'no-context';
