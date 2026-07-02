@@ -4,6 +4,15 @@
 
 
 
+
+## v0.9.8 (prerelease)
+
+Date: 2026-07-02
+
+* update cql right-click context menu layout
+* bump version to 0.9.8, update cql-ls to v4.10.0
+
+
 ## v0.9.7 (prerelease)
 
 Date: 2026-06-25
