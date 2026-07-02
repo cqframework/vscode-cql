@@ -5,7 +5,7 @@ import * as path from 'path';
 interface PackageJson {
   contributes: {
     commands: Array<{ command: string; title: string }>;
-    menus: { 'editor/context': Array<{ command: string; when: string }> };
+    menus: { 'editor/context': Array<{ command?: string; submenu?: string; when: string }> };
   };
 }
 
@@ -53,6 +53,7 @@ suite('package.json contributions', () => {
   test('all CQL context menu entries require editorLangId == cql', () => {
     const menuItems = pkg.contributes.menus['editor/context'];
     for (const item of menuItems) {
+      if (!item.command) continue;
       if (item.command.startsWith('cql.')) {
         expect(
           item.when,
@@ -65,6 +66,7 @@ suite('package.json contributions', () => {
   test('all CQL context menu entries require cql.languageServerReady', () => {
     const menuItems = pkg.contributes.menus['editor/context'];
     for (const item of menuItems) {
+      if (!item.command) continue;
       if (item.command.startsWith('cql.')) {
         expect(
           item.when,
