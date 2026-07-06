@@ -1,6 +1,6 @@
 {
   "name": "cql",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "displayName": "Clinical Quality Language (CQL)",
   "description": "Syntax highlighting, linting, and execution for the HL7 Clinical Quality Language (CQL) for VS Code",
   "publisher": "cqframework",
@@ -345,6 +345,16 @@
         "category": "CQL"
       }
     ],
+    "submenus": [
+      {
+        "id": "cql.editor.submenu.executeCql",
+        "label": "Execute CQL"
+      },
+      {
+        "id": "cql.editor.submenu.viewElm",
+        "label": "View ELM"
+      }
+    ],
     "menus": {
       "commandPalette": [
         {
@@ -502,39 +512,54 @@
       ],
       "editor/context": [
         {
-          "command": "cql.editor.view-elm.json",
+          "command": "cql.editor.debug-test-case",
           "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
         },
         {
-          "command": "cql.editor.view-elm.xml",
+          "submenu": "cql.editor.submenu.executeCql",
           "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
         },
         {
-          "command": "cql.editor.view-elm.ast",
+          "submenu": "cql.editor.submenu.viewElm",
           "when": "editorLangId == cql && cql.languageServerReady",
           "group": "1_cqlactions"
-        },
-        {
-          "command": "cql.editor.view-elm.ast.split",
-          "when": "editorLangId == cql && cql.languageServerReady",
-          "group": "1_cqlactions"
-        },
+        }
+      ],
+      "cql.editor.submenu.executeCql": [
         {
           "command": "cql.editor.execute",
           "when": "editorLangId == cql && cql.languageServerReady",
-          "group": "1_cqlactions"
+          "title": "All Test Cases"
         },
         {
           "command": "cql.editor.execute.select-test-cases",
           "when": "editorLangId == cql && cql.languageServerReady",
-          "group": "1_cqlactions"
+          "title": "Select Test Cases"
+        }
+      ],
+
+      "cql.editor.submenu.viewElm": [
+        {
+          "command": "cql.editor.view-elm.ast",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "title": "AST"
         },
         {
-          "command": "cql.editor.debug-test-case",
+          "command": "cql.editor.view-elm.ast.split",
           "when": "editorLangId == cql && cql.languageServerReady",
-          "group": "1_cqlactions"
+          "title": "AST (Split)"
+        },
+        {
+          "command": "cql.editor.view-elm.json",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "title": "JSON"
+        },
+        {
+          "command": "cql.editor.view-elm.xml",
+          "when": "editorLangId == cql && cql.languageServerReady",
+          "title": "XML"
         }
       ],
       "view/item/context": [
@@ -836,7 +861,7 @@
     "cql-language-server": {
       "groupId": "org.opencds.cqf.cql.ls",
       "artifactId": "cql-ls-server",
-      "version": "4.9.0"
+      "version": "4.10.0"
     }
   },
   "devDependencies": {

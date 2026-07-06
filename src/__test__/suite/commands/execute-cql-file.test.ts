@@ -2,6 +2,10 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+
+const EXTENSION_VERSION: string = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, '../../../../package.json'), 'utf-8')
+).version;
 import { Uri } from 'vscode';
 import {
   formatResponse,
@@ -274,7 +278,7 @@ suite('writeIndividualResultFiles()', () => {
     writeIndividualResultFiles('MyLib', undefined, [{ name: 'p1' }], response, Uri.file(tmpDir), Date.now());
     const result = readResult('MyLib', 'p1');
     expect(result.versions).to.be.deep.equal({
-      extension: '0.9.7',
+      extension: EXTENSION_VERSION,
     });
   });
 

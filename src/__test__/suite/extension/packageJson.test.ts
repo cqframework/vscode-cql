@@ -2,11 +2,21 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import * as path from 'path';
 
+type MenuItem = { command?: string; submenu?: string; when: string };
+
 interface PackageJson {
   contributes: {
     commands: Array<{ command: string; title: string }>;
-    menus: { 'editor/context': Array<{ command: string; when: string }> };
+    menus: { 'editor/context': MenuItem[] } & { [submenu: string]: MenuItem[] };
   };
+}
+
+function editorContextItems(p: PackageJson): MenuItem[] {
+  const direct = p.contributes.menus['editor/context'] ?? [];
+  const nested = direct
+    .filter(m => m.submenu)
+    .flatMap(m => p.contributes.menus[m.submenu!] ?? []);
+  return [...direct, ...nested];
 }
 
 const pkg: PackageJson = JSON.parse(
@@ -42,7 +52,7 @@ suite('package.json contributions', () => {
   });
 
   test('context menu commands have correct when clause', () => {
-    const menuItems = pkg.contributes.menus['editor/context'];
+    const menuItems = editorContextItems(pkg);
     for (const cmd of CONTEXT_MENU_COMMANDS) {
       const item = menuItems.find(m => m.command === cmd);
       expect(item, `"${cmd}" should appear in editor/context menu`).to.exist;
@@ -53,6 +63,7 @@ suite('package.json contributions', () => {
   test('all CQL context menu entries require editorLangId == cql', () => {
     const menuItems = pkg.contributes.menus['editor/context'];
     for (const item of menuItems) {
+      if (!item.command) continue;
       if (item.command.startsWith('cql.')) {
         expect(
           item.when,
@@ -65,6 +76,7 @@ suite('package.json contributions', () => {
   test('all CQL context menu entries require cql.languageServerReady', () => {
     const menuItems = pkg.contributes.menus['editor/context'];
     for (const item of menuItems) {
+      if (!item.command) continue;
       if (item.command.startsWith('cql.')) {
         expect(
           item.when,
