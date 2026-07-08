@@ -19,6 +19,15 @@ This extension requires Java to be installed. It'll prompt you to install Java i
 
 This project maintains a [User Guide](https://github.com/cqframework/vscode-cql/wiki/User-Guide) that provides detailed instructions on how to use the plugin to author and test CQL content.
 
+### Upgrading: workspaces with `version="dev"` dependencies
+
+Earlier versions of the extension wrote stub packages to `~/.fhir/packages/<pkg>#current` for
+dev (sibling project) dependencies. These stubs interfere with the IG Publisher and other FHIR
+tooling and are no longer created — but leftover ones are not removed automatically. If you
+develop multiple IG projects together, remove them once by hand; see
+[FHIR Package Cache](https://github.com/cqframework/vscode-cql/wiki/FHIR-Package-Cache)
+for how to identify a stub and clean it up safely.
+
 ## More About the Clinical Quality Language
 
 The Clinical Quality Language (CQL) is a domain specific language for expressing
