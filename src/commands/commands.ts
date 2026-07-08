@@ -55,6 +55,12 @@ export namespace Commands {
   export const DEBUG_TEST_CASE_COMMAND = 'cql.editor.debug-test-case';
 
   /*
+   * Refresh IG diagnostics (missing packageId/canonicalBase warnings)
+   */
+  export const REFRESH_IG_DIAGNOSTICS_COMMAND = 'cql.refresh-ig-diagnostics';
+  export const REFRESH_IG_DIAGNOSTICS = 'org.opencds.cqf.cql.ls.refreshIgDiagnostics';
+
+  /*
    * Open settings.json
    */
   export const OPEN_JSON_SETTINGS = 'workbench.action.openSettingsJson';
