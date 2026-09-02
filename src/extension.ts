@@ -15,6 +15,7 @@ import { register as registerSelectTestCases } from './commands/select-test-case
 import { register as registerDebugTestCase } from './commands/debug-test-case';
 import { register as registerLogCommands } from './commands/log-files';
 import { register as registerViewElmCommand } from './commands/view-elm';
+import { register as registerCqlVirtualSourceContentProvider } from './cql-service/cqlVirtualSourceContentProvider';
 import { cqlLanguageClientInstance } from './cql-language-server/cqlLanguageClient';
 import { CqlDebugAdapterDescriptorFactory } from './debug/cqlDebugAdapterDescriptorFactory';
 import { CqlDebugAstTrackerFactory } from './debug/cqlDebugAstTracker';
@@ -100,6 +101,7 @@ export function activate(context: ExtensionContext): Promise<void> {
   registerDebugTestCase(context);
   registerLogCommands(context);
   registerViewElmCommand(context);
+  registerCqlVirtualSourceContentProvider(context);
   activateStepGranularityToggle(context);
   const controller = activateController(context);
   context.subscriptions.push(controller);

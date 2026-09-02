@@ -39,6 +39,13 @@ export namespace Commands {
   export const VIEW_ELM = 'org.opencds.cqf.cql.ls.viewElm';
 
   /*
+   * Fetch CQL source text for a `cql-virtual:` URI (a library with no workspace file, e.g.
+   * FHIRHelpers or an npm-installed library) — served to VS Code's TextDocumentContentProvider
+   * for go-to-definition into such libraries.
+   */
+  export const VIRTUAL_SOURCE = 'org.opencds.cqf.cql.ls.virtualSource';
+
+  /*
    * Get Version Info
    */
   export const GET_VERSION_INFO = 'org.opencds.cqf.cql.ls.getVersionInfo';

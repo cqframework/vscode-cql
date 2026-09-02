@@ -539,7 +539,6 @@
           "title": "Select Test Cases"
         }
       ],
-
       "cql.editor.submenu.viewElm": [
         {
           "command": "cql.editor.view-elm.ast",
@@ -824,7 +823,10 @@
               },
               "stepGranularity": {
                 "type": "string",
-                "enum": ["cql", "ast"],
+                "enum": [
+                  "cql",
+                  "ast"
+                ],
                 "default": "cql",
                 "description": "Whether step requests advance through CQL source lines (default) or individual ELM/AST nodes."
               }
@@ -843,7 +845,10 @@
         "fileMatch": "**/input/tests/config.jsonc",
         "url": "./schemas/cql-config.schema.json"
       }
-    ]
+    ],
+    "configurationDefaults": {
+      "debug.openExplorerOnEnd": true
+    }
   },
   "resolutions": {
     "color-name": "1.1.3"
@@ -861,7 +866,7 @@
     "cql-language-server": {
       "groupId": "org.opencds.cqf.cql.ls",
       "artifactId": "cql-ls-server",
-      "version": "4.10.0"
+      "version": "4.11.0-SNAPSHOT"
     }
   },
   "devDependencies": {
@@ -877,7 +882,7 @@
     "@types/vscode": "^1.73.0",
     "@types/winreg": "^1.2.31",
     "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.3.6",
+    "@vscode/test-electron": "^3.1.0",
     "chai": "4.5",
     "mocha": "^11.7.5",
     "mock-fs": "^5.5.0",
