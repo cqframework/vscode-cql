@@ -53,7 +53,7 @@ async function syncFromStackTrace(
     });
     const top = resp?.stackFrames?.[0];
     log.debug('syncFromStackTrace: threadId={} topFrame={}', threadId, top ? {
-      line: top.line, column: top.column, source: top.source?.path, localId: top.instructionPointerReference,
+      line: top.line, column: top.column, source: top.source?.path, sourceReference: top.source?.sourceReference, localId: top.instructionPointerReference,
     } : null);
     if (top) await applyTopFrame(top, session);
   } catch (e) {
@@ -68,7 +68,7 @@ async function applyTopFrame(
     endLine?: number;
     endColumn?: number;
     instructionPointerReference?: string;
-    source?: { path?: string };
+    source?: { path?: string; sourceReference?: number };
   },
   session: vscode.DebugSession,
 ): Promise<void> {
@@ -83,11 +83,16 @@ async function applyTopFrame(
   }
 
   const sourcePath = frame.source?.path;
+  const sourceReference = frame.source?.sourceReference;
   if (sourcePath && !sourcePath.toLowerCase().endsWith('.cql')) {
     log.debug('applyTopFrame: non-CQL source path={}', sourcePath);
     return;
   }
 
-  log.debug('applyTopFrame: sourcePath={} line={}', sourcePath, frame.line);
+  // No real file path — e.g. a library with no workspace file (FHIRHelpers, an
+  // npm-installed IG library) whose content is only served via DAP sourceReference.
+  // Don't bail here; forward sourceReference through so onFrameStopped can still
+  // refresh the AST panel for it.
+  log.debug('applyTopFrame: sourcePath={} sourceReference={} line={}', sourcePath, sourceReference, frame.line);
   await controller.onFrameStopped(frame, session);
 }

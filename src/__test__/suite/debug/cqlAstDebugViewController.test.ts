@@ -162,6 +162,60 @@ suite('CqlAstDebugViewController', () => {
     controller.dispose();
   });
 
+  test('frame with no path or sourceReference is ignored', async () => {
+    const fetchStub = sandbox.stub(fetchModule, 'fetchAstViaDap').resolves(SAMPLE_AST);
+    const controller = activateController(context);
+
+    await controller.onFrameStopped({
+      line: 3,
+      column: 1,
+      source: {},
+    }, {} as any);
+
+    expect(fetchStub.called).to.be.false;
+    controller.dispose();
+  });
+
+  test('sourceReference-only frame (no workspace file, e.g. FHIRHelpers) still refreshes the AST panel', async () => {
+    const fetchStub = sandbox.stub(fetchModule, 'fetchAstViaDap').resolves(SAMPLE_AST);
+    const controller = activateController(context);
+
+    await controller.onFrameStopped({
+      line: 3,
+      column: 1,
+      endLine: 4,
+      endColumn: 5,
+      source: { sourceReference: 42 },
+    }, {} as any);
+
+    // Fetches AST via the synthetic cql-source:// key derived from sourceReference.
+    expect(fetchStub.calledOnce).to.be.true;
+    const fetchedUri = fetchStub.firstCall.args[0] as vscode.Uri;
+    expect(fetchedUri.toString()).to.equal('cql-source://42');
+
+    // AST tree reveal still works (no file needed for this).
+    expect(mockTreeView.reveal.calledOnce).to.be.true;
+
+    controller.dispose();
+  });
+
+  test('sourceReference-only frame does not attempt to open a text editor', async () => {
+    sandbox.stub(fetchModule, 'fetchAstViaDap').resolves(SAMPLE_AST);
+    const openTextDocumentStub = sandbox.stub(vscode.workspace, 'openTextDocument');
+    const controller = activateController(context);
+
+    await controller.onFrameStopped({
+      line: 3,
+      column: 1,
+      endLine: 4,
+      endColumn: 5,
+      source: { sourceReference: 42 },
+    }, {} as any);
+
+    expect(openTextDocumentStub.called).to.be.false;
+    controller.dispose();
+  });
+
   test('dispose cleans up all resources', () => {
     const controller = activateController(context);
     controller.dispose();

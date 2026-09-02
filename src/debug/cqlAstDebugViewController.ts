@@ -39,7 +39,15 @@ interface DapFrame {
   endLine?: number;
   endColumn?: number;
   instructionPointerReference?: string;
-  source?: { path?: string };
+  source?: { path?: string; sourceReference?: number };
+}
+
+// Synthetic key for a library with no workspace file (e.g. FHIRHelpers, an npm-installed
+// IG library) — mirrors the "cql-source://<ref>" URI the language server already registers
+// internally for such libraries (CqlDebugServer.kt), so the existing `getAst` DAP request
+// (keyed by URI) resolves it the same way it resolves a real file's URI.
+function virtualSourceKey(sourceReference: number): string {
+  return `cql-source://${sourceReference}`;
 }
 
 export class CqlAstDebugViewController implements Disposable {
@@ -109,25 +117,41 @@ export class CqlAstDebugViewController implements Disposable {
   ): Promise<void> {
     const span = normalizeSpan(frame);
     const sourcePath = frame.source?.path;
+    const sourceReference = frame.source?.sourceReference;
 
-    if (!sourcePath || !sourcePath.toLowerCase().endsWith('.cql')) {
+    if (sourcePath && !sourcePath.toLowerCase().endsWith('.cql')) {
       log.debug('cqlAstVC: non-CQL source path={}', sourcePath);
       return;
     }
 
-    if (sourcePath !== this.activeCqlPath) {
+    // activeKey identifies which library's AST is currently loaded — a real file path,
+    // or (for a library with no workspace file, e.g. FHIRHelpers/an npm-installed IG
+    // library) a synthetic key derived from the DAP sourceReference.
+    const activeKey = sourcePath ?? (sourceReference ? virtualSourceKey(sourceReference) : undefined);
+    if (!activeKey) {
+      log.debug('cqlAstVC: no source path or sourceReference on frame');
+      return;
+    }
+
+    if (activeKey !== this.activeCqlPath) {
       try {
-        await this.loadAst(sourcePath);
-        this.activeCqlPath = sourcePath;
+        const uri = sourcePath ? Uri.file(sourcePath) : Uri.parse(activeKey);
+        await this.loadAst(uri);
+        this.activeCqlPath = activeKey;
       } catch (e) {
-        log.debug('cqlAstVC: loadAst failed for {} err={}', sourcePath, e);
-        this.provider.setEmpty(`Could not load AST for ${sourcePath}`);
+        log.debug('cqlAstVC: loadAst failed for {} err={}', activeKey, e);
+        this.provider.setEmpty(`Could not load AST for ${activeKey}`);
         return;
       }
     }
 
     this.resolveAndReveal(span);
-    await this.applyCqlDecoration(span);
+    // Only a real file can be opened/decorated in a text editor — a sourceReference-only
+    // frame has no file to open (VS Code's own debug UI already shows a read-only tab for
+    // it via the DAP `source` request).
+    if (sourcePath) {
+      await this.applyCqlDecoration(sourcePath, span);
+    }
   }
 
   dispose(): void {
@@ -140,9 +164,8 @@ export class CqlAstDebugViewController implements Disposable {
     this.provider.setEmpty();
   }
 
-  private async loadAst(cqlPath: string): Promise<void> {
-    const uri = Uri.file(cqlPath);
-    log.debug('cqlAstVC: fetching AST for {}', cqlPath);
+  private async loadAst(uri: Uri): Promise<void> {
+    log.debug('cqlAstVC: fetching AST for {}', uri.toString());
     const astContent = await fetchAstViaDap(uri, 'ast');
     const { roots, index } = parseAstToTree(astContent);
     this.cqlIndex = index;
@@ -200,10 +223,7 @@ export class CqlAstDebugViewController implements Disposable {
     return undefined;
   }
 
-  private async applyCqlDecoration(span: CqlSpan): Promise<void> {
-    const cqlPath = this.activeCqlPath;
-    if (!cqlPath) return;
-
+  private async applyCqlDecoration(cqlPath: string, span: CqlSpan): Promise<void> {
     let editor = window.visibleTextEditors.find(
       e => e.document.uri.fsPath === cqlPath,
     );

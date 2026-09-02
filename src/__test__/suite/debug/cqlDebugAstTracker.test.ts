@@ -78,6 +78,30 @@ suite('CqlDebugAstTracker', () => {
     expect(frameArg.source.path).to.equal('/test/file.cql');
   });
 
+  test('sourceReference-only frame (no path, e.g. FHIRHelpers) still reaches the controller', async () => {
+    const sessionMock = {
+      customRequest: sandbox.stub().resolves({
+        stackFrames: [{
+          line: 12, column: 1,
+          source: { sourceReference: 42 },
+        }],
+      }),
+    } as any;
+
+    const tracker = factory.createDebugAdapterTracker(sessionMock);
+
+    await tracker.onDidSendMessage!({
+      type: 'event',
+      event: 'stopped',
+      body: { threadId: 1 },
+    });
+
+    expect(controllerStub.onFrameStopped.calledOnce).to.be.true;
+    const frameArg = controllerStub.onFrameStopped.firstCall.args[0];
+    expect(frameArg.source.path).to.be.undefined;
+    expect(frameArg.source.sourceReference).to.equal(42);
+  });
+
   test('piggy-backs on stackTrace response from UI-issued request', () => {
     const sessionMock = {} as any;
     const tracker = factory.createDebugAdapterTracker(sessionMock);
