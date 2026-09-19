@@ -118,7 +118,10 @@ export class MultiTransportLogger implements LogOutputChannel {
 
     // vscode-languageclient LSP trace pattern: "[Trace - HH:MM:SS AM] ..."
     // The header and its params body arrive in separate appendLine() calls, so
-    // _currentBlockLevel persists the detected level across calls.
+    // _currentBlockLevel persists the detected level across calls. Logback server
+    // messages can also span many lines (e.g. a multi-line ELM XML dump) and can be
+    // split across stderr data events, so the persisted level is also refreshed from
+    // each matched logback header and inherited by its continuation lines.
     const lspTracePattern = /^\[(Trace|Debug|Info|Warn|Error)\s+-\s+/i;
 
     // If this call starts with an LSP trace header, update the persisted level.
@@ -143,8 +146,10 @@ export class MultiTransportLogger implements LogOutputChannel {
       if (!line) return;
       const logbackMatch = logbackPattern.exec(line);
       if (logbackMatch) {
-        // Server log lines carry their own level — use it directly.
-        logAtLevel(logbackMatch[1].toUpperCase(), line);
+        // Server log lines carry their own level — use it directly and remember it
+        // so continuation lines (and later stderr fragments) keep the same level.
+        this._currentBlockLevel = logbackMatch[1].toUpperCase();
+        logAtLevel(this._currentBlockLevel, line);
       } else {
         // LSP trace lines (header + continuation) use the persisted block level.
         logAtLevel(this._currentBlockLevel, line);
