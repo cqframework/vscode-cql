@@ -78,12 +78,12 @@ suite('CqlDebugAstTracker', () => {
     expect(frameArg.source.path).to.equal('/test/file.cql');
   });
 
-  test('sourceReference-only frame (no path, e.g. FHIRHelpers) still reaches the controller', async () => {
+  test('cql-virtual path frame reaches controller', async () => {
     const sessionMock = {
       customRequest: sandbox.stub().resolves({
         stackFrames: [{
           line: 12, column: 1,
-          source: { sourceReference: 42 },
+          source: { path: 'cql-virtual:///FHIRHelpers-4.0.1.cql' },
         }],
       }),
     } as any;
@@ -98,8 +98,7 @@ suite('CqlDebugAstTracker', () => {
 
     expect(controllerStub.onFrameStopped.calledOnce).to.be.true;
     const frameArg = controllerStub.onFrameStopped.firstCall.args[0];
-    expect(frameArg.source.path).to.be.undefined;
-    expect(frameArg.source.sourceReference).to.equal(42);
+    expect(frameArg.source.path).to.equal('cql-virtual:///FHIRHelpers-4.0.1.cql');
   });
 
   test('piggy-backs on stackTrace response from UI-issued request', () => {

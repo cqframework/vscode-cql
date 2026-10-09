@@ -20,7 +20,7 @@ suite('getVirtualSource()', () => {
 
   test('sends the virtualSource command with the uri string', async () => {
     const sendStub = sandbox.stub(clientModule, 'sendRequest').resolves('library FHIRHelpers version \'1.0.000\'');
-    const uri = Uri.parse('cql-virtual://FHIRHelpers/1.0.000/FHIRHelpers.cql');
+    const uri = Uri.parse('cql-virtual:///FHIRHelpers-1.0.000.cql');
 
     const result = await getVirtualSource(uri);
 
@@ -54,7 +54,7 @@ suite('CqlVirtualSourceContentProvider', () => {
     sandbox.stub(sourceModule, 'getVirtualSource').resolves('library FHIRHelpers version \'1.0.000\'');
     const provider = new CqlVirtualSourceContentProvider();
 
-    const content = await provider.provideTextDocumentContent(Uri.parse('cql-virtual://FHIRHelpers/1.0.000/FHIRHelpers.cql'));
+    const content = await provider.provideTextDocumentContent(Uri.parse('cql-virtual:///FHIRHelpers-1.0.000.cql'));
 
     expect(content).to.equal('library FHIRHelpers version \'1.0.000\'');
   });

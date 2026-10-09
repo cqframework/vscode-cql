@@ -82,17 +82,13 @@ async function applyTopFrame(
     return;
   }
 
+  // A file path, or a cql-virtual URI for a library with no workspace file — both end in .cql.
   const sourcePath = frame.source?.path;
-  const sourceReference = frame.source?.sourceReference;
   if (sourcePath && !sourcePath.toLowerCase().endsWith('.cql')) {
     log.debug('applyTopFrame: non-CQL source path={}', sourcePath);
     return;
   }
 
-  // No real file path — e.g. a library with no workspace file (FHIRHelpers, an
-  // npm-installed IG library) whose content is only served via DAP sourceReference.
-  // Don't bail here; forward sourceReference through so onFrameStopped can still
-  // refresh the AST panel for it.
-  log.debug('applyTopFrame: sourcePath={} sourceReference={} line={}', sourcePath, sourceReference, frame.line);
+  log.debug('applyTopFrame: sourcePath={} line={}', sourcePath, frame.line);
   await controller.onFrameStopped(frame, session);
 }
