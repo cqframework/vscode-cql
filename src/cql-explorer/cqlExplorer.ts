@@ -17,6 +17,7 @@ import {
 import { CqlProject, CqlTestCase } from '../model/cqlProject';
 import { CqlSolution } from '../model/cqlSolution';
 import { DeviationKind } from '../model/igLayoutDetector';
+import { runLibraryBatch } from '../commands/library-batch';
 import { cloneTestCase } from './testCaseCloner';
 import { ConfigEditorWebview } from '../views/configEditorWebview';
 import {
@@ -118,23 +119,7 @@ export class CqlExplorer {
             vscode.window.showInformationMessage('No libraries with test cases match the current filter.');
             return;
           }
-          await vscode.window.withProgress(
-            {
-              location: vscode.ProgressLocation.Notification,
-              title: `Execute CQL — ${item.cqlProject.name}`,
-              cancellable: true,
-            },
-            async (progress, token) => {
-              for (let i = 0; i < libs.length; i++) {
-                if (token.isCancellationRequested) {
-                  break;
-                }
-                const lib = libs[i];
-                progress.report({ message: `${lib.name} (${i + 1} of ${libs.length})` });
-                await executeCQLFile(lib.uri, undefined, false);
-              }
-            },
-          );
+          await runLibraryBatch(libs, `Execute CQL — ${item.cqlProject.name}`);
         },
       ),
 
@@ -164,23 +149,7 @@ export class CqlExplorer {
           if (!picks || picks.length === 0) {
             return;
           }
-          await vscode.window.withProgress(
-            {
-              location: vscode.ProgressLocation.Notification,
-              title: `Execute CQL — ${item.cqlProject.name}`,
-              cancellable: true,
-            },
-            async (progress, token) => {
-              for (let i = 0; i < picks.length; i++) {
-                if (token.isCancellationRequested) {
-                  break;
-                }
-                const lib = picks[i].library;
-                progress.report({ message: `${lib.name} (${i + 1} of ${picks.length})` });
-                await executeCQLFile(lib.uri, undefined, false);
-              }
-            },
-          );
+          await runLibraryBatch(picks.map(p => p.library), `Execute CQL — ${item.cqlProject.name}`);
         },
       ),
 
@@ -198,23 +167,7 @@ export class CqlExplorer {
         if (libs.length === 0) {
           return;
         }
-        await vscode.window.withProgress(
-          {
-            location: vscode.ProgressLocation.Notification,
-            title: 'Execute CQL',
-            cancellable: true,
-          },
-          async (progress, token) => {
-            for (let i = 0; i < libs.length; i++) {
-              if (token.isCancellationRequested) {
-                break;
-              }
-              const lib = libs[i];
-              progress.report({ message: `${lib.name} (${i + 1} of ${libs.length})` });
-              await executeCQLFile(lib.uri, undefined, false);
-            }
-          },
-        );
+        await runLibraryBatch(libs, 'Execute CQL');
       }),
 
       // execute all test cases for a library
