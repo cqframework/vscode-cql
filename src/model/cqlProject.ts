@@ -16,6 +16,18 @@ import { DeviationKind, findTestCasesFolder } from './igLayoutDetector';
 
 export class CqlTestCaseResult {}
 
+const TEST_CASE_RESULT_FILE = /^TestCaseResult-(.+)\.json$/;
+
+/**
+ * Extracts the test case name from an individual result file path
+ * (`.../TestCaseResult-{testCaseName}.json`). Splits on both separators so the
+ * result is identical for POSIX and Windows paths regardless of host OS.
+ */
+export function testCaseNameFromResultPath(p: string): string | undefined {
+  const fileName = p.split(/[\\/]/).pop() ?? '';
+  return TEST_CASE_RESULT_FILE.exec(fileName)?.[1];
+}
+
 export type TestCaseLoadState = 'not-loaded' | 'loading' | 'loaded';
 
 export interface CqlTestCaseResource {
@@ -70,6 +82,8 @@ export class CqlLibrary extends RobustEmitter {
 
   private readonly testCases: Array<CqlTestCase> = [];
   private _resultUris: Uri[] = [];
+  /** Test case name → TestCaseResult-{name}.json uri; O(1) lookup during tree rebuilds. */
+  private readonly _testCaseResults: Map<string, Uri> = new Map();
   public readonly name: string;
   public readonly visible: ObservableProperty<boolean>;
   public readonly uri: Uri;
@@ -103,20 +117,35 @@ export class CqlLibrary extends RobustEmitter {
     return [...this._resultUris];
   }
 
+  /** Individual JSON result for the named test case, if one exists. */
+  getTestCaseResultUri(testCaseName: string): Uri | undefined {
+    return this._testCaseResults.get(testCaseName);
+  }
+
+  /**
+   * Registers a result file. Emits RESULT_CHANGED only when the uri is new — a content
+   * change to a known file does not alter the tree, so it must not trigger a rebuild.
+   */
   addResult(uri: Uri): void {
-    if (!this._resultUris.some(u => u.fsPath === uri.fsPath)) {
-      this._resultUris.push(uri);
-    }
+    if (this._resultUris.some(u => u.fsPath === uri.fsPath)) return;
+    this._resultUris.push(uri);
+    const testCaseName = testCaseNameFromResultPath(uri.fsPath);
+    if (testCaseName !== undefined) this._testCaseResults.set(testCaseName, uri);
     this.emit(CqlLibraryEvents.RESULT_CHANGED);
   }
 
   removeResult(uri: Uri): void {
+    const before = this._resultUris.length;
     this._resultUris = this._resultUris.filter(u => u.fsPath !== uri.fsPath);
+    if (this._resultUris.length === before) return;
+    const testCaseName = testCaseNameFromResultPath(uri.fsPath);
+    if (testCaseName !== undefined) this._testCaseResults.delete(testCaseName);
     this.emit(CqlLibraryEvents.RESULT_CHANGED);
   }
 
   clearResults(): void {
     this._resultUris = [];
+    this._testCaseResults.clear();
     this.emit(CqlLibraryEvents.RESULT_CHANGED);
   }
 
@@ -255,8 +284,16 @@ export class CqlProject extends EventEmitter {
     return this.findLibraryByName(dirName);
   }
 
+  /** True for files under input/tests/results — owned by the result watchers, not test cases. */
+  private isInResultFolder(uri: Uri): boolean {
+    return uri.fsPath.startsWith(this.resultFolder + path.sep);
+  }
+
   private configureTestCaseResourceWatcher() {
+    // results/ lives under input/tests/, so this watcher also sees TestCaseResult-*.json.
+    // Without the guard a new result file misses findTestCaseByDir and triggers a full refresh().
     this.testCaseResourceWatcher!.onDidCreate(async (uri: Uri) => {
+      if (this.isInResultFolder(uri)) return;
       const testCaseDir = path.dirname(uri.fsPath);
       const found = this.findTestCaseByDir(testCaseDir);
       if (found) {
@@ -268,6 +305,7 @@ export class CqlProject extends EventEmitter {
     });
 
     this.testCaseResourceWatcher!.onDidDelete(async (uri: Uri) => {
+      if (this.isInResultFolder(uri)) return;
       const testCaseDir = path.dirname(uri.fsPath);
       const found = this.findTestCaseByDir(testCaseDir);
       if (found) {
@@ -279,6 +317,7 @@ export class CqlProject extends EventEmitter {
     });
 
     this.testCaseResourceWatcher!.onDidChange(async (uri: Uri) => {
+      if (this.isInResultFolder(uri)) return;
       const testCaseDir = path.dirname(uri.fsPath);
       const found = this.findTestCaseByDir(testCaseDir);
       if (found) {

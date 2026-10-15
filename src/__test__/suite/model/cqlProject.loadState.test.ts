@@ -1,4 +1,6 @@
+import path from 'node:path';
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
 import { CqlLibrary, CqlProject } from '../../../model/cqlProject';
@@ -60,6 +62,78 @@ suite('CqlProject.loadResults', () => {
     // Before the fix this returned without logging; after the fix the finally
     // block always logs. Either way the promise must resolve, not reject.
     await (project as any).loadResults();
+  });
+});
+
+suite('CqlProject testCaseResourceWatcher — results folder guard', () => {
+  type Handler = (uri: Uri) => Promise<void> | void;
+  interface FakeWatcher {
+    create?: Handler;
+    delete?: Handler;
+    change?: Handler;
+  }
+
+  let project: CqlProject;
+  let refresh: sinon.SinonStub;
+  let watcher: FakeWatcher;
+  let wsRoot: string;
+
+  setup(() => {
+    wsRoot = workspace.workspaceFolders![0].uri.fsPath;
+    project = new CqlProject(wsRoot, []);
+    refresh = sinon.stub(project, 'refresh');
+
+    // Capture the handlers the project registers instead of using a real FS watcher.
+    watcher = {};
+    const fake = {
+      onDidCreate: (h: Handler) => { watcher.create = h; },
+      onDidDelete: (h: Handler) => { watcher.delete = h; },
+      onDidChange: (h: Handler) => { watcher.change = h; },
+    };
+    const p = project as unknown as {
+      testCaseResourceWatcher: unknown;
+      configureTestCaseResourceWatcher: () => void;
+    };
+    p.testCaseResourceWatcher = fake;
+    p.configureTestCaseResourceWatcher();
+  });
+
+  teardown(() => sinon.restore());
+
+  const resultFile = () =>
+    Uri.file(
+      path.join(wsRoot, 'input', 'tests', 'results', 'SimpleMeasure', 'TestCaseResult-1111.json'),
+    );
+
+  test('create of a TestCaseResult JSON does not trigger a full refresh', async () => {
+    await watcher.create!(resultFile());
+    expect(refresh.called).to.be.false;
+  });
+
+  test('delete of a TestCaseResult JSON does not trigger a full refresh', async () => {
+    await watcher.delete!(resultFile());
+    expect(refresh.called).to.be.false;
+  });
+
+  test('change of a TestCaseResult JSON does not trigger a full refresh', async () => {
+    await watcher.change!(resultFile());
+    expect(refresh.called).to.be.false;
+  });
+
+  test('control: unknown test-case JSON outside results still triggers refresh', async () => {
+    const uri = Uri.file(
+      path.join(wsRoot, 'input', 'tests', 'Measure', 'Unknown', 'new-tc', 'Patient-1.json'),
+    );
+    await watcher.create!(uri);
+    expect(refresh.calledOnce).to.be.true;
+  });
+
+  test('control: sibling dir with "results" prefix is not treated as results folder', async () => {
+    const uri = Uri.file(
+      path.join(wsRoot, 'input', 'tests', 'results-old', 'Lib', 'TestCaseResult-1.json'),
+    );
+    await watcher.create!(uri);
+    expect(refresh.calledOnce).to.be.true;
   });
 });
 

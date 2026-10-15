@@ -6,8 +6,10 @@ import {
   CqlLibraryRootTreeItem,
   CqlProjectRootTreeItem,
   CqlProjectTreeDataProvider,
+  CqlTestCaseResultTreeItem,
   CqlTestCaseRootTreeItem,
   CqlTestCasesLoadingTreeItem,
+  CqlTestCaseTreeItem,
 } from '../../../cql-explorer/cqlProjectTreeDataProvider';
 import { DeviationKind } from '../../../model/igLayoutDetector';
 
@@ -317,5 +319,38 @@ suite('CqlProjectTreeDataProvider — LIBRARY_REMOVED bug fix (multi-project)', 
     expect(projRoot.children).to.have.length(0);
     // Old shallow copy is unaffected (proving it was a copy)
     expect(copy).to.have.length(1);
+  });
+});
+
+suite('CqlProjectTreeDataProvider — test case result leaf', () => {
+  const wsRoot = workspace.workspaceFolders![0].uri;
+
+  function setup1111(): { provider: CqlProjectTreeDataProvider; tcItem: CqlTestCaseTreeItem } {
+    const lib = new CqlLibrary(Uri.joinPath(wsRoot, 'input/cql/SimpleMeasure.cql'));
+    lib.testCaseLoadState = 'loaded';
+    lib.addTestCase(
+      new CqlTestCase(Uri.joinPath(wsRoot, 'input/tests/Measure/SimpleMeasure/1111')),
+    );
+    lib.addResult(
+      Uri.joinPath(wsRoot, 'input/tests/results/SimpleMeasure/TestCaseResult-1111.json'),
+    );
+    const provider = new CqlProjectTreeDataProvider(fakeProject('P', [lib]));
+    const [libRoot] = provider.getRootItems() as CqlLibraryRootTreeItem[];
+    const tcRoot = libRoot.children.find(
+      c => c instanceof CqlTestCaseRootTreeItem,
+    ) as CqlTestCaseRootTreeItem;
+    return { provider, tcItem: tcRoot.children[0] as CqlTestCaseTreeItem };
+  }
+
+  test('getChildren on a test case includes the result leaf first', () => {
+    const { provider, tcItem } = setup1111();
+    const children = provider.getChildren(tcItem);
+    expect(children[0]).to.be.instanceOf(CqlTestCaseResultTreeItem);
+  });
+
+  test('getParent of the result leaf is its test case', () => {
+    const { provider, tcItem } = setup1111();
+    const leaf = tcItem.children[0];
+    expect(provider.getParent(leaf)).to.equal(tcItem);
   });
 });

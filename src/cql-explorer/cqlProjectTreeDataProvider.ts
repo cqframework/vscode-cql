@@ -77,10 +77,21 @@ export class CqlTestCaseResourceTreeItem extends vscode.TreeItem {
   }
 }
 
+/** Individual TestCaseResult-{name}.json shown inside its test case (also listed under Results). */
+export class CqlTestCaseResultTreeItem extends vscode.TreeItem {
+  constructor(public readonly uri: vscode.Uri) {
+    super(path.basename(uri.fsPath), vscode.TreeItemCollapsibleState.None);
+    this.contextValue = 'cql-testcase-result';
+    this.iconPath = new vscode.ThemeIcon('output');
+    this.command = { command: 'vscode.open', title: 'Open', arguments: [uri] };
+  }
+}
+
 export class CqlTestCaseTreeItem extends vscode.TreeItem {
   private readonly _children: vscode.TreeItem[] = [];
+  private _resultUri: vscode.Uri | undefined;
 
-  constructor(public readonly cqlTestCase: CqlTestCase) {
+  constructor(public readonly cqlTestCase: CqlTestCase, resultUri?: vscode.Uri) {
     super(cqlTestCase.name, vscode.TreeItemCollapsibleState.Collapsed);
     this.contextValue = 'cql-testcase';
     this.iconPath = new vscode.ThemeIcon('person');
@@ -90,10 +101,28 @@ export class CqlTestCaseTreeItem extends vscode.TreeItem {
       this.tooltip = cqlTestCase.description;
     }
 
-    cqlTestCase.resources.sort((a, b) => a.name.localeCompare(b.name));
-    cqlTestCase.resources.forEach((cqlTestCaseResource: CqlTestCaseResource) => {
-      this.addTestCaseResource(cqlTestCaseResource);
-    });
+    this._resultUri = resultUri;
+    this.setResources(cqlTestCase.resources);
+  }
+
+  public get resultUri(): vscode.Uri | undefined {
+    return this._resultUri;
+  }
+
+  /** Replace the resource children, keeping the result leaf (if any) pinned first. */
+  public setResources(resources: CqlTestCaseResource[]): void {
+    this._children.length = 0;
+    if (this._resultUri) {
+      this._children.push(new CqlTestCaseResultTreeItem(this._resultUri));
+    }
+    [...resources]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach(r => this.addTestCaseResource(r));
+  }
+
+  public setResult(resultUri: vscode.Uri | undefined): void {
+    this._resultUri = resultUri;
+    this.setResources(this.cqlTestCase.resources);
   }
 
   public addTestCaseResource(cqlTestCaseResource: CqlTestCaseResource) {
@@ -135,7 +164,9 @@ export class CqlTestCaseRootTreeItem extends vscode.TreeItem {
         return;
       }
     }
-    this._children.push(new CqlTestCaseTreeItem(cqlTestCase));
+    this._children.push(
+      new CqlTestCaseTreeItem(cqlTestCase, this.cqlLibrary.getTestCaseResultUri(cqlTestCase.name)),
+    );
   }
 
   public resetChildren(): void {
@@ -500,10 +531,7 @@ export class CqlProjectTreeDataProvider implements vscode.TreeDataProvider<vscod
     lib.on(CqlLibraryEvents.TESTCASE_RESOURCES_CHANGED, (testCase: CqlTestCase) => {
       const tcItem = this.findCqlTestCaseTreeItem(testCase.uri.fsPath);
       if (tcItem) {
-        tcItem.clearChildren();
-        testCase.resources
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .forEach(r => tcItem.addTestCaseResource(r));
+        tcItem.setResources(testCase.resources);
         this._onDidChangeTreeData.fire(tcItem);
       } else {
         this._onDidChangeTreeData.fire();

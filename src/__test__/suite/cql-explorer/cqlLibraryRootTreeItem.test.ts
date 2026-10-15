@@ -6,6 +6,7 @@ import { CqlLibrary, CqlTestCase } from '../../../model/cqlProject';
 import {
   CqlLibraryRootTreeItem,
   CqlResultsRootTreeItem,
+  CqlTestCaseResultTreeItem,
   CqlTestCaseRootTreeItem,
   CqlTestCaseTreeItem,
 } from '../../../cql-explorer/cqlProjectTreeDataProvider';
@@ -200,6 +201,60 @@ suite('CqlLibraryRootTreeItem.rebuildTestCases', () => {
     lib.clearResults();
     item.rebuildTestCases('');
     expect(item.children.some(c => c instanceof CqlResultsRootTreeItem)).to.be.false;
+  });
+
+  function getTestCaseItem(item: CqlLibraryRootTreeItem, name: string): CqlTestCaseTreeItem {
+    return getTestCaseRootItem(item)!.children.find(
+      c => c instanceof CqlTestCaseTreeItem && c.cqlTestCase.name === name,
+    ) as CqlTestCaseTreeItem;
+  }
+
+  test('TestCaseResult JSON is shown under its test case and under Results', () => {
+    const resultUri = Uri.joinPath(
+      workspace.workspaceFolders![0].uri,
+      'input/tests/results/SimpleMeasure/TestCaseResult-1111.json',
+    );
+    lib.addResult(resultUri);
+    const item = new CqlLibraryRootTreeItem(lib, vscode.TreeItemCollapsibleState.Collapsed);
+
+    const tcChildren = getTestCaseItem(item, '1111').children;
+    expect(tcChildren[0]).to.be.instanceOf(CqlTestCaseResultTreeItem);
+    expect((tcChildren[0] as CqlTestCaseResultTreeItem).uri.fsPath).to.equal(resultUri.fsPath);
+    expect(
+      getTestCaseItem(item, '2222').children.some(c => c instanceof CqlTestCaseResultTreeItem),
+    ).to.be.false;
+
+    const resultsRoot = item.children.find(
+      c => c instanceof CqlResultsRootTreeItem,
+    ) as CqlResultsRootTreeItem;
+    expect(resultsRoot.children.map(c => c.label)).to.deep.equal(['TestCaseResult-1111.json']);
+  });
+
+  test('rebuildTestCases picks up a result added after construction', () => {
+    const item = new CqlLibraryRootTreeItem(lib, vscode.TreeItemCollapsibleState.Collapsed);
+    expect(
+      getTestCaseItem(item, '1111').children.some(c => c instanceof CqlTestCaseResultTreeItem),
+    ).to.be.false;
+
+    lib.addResult(Uri.joinPath(
+      workspace.workspaceFolders![0].uri,
+      'input/tests/results/SimpleMeasure/TestCaseResult-1111.json',
+    ));
+    item.rebuildTestCases('');
+    expect(getTestCaseItem(item, '1111').children[0]).to.be.instanceOf(CqlTestCaseResultTreeItem);
+  });
+
+  test('legacy .txt result does not add a leaf to any test case', () => {
+    lib.addResult(Uri.joinPath(
+      workspace.workspaceFolders![0].uri,
+      'input/tests/results/SimpleMeasure.txt',
+    ));
+    const item = new CqlLibraryRootTreeItem(lib, vscode.TreeItemCollapsibleState.Collapsed);
+    for (const name of ['1111', '2222']) {
+      expect(
+        getTestCaseItem(item, name).children.some(c => c instanceof CqlTestCaseResultTreeItem),
+      ).to.be.false;
+    }
   });
 });
 

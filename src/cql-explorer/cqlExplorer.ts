@@ -744,10 +744,7 @@ export class CqlExplorer {
         );
       }
     }
-    item.clearChildren();
-    item.cqlTestCase.resources
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .forEach(r => item.addTestCaseResource(r));
+    item.setResources(item.cqlTestCase.resources);
   }
 
   /** Find the CqlTestCaseRootTreeItem for the library at the given fsPath. */
