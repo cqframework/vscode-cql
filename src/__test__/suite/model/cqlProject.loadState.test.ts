@@ -137,6 +137,67 @@ suite('CqlProject testCaseResourceWatcher — results folder guard', () => {
   });
 });
 
+suite('CqlProject testFolderWatcher — result folder deletes', () => {
+  type Handler = (uri: Uri) => void;
+
+  let project: CqlProject;
+  let lib: CqlLibrary;
+  let refresh: sinon.SinonStub;
+  let onDelete: Handler;
+  let wsRoot: string;
+
+  const resultsDir = () => path.join(wsRoot, 'input', 'tests', 'results');
+  const libResultsDir = () => path.join(resultsDir(), 'SimpleMeasure');
+
+  setup(async () => {
+    wsRoot = workspace.workspaceFolders![0].uri.fsPath;
+    project = new CqlProject(wsRoot, []);
+    await new Promise<void>(resolve => project.once(CqlProject.Events.LOADED, () => resolve()));
+    lib = project.Libraries.find(l => l.name === 'SimpleMeasure')!;
+    refresh = sinon.stub(project, 'refresh');
+
+    const fake = {
+      onDidCreate: () => {},
+      onDidDelete: (h: Handler) => { onDelete = h; },
+    };
+    const p = project as unknown as {
+      testFolderWatcher: unknown;
+      configureTestFolderWatcher: () => void;
+    };
+    p.testFolderWatcher = fake;
+    p.configureTestFolderWatcher();
+
+    lib.addResult(Uri.file(path.join(libResultsDir(), 'TestCaseResult-1111.json')));
+    lib.addResult(Uri.file(path.join(libResultsDir(), 'TestCaseResult-2222.json')));
+  });
+
+  teardown(() => sinon.restore());
+
+  test('deleting results/{Library}/ removes its test case results', () => {
+    onDelete(Uri.file(libResultsDir()));
+    expect(lib.getTestCaseResultUri('1111')).to.be.undefined;
+    expect(lib.getTestCaseResultUri('2222')).to.be.undefined;
+    expect(lib.resultUris).to.be.empty;
+  });
+
+  test('deleting results/{Library}/ does not trigger a full refresh', () => {
+    onDelete(Uri.file(libResultsDir()));
+    expect(refresh.called).to.be.false;
+  });
+
+  test('deleting the whole results/ folder prunes results without a full refresh', () => {
+    onDelete(Uri.file(resultsDir()));
+    expect(lib.resultUris).to.be.empty;
+    expect(refresh.called).to.be.false;
+  });
+
+  test('control: deleting a test case folder still triggers refresh', () => {
+    onDelete(Uri.file(path.join(wsRoot, 'input', 'tests', 'Measure', 'SimpleMeasure', '1111')));
+    expect(refresh.calledOnce).to.be.true;
+    expect(lib.resultUris).to.have.length(2);
+  });
+});
+
 suite('CqlTestCasesLoadingTreeItem', () => {
   test('has spinner icon', () => {
     const item = new CqlTestCasesLoadingTreeItem();

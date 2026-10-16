@@ -143,6 +143,22 @@ export class CqlLibrary extends RobustEmitter {
     this.emit(CqlLibraryEvents.RESULT_CHANGED);
   }
 
+  /**
+   * Removes every result at or below `fsPath` (a deleted result folder or file).
+   * Emits RESULT_CHANGED once, and only if something was removed.
+   */
+  removeResultsUnder(fsPath: string): void {
+    const isUnder = (u: Uri) => u.fsPath === fsPath || u.fsPath.startsWith(fsPath + path.sep);
+    const removed = this._resultUris.filter(isUnder);
+    if (removed.length === 0) return;
+    this._resultUris = this._resultUris.filter(u => !isUnder(u));
+    for (const uri of removed) {
+      const testCaseName = testCaseNameFromResultPath(uri.fsPath);
+      if (testCaseName !== undefined) this._testCaseResults.delete(testCaseName);
+    }
+    this.emit(CqlLibraryEvents.RESULT_CHANGED);
+  }
+
   clearResults(): void {
     this._resultUris = [];
     this._testCaseResults.clear();
@@ -245,7 +261,15 @@ export class CqlProject extends EventEmitter {
       }
     });
     this.testFolderWatcher!.onDidDelete((uri: Uri) => {
-      if (!path.extname(uri.fsPath) && !uri.fsPath.startsWith(this.resultFolder + path.sep)) {
+      // A deleted folder is reported once, for the folder only — the result watchers'
+      // file patterns never see the files inside it, so prune results under it here.
+      if (uri.fsPath === this.resultFolder || this.isInResultFolder(uri)) {
+        for (const lib of this._libraries.values()) {
+          lib.removeResultsUnder(uri.fsPath);
+        }
+        return;
+      }
+      if (!path.extname(uri.fsPath)) {
         this.refresh(); // no extension → directory
       }
     });

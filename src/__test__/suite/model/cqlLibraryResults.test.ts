@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { expect } from 'chai';
 import { Uri, workspace } from 'vscode';
 import {
@@ -118,5 +119,55 @@ suite('CqlLibrary test case result tracking', () => {
     lib.addResult(uri);
     lib.removeResult(uri);
     expect(events).to.equal(2);
+  });
+
+  suite('removeResultsUnder (folder delete)', () => {
+    const resultsDir = () => path.join(wsRoot.fsPath, 'input', 'tests', 'results');
+    const libDir = () => path.join(resultsDir(), 'SimpleMeasure');
+
+    setup(() => {
+      lib.addResult(resultUri('TestCaseResult-1111.json'));
+      lib.addResult(resultUri('TestCaseResult-2222.json'));
+      lib.addResult(resultUri('SimpleMeasure.txt'));
+      lib.addResult(Uri.file(path.join(resultsDir(), 'SimpleMeasure.txt')));
+      events = 0;
+    });
+
+    test('deleting the library result folder removes every result inside it', () => {
+      lib.removeResultsUnder(libDir());
+      expect(lib.getTestCaseResultUri('1111')).to.be.undefined;
+      expect(lib.getTestCaseResultUri('2222')).to.be.undefined;
+      // flat results/SimpleMeasure.txt is a sibling of the folder, not inside it
+      expect(lib.resultUris.map(u => path.basename(u.fsPath))).to.deep.equal(['SimpleMeasure.txt']);
+      expect(lib.resultUris[0].fsPath).to.equal(path.join(resultsDir(), 'SimpleMeasure.txt'));
+    });
+
+    test('deleting the whole results folder removes everything', () => {
+      lib.removeResultsUnder(resultsDir());
+      expect(lib.resultUris).to.be.empty;
+      expect(lib.getTestCaseResultUri('1111')).to.be.undefined;
+    });
+
+    test('emits RESULT_CHANGED exactly once for a multi-file folder delete', () => {
+      lib.removeResultsUnder(libDir());
+      expect(events).to.equal(1);
+    });
+
+    test('a single file path removes just that file', () => {
+      lib.removeResultsUnder(resultUri('TestCaseResult-1111.json').fsPath);
+      expect(lib.getTestCaseResultUri('1111')).to.be.undefined;
+      expect(lib.getTestCaseResultUri('2222')).to.not.be.undefined;
+    });
+
+    test('a sibling folder sharing a name prefix is not affected', () => {
+      lib.removeResultsUnder(path.join(resultsDir(), 'Simple'));
+      expect(lib.resultUris).to.have.length(4);
+      expect(events).to.equal(0);
+    });
+
+    test('no-op (no emit) when nothing is under the path', () => {
+      lib.removeResultsUnder(path.join(resultsDir(), 'OtherLib'));
+      expect(events).to.equal(0);
+    });
   });
 });

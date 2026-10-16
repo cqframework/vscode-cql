@@ -6,6 +6,7 @@ import {
   CqlLibraryRootTreeItem,
   CqlProjectRootTreeItem,
   CqlProjectTreeDataProvider,
+  CqlResultsRootTreeItem,
   CqlTestCaseResultTreeItem,
   CqlTestCaseRootTreeItem,
   CqlTestCasesLoadingTreeItem,
@@ -352,5 +353,24 @@ suite('CqlProjectTreeDataProvider — test case result leaf', () => {
     const { provider, tcItem } = setup1111();
     const leaf = tcItem.children[0];
     expect(provider.getParent(leaf)).to.equal(tcItem);
+  });
+
+  test('folder delete (removeResultsUnder) removes the leaf after RESULT_CHANGED rebuild', () => {
+    const { provider, tcItem } = setup1111();
+    const lib = (provider.getRootItems()[0] as CqlLibraryRootTreeItem).cqlLibrary;
+    expect(tcItem.children[0]).to.be.instanceOf(CqlTestCaseResultTreeItem);
+
+    lib.removeResultsUnder(
+      Uri.joinPath(wsRoot, 'input/tests/results/SimpleMeasure').fsPath,
+    );
+
+    // RESULT_CHANGED rebuilds the library subtree with fresh items — re-read from the provider
+    const [libRoot] = provider.getRootItems() as CqlLibraryRootTreeItem[];
+    const tcRoot = libRoot.children.find(
+      c => c instanceof CqlTestCaseRootTreeItem,
+    ) as CqlTestCaseRootTreeItem;
+    const rebuilt = tcRoot.children[0] as CqlTestCaseTreeItem;
+    expect(rebuilt.children.some(c => c instanceof CqlTestCaseResultTreeItem)).to.be.false;
+    expect(libRoot.children.some(c => c instanceof CqlResultsRootTreeItem)).to.be.false;
   });
 });
