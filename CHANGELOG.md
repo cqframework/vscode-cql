@@ -2,7 +2,18 @@
 
 
 
+## v1.0.0
 
+Date: 2026-10-28
+
+* bump version to 1.0.0
+* upgrade to CQL Language Server 5.0.0
+* fix deleted test results update isse
+* add JSON test result to test case folder in CQL Explorer
+* fix notification pop-ups when executing CQL bacth
+* fixes issue with embedded libraries and code navigation
+* fix logging issue
+* AST view for library frames without a workspace file
 
 
 ## v0.9.8 (prerelease)
