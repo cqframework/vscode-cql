@@ -17,3 +17,5 @@ tests
 .eslintrc.js
 test-workspaces
 scripts
+
+out/

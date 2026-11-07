@@ -15,7 +15,6 @@
     "hl7"
   ],
   "icon": "icons/cqframework-white-bg.png",
-  "preview": true,
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": false
@@ -23,7 +22,7 @@
     "virtualWorkspaces": false
   },
   "engines": {
-    "vscode": ">=1.75.0"
+    "vscode": "^1.90.0"
   },
   "repository": {
     "type": "git",
@@ -879,7 +878,7 @@
     "@types/node": "^16.18.34",
     "@types/node-fetch": "^2.6.2",
     "@types/sinon": "^21.0.1",
-    "@types/vscode": "^1.73.0",
+    "@types/vscode": "~1.90.0",
     "@types/winreg": "^1.2.31",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^3.1.0",

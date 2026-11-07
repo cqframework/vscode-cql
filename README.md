@@ -9,7 +9,7 @@
 ## Requirements
 
 * Visual Studio Code 1.90 or newer
-* Java 11 or newer
+* Java 17 or newer
 
 ## Quick Start
 
