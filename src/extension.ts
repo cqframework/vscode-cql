@@ -110,7 +110,7 @@ export function activate(context: ExtensionContext): Promise<void> {
   return requirements
     .resolveRequirements(context)
     .catch(error => {
-      //log.error(error.message);
+      log.error(error.message);
       window.showErrorMessage(error.message, error.label).then(selection => {
         if (error.label && error.label === selection && error.command) {
           commands.executeCommand(error.command, error.commandParam);
