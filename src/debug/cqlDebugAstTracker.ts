@@ -53,7 +53,7 @@ async function syncFromStackTrace(
     });
     const top = resp?.stackFrames?.[0];
     log.debug('syncFromStackTrace: threadId={} topFrame={}', threadId, top ? {
-      line: top.line, column: top.column, source: top.source?.path, localId: top.instructionPointerReference,
+      line: top.line, column: top.column, source: top.source?.path, sourceReference: top.source?.sourceReference, localId: top.instructionPointerReference,
     } : null);
     if (top) await applyTopFrame(top, session);
   } catch (e) {
@@ -68,7 +68,7 @@ async function applyTopFrame(
     endLine?: number;
     endColumn?: number;
     instructionPointerReference?: string;
-    source?: { path?: string };
+    source?: { path?: string; sourceReference?: number };
   },
   session: vscode.DebugSession,
 ): Promise<void> {
@@ -82,6 +82,7 @@ async function applyTopFrame(
     return;
   }
 
+  // A file path, or a cql-virtual URI for a library with no workspace file — both end in .cql.
   const sourcePath = frame.source?.path;
   if (sourcePath && !sourcePath.toLowerCase().endsWith('.cql')) {
     log.debug('applyTopFrame: non-CQL source path={}', sourcePath);

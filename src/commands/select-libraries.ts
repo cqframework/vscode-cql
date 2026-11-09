@@ -1,11 +1,10 @@
-import { commands, ExtensionContext, ProgressLocation, Uri, window } from 'vscode';
+import { commands, ExtensionContext, Uri, window } from 'vscode';
 import { Utils } from 'vscode-uri';
 import { Commands } from '../commands/commands';
 import { CqlProjectEvents } from '../model/cqlProject';
 import { CqlSolution } from '../model/cqlSolution';
 import { getCqlPaths, getLibraries } from '../helpers/cqlHelpers';
-import { executeCQLFile } from './execute-cql-file';
-import * as log from '../log-services/logger';
+import { runLibraryBatch } from './library-batch';
 
 let _context: ExtensionContext | undefined;
 
@@ -83,46 +82,14 @@ export async function selectLibraries(): Promise<void> {
       _context?.workspaceState.update(stateKey, selected.map(item => item.label));
       quickPick.hide();
 
-      await window.withProgress(
-        {
-          location: ProgressLocation.Notification,
-          title: 'Executing CQL Libraries',
-          cancellable: true,
-        },
-        async (progress, token) => {
-          const total = selected.length;
-          const batchStart = Date.now();
-          let completed = 0;
-          for (let i = 0; i < total; i++) {
-            if (token.isCancellationRequested) {
-              break;
-            }
-            const item = selected[i];
-            progress.report({
-              message: `(${i + 1}/${total}) ${item.label}`,
-              increment: (1 / total) * 100,
-            });
-            const libStart = Date.now();
-            try {
-              await executeCQLFile(item.uri, undefined, false, undefined, false);
-              log.info(`[PERF] ${item.label}: ${((Date.now() - libStart) / 1000).toFixed(1)}s`);
-              completed++;
-            } catch (e) {
-              log.error(`Error executing CQL for ${item.label}`, e);
-              window.showErrorMessage(
-                `Failed to execute ${item.label}: ${e instanceof Error ? e.message : String(e)}`,
-              );
-            }
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-          const batchElapsed = ((Date.now() - batchStart) / 1000).toFixed(1);
-          log.info(`[PERF] selectLibraries total (${total} libraries): ${batchElapsed}s`);
-          const msg =
-            completed === total
-              ? `CQL execution complete — ${total} ${total === 1 ? 'library' : 'libraries'} (${batchElapsed}s)`
-              : `CQL execution cancelled — ${completed}/${total} libraries (${batchElapsed}s)`;
-          window.showInformationMessage(msg);
-        },
+      if (selected.length === 0) {
+        return;
+      }
+
+      await runLibraryBatch(
+        selected.map(item => ({ name: item.label, uri: item.uri })),
+        'Executing CQL Libraries',
+        { delayMs: 500 },
       );
     });
   }

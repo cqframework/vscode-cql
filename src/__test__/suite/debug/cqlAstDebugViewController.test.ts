@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { CqlAstDebugViewController, activateController } from '../../../debug/cqlAstDebugViewController';
+import { CqlAstDebugViewController, activateController, sourcePathToUri } from '../../../debug/cqlAstDebugViewController';
 import * as fetchModule from '../../../debug/debugAstFetcher';
 
 const SAMPLE_AST = `Library: One (version unspecified) [id=0]
@@ -162,6 +162,64 @@ suite('CqlAstDebugViewController', () => {
     controller.dispose();
   });
 
+  test('frame with no path or sourceReference is ignored', async () => {
+    const fetchStub = sandbox.stub(fetchModule, 'fetchAstViaDap').resolves(SAMPLE_AST);
+    const controller = activateController(context);
+
+    await controller.onFrameStopped({
+      line: 3,
+      column: 1,
+      source: {},
+    }, {} as any);
+
+    expect(fetchStub.called).to.be.false;
+    controller.dispose();
+  });
+
+  test('cql-virtual path frame fetches AST with cql-virtual URI', async () => {
+    const fetchStub = sandbox.stub(fetchModule, 'fetchAstViaDap').resolves(SAMPLE_AST);
+    const controller = activateController(context);
+
+    await controller.onFrameStopped({
+      line: 3,
+      column: 1,
+      endLine: 4,
+      endColumn: 5,
+      source: { path: 'cql-virtual:///FHIRHelpers-4.0.1.cql' },
+    }, {} as any);
+
+    expect(fetchStub.calledOnce).to.be.true;
+    // VS Code's Uri drops the empty authority when serialized (cql-virtual:/...), so compare
+    // components; the language server normalizes both forms.
+    const fetchedUri = fetchStub.firstCall.args[0] as vscode.Uri;
+    expect(fetchedUri.scheme).to.equal('cql-virtual');
+    expect(fetchedUri.path).to.equal('/FHIRHelpers-4.0.1.cql');
+
+    expect(mockTreeView.reveal.calledOnce).to.be.true;
+
+    controller.dispose();
+  });
+
+  test('virtual frame opens the cql-virtual document, not a file', async () => {
+    sandbox.stub(fetchModule, 'fetchAstViaDap').resolves(SAMPLE_AST);
+    const openTextDocumentStub = sandbox.stub(vscode.workspace, 'openTextDocument').resolves({} as any);
+    sandbox.stub(vscode.window, 'showTextDocument').resolves({ setDecorations: sandbox.stub(), revealRange: sandbox.stub(), selection: null } as any);
+    const controller = activateController(context);
+
+    await controller.onFrameStopped({
+      line: 3,
+      column: 1,
+      endLine: 4,
+      endColumn: 5,
+      source: { path: 'cql-virtual:///FHIRHelpers-4.0.1.cql' },
+    }, {} as any);
+
+    expect(openTextDocumentStub.calledOnce).to.be.true;
+    const openedUri = openTextDocumentStub.firstCall.args[0] as unknown as vscode.Uri;
+    expect(openedUri.scheme).to.equal('cql-virtual');
+    controller.dispose();
+  });
+
   test('dispose cleans up all resources', () => {
     const controller = activateController(context);
     controller.dispose();
@@ -170,5 +228,33 @@ suite('CqlAstDebugViewController', () => {
     const decorCalls = (mockDecoration.dispose as sinon.SinonSpy).callCount;
     expect(treeCalls).to.equal(1);
     expect(decorCalls).to.be.at.least(1);
+  });
+});
+
+// | Source.path                  | Uri scheme  |
+// | ---------------------------- | ----------- |
+// | /a/b/Lib.cql                 | file        |
+// | C:\a\b\Lib.cql               | file        |
+// | C:/a/b/Lib.cql               | file        |
+// | cql-virtual:///Lib-1.0.0.cql | cql-virtual |
+suite('sourcePathToUri', () => {
+  test('posix path is a file URI', () => {
+    const uri = sourcePathToUri('/a/b/Lib.cql');
+    expect(uri.scheme).to.equal('file');
+    expect(uri.path).to.equal('/a/b/Lib.cql');
+  });
+
+  test('Windows backslash path is a file URI, not a "C" scheme', () => {
+    expect(sourcePathToUri('C:\\a\\b\\Lib.cql').scheme).to.equal('file');
+  });
+
+  test('Windows forward-slash path is a file URI, not a "C" scheme', () => {
+    expect(sourcePathToUri('C:/a/b/Lib.cql').scheme).to.equal('file');
+  });
+
+  test('cql-virtual URI is parsed as a URI', () => {
+    const uri = sourcePathToUri('cql-virtual:///Lib-1.0.0.cql');
+    expect(uri.scheme).to.equal('cql-virtual');
+    expect(uri.path).to.equal('/Lib-1.0.0.cql');
   });
 });

@@ -2,8 +2,10 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import sinon from 'sinon';
+import { Uri, window } from 'vscode';
 import {
+  getCqlPaths,
   getExcludedTestCases,
   getFhirVersion,
   getLibraries,
@@ -300,5 +302,29 @@ suite('getLibraries()', () => {
     const result = getLibraries(Uri.file(tmpDir));
     expect(result).to.have.lengthOf(1);
     expect(path.basename(result[0].fsPath)).to.equal('LibA.cql');
+  });
+});
+
+suite('getCqlPaths() — no matching project', () => {
+  // A .cql outside every workspace project, so findProjectForUri returns undefined.
+  const outsideUri = Uri.file(path.join(os.tmpdir(), 'vscode-cql-no-project', 'Orphan.cql'));
+  let showErrorStub: sinon.SinonStub;
+
+  setup(() => {
+    showErrorStub = sinon.stub(window, 'showErrorMessage');
+  });
+
+  teardown(() => {
+    showErrorStub.restore();
+  });
+
+  test('returns undefined and shows an error toast by default', () => {
+    expect(getCqlPaths(outsideUri)).to.be.undefined;
+    expect(showErrorStub.calledOnceWith('Unable to determine path to project root.')).to.be.true;
+  });
+
+  test('returns undefined without a toast when silent', () => {
+    expect(getCqlPaths(outsideUri, true)).to.be.undefined;
+    expect(showErrorStub.called).to.be.false;
   });
 });

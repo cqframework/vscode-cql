@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import fetch from 'node-fetch';
 import * as path from 'path';
 import { ExtensionContext, Progress, ProgressLocation, window } from 'vscode';
+import * as log from '../log-services/logger';
 import { ensureExists } from '../utils/file-utils';
 
 interface MavenCoords {
@@ -72,19 +73,33 @@ async function installServiceIfMissing(
   serviceName: string,
   coords: MavenCoords,
 ): Promise<void> {
-  const doesExist = isServiceInstalled(extensionPath, coords);
-  if (!doesExist) {
-    return window.withProgress(
+  const jarPath = getServicePathFromCoords(extensionPath, coords);
+  if (isServiceInstalled(extensionPath, coords)) {
+    log.debug(`Using ${serviceName} at ${jarPath}`);
+    return;
+  }
+
+  const url = getSearchUrl(coords);
+  log.info(`${serviceName} not found at ${jarPath}; downloading from ${url}`);
+  const startedAt = Date.now();
+  try {
+    await window.withProgress(
       {
         location: ProgressLocation.Notification,
         cancellable: false,
-        title: `Installing ${serviceName}`,
+        title: `Downloading CQL Language Server ${coords.version} (first run only)`,
       },
       async progress => {
         await installJar(extensionPath, serviceName, coords, progress);
       },
     );
+  } catch (e) {
+    log.error(`Failed to download ${serviceName} from ${url}`, e);
+    throw e;
   }
+  const mb = (fs.statSync(jarPath).size / BYTES_PER_MB).toFixed(1);
+  const secs = ((Date.now() - startedAt) / 1000).toFixed(1);
+  log.info(`Downloaded ${serviceName} (${mb} MB) in ${secs}s to ${jarPath}`);
 }
 
 function isServiceInstalled(extensionPath: string, coords: MavenCoords): boolean {
@@ -132,39 +147,115 @@ async function installJar(
   }
 }
 
+const BYTES_PER_MB = 1024 * 1024;
+
+export function partialPath(jarPath: string): string {
+  return `${jarPath}.part`;
+}
+
+// VS Code's `increment` is additive percent points, so report only the delta since the last report.
+export function progressStep(
+  bytesSoFar: number,
+  totalBytes: number | undefined,
+  lastPct: number,
+): { pct: number; increment: number } {
+  if (!totalBytes || totalBytes <= 0) {
+    return { pct: lastPct, increment: 0 };
+  }
+  const pct = Math.min(100, Math.floor((bytesSoFar / totalBytes) * 100));
+  return { pct, increment: Math.max(0, pct - lastPct) };
+}
+
+export function formatProgressMessage(bytesSoFar: number, totalBytes?: number): string {
+  const soFarMb = (bytesSoFar / BYTES_PER_MB).toFixed(1);
+  if (!totalBytes || totalBytes <= 0) {
+    return `Downloading ${soFarMb} MB`;
+  }
+  const totalMb = (totalBytes / BYTES_PER_MB).toFixed(1);
+  const pct = Math.min(100, Math.floor((bytesSoFar / totalBytes) * 100));
+  return `Downloading ${soFarMb} / ${totalMb} MB (${pct}%)`;
+}
+
+// Best-effort delete: a failure (e.g. EPERM/EBUSY on Windows) must not mask the caller's error.
+// A leftover .part is cleared at the start of the next download.
+export function safeRemove(file: string): void {
+  try {
+    if (fs.existsSync(file)) {
+      fs.unlinkSync(file);
+    }
+  } catch (err) {
+    log.warn(`Could not remove partial download ${file}`, err);
+  }
+}
+
 async function downloadFile(
   url: string,
-  path: string,
+  jarPath: string,
   _serviceName: string,
   totalBytes?: number,
   progress?: Progress<{ message?: string; increment?: number }>,
 ) {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Failed to download ${url}: ${res.statusText} (${res.status})`);
-  }
-  const fileStream = fs.createWriteStream(path);
-  let bytesSoFar = 0;
+  const part = partialPath(jarPath);
+  // Clear any partial left by an earlier interrupted run.
+  safeRemove(part);
+  let fileStream: fs.WriteStream | undefined;
+  let streamClosed: Promise<void> | undefined;
   try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Failed to download ${url}: ${res.statusText} (${res.status})`);
+    }
+    fileStream = fs.createWriteStream(part);
+    const out = fileStream;
+    streamClosed = new Promise<void>(resolve => out.once('close', () => resolve()));
+    let bytesSoFar = 0;
+    let lastPct = 0;
+    let lastMb = -1;
     await new Promise((resolve, reject) => {
-      res.body.pipe(fileStream);
+      res.body.pipe(out);
       res.body.on('data', chunk => {
-        if (progress) {
-          bytesSoFar += chunk.length;
-          progress.report({
-            message: `Downloading`,
-            increment: bytesSoFar / totalBytes!,
-          });
+        bytesSoFar += chunk.length;
+        if (!progress) {
+          return;
+        }
+        if (totalBytes) {
+          const step = progressStep(bytesSoFar, totalBytes, lastPct);
+          if (step.pct !== lastPct) {
+            lastPct = step.pct;
+            progress.report({
+              message: formatProgressMessage(bytesSoFar, totalBytes),
+              increment: step.increment,
+            });
+          }
+        } else {
+          const mb = Math.floor(bytesSoFar / BYTES_PER_MB);
+          if (mb !== lastMb) {
+            lastMb = mb;
+            progress.report({ message: formatProgressMessage(bytesSoFar) });
+          }
         }
       });
-      res.body.on('error', reject);
-      fileStream.on('error', reject);
-      fileStream.on('finish', resolve);
+      res.body.on('error', err => {
+        res.body.unpipe(out);
+        reject(err);
+      });
+      out.on('error', reject);
+      out.on('finish', resolve);
     });
-  } catch (e) {
-    if (fs.existsSync(path)) {
-      fs.unlinkSync(path);
+    if (totalBytes !== undefined && out.bytesWritten !== totalBytes) {
+      throw new Error(
+        `Incomplete download of ${url}: expected ${totalBytes} bytes, got ${out.bytesWritten}`,
+      );
     }
+    // Same directory, so the rename is atomic: jarPath never holds a truncated file.
+    fs.renameSync(part, jarPath);
+  } catch (e) {
+    // Release the file handle first: on Windows, deleting an open file throws EPERM/EBUSY.
+    if (fileStream && streamClosed) {
+      fileStream.destroy();
+      await streamClosed;
+    }
+    safeRemove(part);
     throw e;
   }
 }

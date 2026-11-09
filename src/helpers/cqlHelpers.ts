@@ -37,10 +37,16 @@ export function resolveTestConfigPath(testDirectoryPath: Uri): Uri {
   return Utils.resolvePath(testDirectoryPath, 'config.json');
 }
 
-export function getCqlPaths(cqlFileUri: Uri): CqlPaths | undefined {
+/**
+ * @param silent When true, a missing project returns `undefined` without showing an error
+ *   toast (batch execution reports the failure in its end-of-batch summary instead).
+ */
+export function getCqlPaths(cqlFileUri: Uri, silent: boolean = false): CqlPaths | undefined {
   const project = CqlSolution.getCurrent().findProjectForUri(cqlFileUri);
   if (!project) {
-    window.showErrorMessage('Unable to determine path to project root.');
+    if (!silent) {
+      window.showErrorMessage('Unable to determine path to project root.');
+    }
     return;
   }
   const projectDirectoryPath = Uri.file(project.igRoot);

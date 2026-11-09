@@ -23,6 +23,13 @@ import * as log from '../log-services/logger';
 
 let _instance: CqlAstDebugViewController | undefined;
 
+// A DAP Source.path is either a filesystem path or (for a library with no workspace file, e.g.
+// FHIRHelpers or an npm-installed IG library) a `cql-virtual:` URI. Same heuristic VS Code uses:
+// the scheme must be 2+ characters, so Windows drive letters (`C:\...`, `C:/...`) stay paths.
+export function sourcePathToUri(p: string): Uri {
+  return /^[a-zA-Z][a-zA-Z0-9+\-.]+:/.test(p) ? Uri.parse(p) : Uri.file(p);
+}
+
 export function getControllerInstance(): CqlAstDebugViewController | undefined {
   return _instance;
 }
@@ -39,7 +46,7 @@ interface DapFrame {
   endLine?: number;
   endColumn?: number;
   instructionPointerReference?: string;
-  source?: { path?: string };
+  source?: { path?: string; sourceReference?: number };
 }
 
 export class CqlAstDebugViewController implements Disposable {
@@ -108,16 +115,20 @@ export class CqlAstDebugViewController implements Disposable {
     _session: import('vscode').DebugSession,
   ): Promise<void> {
     const span = normalizeSpan(frame);
+    // A file path, or a cql-virtual URI for a library with no workspace file.
     const sourcePath = frame.source?.path;
-
-    if (!sourcePath || !sourcePath.toLowerCase().endsWith('.cql')) {
+    if (!sourcePath) {
+      log.debug('cqlAstVC: no source path on frame');
+      return;
+    }
+    if (!sourcePath.toLowerCase().endsWith('.cql')) {
       log.debug('cqlAstVC: non-CQL source path={}', sourcePath);
       return;
     }
 
     if (sourcePath !== this.activeCqlPath) {
       try {
-        await this.loadAst(sourcePath);
+        await this.loadAst(sourcePathToUri(sourcePath));
         this.activeCqlPath = sourcePath;
       } catch (e) {
         log.debug('cqlAstVC: loadAst failed for {} err={}', sourcePath, e);
@@ -127,7 +138,7 @@ export class CqlAstDebugViewController implements Disposable {
     }
 
     this.resolveAndReveal(span);
-    await this.applyCqlDecoration(span);
+    await this.applyCqlDecoration(sourcePath, span);
   }
 
   dispose(): void {
@@ -140,9 +151,8 @@ export class CqlAstDebugViewController implements Disposable {
     this.provider.setEmpty();
   }
 
-  private async loadAst(cqlPath: string): Promise<void> {
-    const uri = Uri.file(cqlPath);
-    log.debug('cqlAstVC: fetching AST for {}', cqlPath);
+  private async loadAst(uri: Uri): Promise<void> {
+    log.debug('cqlAstVC: fetching AST for {}', uri.toString());
     const astContent = await fetchAstViaDap(uri, 'ast');
     const { roots, index } = parseAstToTree(astContent);
     this.cqlIndex = index;
@@ -200,17 +210,15 @@ export class CqlAstDebugViewController implements Disposable {
     return undefined;
   }
 
-  private async applyCqlDecoration(span: CqlSpan): Promise<void> {
-    const cqlPath = this.activeCqlPath;
-    if (!cqlPath) return;
-
+  private async applyCqlDecoration(cqlPath: string, span: CqlSpan): Promise<void> {
+    const targetUri = sourcePathToUri(cqlPath);
     let editor = window.visibleTextEditors.find(
-      e => e.document.uri.fsPath === cqlPath,
+      e => e.document.uri.toString() === targetUri.toString(),
     );
 
     if (!editor) {
       try {
-        const doc = await workspace.openTextDocument(Uri.file(cqlPath));
+        const doc = await workspace.openTextDocument(targetUri);
         editor = await window.showTextDocument(doc, { preserveFocus: true, preview: false });
       } catch (e) {
         log.debug('cqlAstVC: could not open CQL editor for {} err={}', cqlPath, e);
@@ -251,13 +259,14 @@ export class CqlAstDebugViewController implements Disposable {
       return;
     }
 
+    const targetUri = sourcePathToUri(cqlPath);
     let editor = window.visibleTextEditors.find(
-      e => e.document.uri.fsPath === cqlPath,
+      e => e.document.uri.toString() === targetUri.toString(),
     );
 
     if (!editor) {
       try {
-        const doc = await workspace.openTextDocument(Uri.file(cqlPath));
+        const doc = await workspace.openTextDocument(targetUri);
         editor = await window.showTextDocument(doc, { preserveFocus: true, preview: false });
       } catch (e) {
         log.debug('cqlAstVC: onRevealCql: could not open editor err={}', e);

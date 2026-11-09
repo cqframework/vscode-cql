@@ -28,6 +28,7 @@ import { CqlParametersConfig, ParameterEntry, ResultParameterEntry } from '../mo
 import { getMeasureReportData, getTestCases, TestCase } from '../model/testCase';
 import { VersionInfo } from '../protocol';
 import { getExtensionVersion } from '../extensionState';
+import * as log from '../log-services/logger';
 
 export interface VersionInfoWithExtension extends VersionInfo {
   extension?: string;
@@ -54,6 +55,13 @@ export function register(context: ExtensionContext): void {
 
 /**
  * Main command entry point orchestrating execution flow.
+ *
+ * @param showCompletion When false, runs in "batch mode": per-library toasts
+ *   are suppressed so a batch of libraries (driven by `library-batch.ts`) does
+ *   not stack toasts on top of the cancellable progress notification. Batch
+ *   callers also receive thrown errors instead of toast messages for the
+ *   file-missing / no-CQL-paths cases so the batch can record the failure
+ *   rather than silently "completing".
  */
 export async function executeCQLFile(
   cqlFileUri: Uri,
@@ -62,14 +70,24 @@ export async function executeCQLFile(
   resultFormatOverride?: string,
   showCompletion: boolean = true,
 ): Promise<void> {
+  const batchMode = !showCompletion;
+
   if (!fs.existsSync(cqlFileUri.fsPath)) {
-    window.showInformationMessage('No library content found. Please save before executing.');
+    const message = 'No library content found. Please save before executing.';
+    if (batchMode) {
+      throw new Error(message);
+    }
+    window.showInformationMessage(message);
     return;
   }
 
-  const cqlPaths = getCqlPaths(cqlFileUri);
+  const cqlPaths = getCqlPaths(cqlFileUri, batchMode);
   if (!cqlPaths) {
-    window.showErrorMessage('Unable to determine needed CQL Paths.');
+    const message = 'Unable to determine needed CQL Paths.';
+    if (batchMode) {
+      throw new Error(message);
+    }
+    window.showErrorMessage(message);
     return;
   }
 
@@ -99,7 +117,13 @@ export async function executeCQLFile(
   const determinedFhirVersion = getFhirVersion(cqlSource);
   const fhirVersion = determinedFhirVersion ?? 'R4';
   if (!determinedFhirVersion) {
-    window.showInformationMessage('Unable to determine version of FHIR used. Defaulting to R4.');
+    const message = 'Unable to determine version of FHIR used. Defaulting to R4.';
+    if (batchMode) {
+      // Quiet in batch mode — once per library would flood the user.
+      log.warn(message);
+    } else {
+      window.showInformationMessage(message);
+    }
   }
   const libraryVersion = extractLibraryVersion(cqlSource);
   const resultFormat = resultFormatOverride ?? testConfig.resultFormat;

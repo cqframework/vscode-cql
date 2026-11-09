@@ -2,17 +2,20 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import sinon from 'sinon';
 
 const EXTENSION_VERSION: string = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, '../../../../package.json'), 'utf-8')
 ).version;
-import { Uri } from 'vscode';
+import { Uri, window } from 'vscode';
 import {
+  executeCQLFile,
   formatResponse,
   TestCaseResult,
   writeIndividualResultFiles,
 } from '../../../commands/execute-cql-file';
 import { ExecuteCqlResponse } from '../../../cql-service/cqlService.executeCql';
+import * as cqlHelpers from '../../../helpers/cqlHelpers';
 import { CqlParametersConfig } from '../../../model/parameters';
 
 suite('formatResponse()', () => {
@@ -316,5 +319,67 @@ suite('writeIndividualResultFiles()', () => {
     expect(fs.existsSync(path.join(tmpDir, 'SUR716', 'TestCaseResult-p1.json'))).to.be.false;
     const result = readResult('SUR716-011Assertion', 'p1');
     expect(result.libraryName).to.equal('SUR716-011Assertion');
+  });
+});
+
+suite('executeCQLFile() batch mode (showCompletion = false)', () => {
+  let sandbox: sinon.SinonSandbox;
+  let showInfoStub: sinon.SinonStub;
+  let showErrorStub: sinon.SinonStub;
+
+  setup(() => {
+    sandbox = sinon.createSandbox();
+    showInfoStub = sandbox.stub(window, 'showInformationMessage');
+    showErrorStub = sandbox.stub(window, 'showErrorMessage');
+  });
+
+  teardown(() => {
+    sandbox.restore();
+  });
+
+  test('a missing .cql with defaults: shows the info toast and resolves', async () => {
+    const missingUri = Uri.file('/definitely/not/a/real/path/LibX.cql');
+    await executeCQLFile(missingUri);
+    expect(showInfoStub.calledWith('No library content found. Please save before executing.')).to.be.true;
+    expect(showErrorStub.called).to.be.false;
+  });
+
+  test('a missing .cql with showCompletion = false: throws and shows no toast', async () => {
+    const missingUri = Uri.file('/definitely/not/a/real/path/LibX.cql');
+    let thrown: Error | undefined;
+    try {
+      await executeCQLFile(missingUri, undefined, true, undefined, false);
+    } catch (e) {
+      thrown = e as Error;
+    }
+    expect(thrown).to.be.an('error');
+    expect(thrown!.message).to.equal('No library content found. Please save before executing.');
+    expect(showInfoStub.called).to.be.false;
+    expect(showErrorStub.called).to.be.false;
+  });
+
+  test('when getCqlPaths returns undefined with showCompletion = false: throws with that message', async () => {
+    // Stub the helper so the file-exists check passes but the no-paths branch is exercised
+    // without needing to set up a real CqlSolution project fixture.
+    const getCqlPathsStub = sandbox.stub(cqlHelpers, 'getCqlPaths').returns(undefined);
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-cql-batch-'));
+    const existingCql = path.join(tmpDir, 'LibY.cql');
+    fs.writeFileSync(existingCql, "library LibY version '1.0.0'\n");
+    try {
+      const uri = Uri.file(existingCql);
+      let thrown: Error | undefined;
+      try {
+        await executeCQLFile(uri, undefined, true, undefined, false);
+      } catch (e) {
+        thrown = e as Error;
+      }
+      // Batch mode asks getCqlPaths not to post its own per-library error toast.
+      expect(getCqlPathsStub.calledWith(sinon.match.any, true)).to.be.true;
+      expect(thrown).to.be.an('error');
+      expect(thrown!.message).to.equal('Unable to determine needed CQL Paths.');
+      expect(showInfoStub.called).to.be.false;
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });

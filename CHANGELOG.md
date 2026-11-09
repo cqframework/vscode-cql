@@ -2,7 +2,22 @@
 
 
 
+## v1.0.0
 
+Date: 2026-11-07
+
+* bump version to 1.0.0
+* upgrade to CQL Language Server 5.0.0
+* improve CQL Language Server download notification: accurate progress (MB and %), download logging, and recovery from interrupted downloads (#195)
+* add `npm run package` script for building the VSIX without the CQL Language Server JAR
+* require VS Code 1.90 or newer; remove preview flag
+* exclude stale build output and local config from the VSIX
+* fix README Java requirement (Java 17 or newer)
+* fix deleted test results update issue
+* add JSON test result to test case folder in CQL Explorer
+* fix notification pop-ups when executing CQL batch
+* fixes issue with embedded libraries and code navigation
+* AST view for library frames without a workspace file
 
 
 ## v0.9.8 (prerelease)

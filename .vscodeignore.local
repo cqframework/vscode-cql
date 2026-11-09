@@ -8,6 +8,7 @@ src/
 tsconfig.json
 dist/jars
 dist/test
+webview-ui/
 
 .vscode-test
 .vscode-test.js
@@ -16,3 +17,5 @@ tests
 .eslintrc.js
 test-workspaces
 scripts
+
+out/
