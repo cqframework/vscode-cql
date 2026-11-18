@@ -58,7 +58,7 @@
         },
         "value": {
           "type": "string",
-          "description": "The parameter value as a string. For String/Integer/Decimal/Boolean: raw value (e.g. \"HMO\", \"42\", \"true\"). For DateTime/Date/Time: CQL literal (e.g. \"@2024-01-15\"). For Interval<DateTime>: CQL literal (e.g. \"Interval[@2024-01-01T00:00:00.000Z, @2025-01-01T00:00:00.000Z)\")."
+          "description": "The parameter value as a CQL literal expression. Values are CQL System types, not FHIR types. Examples: String \"'HMO'\" (single quotes required), Integer \"42\", Decimal \"3.14\", Boolean \"true\", Date \"@2024-01-01\", DateTime \"@2024-01-01T00:00:00.000Z\", Time \"@T12:00:00\", Quantity \"5 'mg'\", Interval<Date> \"Interval[@2024-01-01, @2025-01-01)\", Interval<DateTime> \"Interval[@2024-01-01T00:00:00.000Z, @2025-01-01T00:00:00.000Z)\"."
         }
       }
     },

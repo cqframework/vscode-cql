@@ -9,7 +9,7 @@ import path from 'node:path';
 import { FileSystemWatcher, RelativePattern, Uri, workspace } from 'vscode';
 import { logger } from '../extensionLogger';
 import { fileExists, isDirectory } from '../helpers/fileHelper';
-import { extractTestCaseDescription } from './testCase';
+import { extractTestCaseDescription, mayContainTestCaseDescription } from './testCase';
 import { ObservableProperty } from '../shared/ObservableProperty';
 import { RobustEmitter } from '../shared/RobustEmitter';
 import { DeviationKind, findTestCasesFolder } from './igLayoutDetector';
@@ -349,7 +349,7 @@ export class CqlProject extends EventEmitter {
         if (path.basename(uri.fsPath).startsWith('MeasureReport')) {
           try {
             const content = await fs.promises.readFile(uri.fsPath, 'utf-8');
-            found.testCase.description = content.includes('cqfm-testCaseDescription')
+            found.testCase.description = mayContainTestCaseDescription(content)
               ? extractTestCaseDescription(JSON.parse(content) as Record<string, unknown>)
               : undefined;
           } catch {
@@ -456,7 +456,7 @@ export class CqlProject extends EventEmitter {
                   path.join(fullPath, mrFile),
                   'utf-8',
                 );
-                if (content.includes('cqfm-testCaseDescription')) {
+                if (mayContainTestCaseDescription(content)) {
                   testCase.description = extractTestCaseDescription(
                     JSON.parse(content) as Record<string, unknown>,
                   );

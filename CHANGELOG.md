@@ -2,6 +2,17 @@
 
 
 
+## v1.1.0 (prerelease)
+
+Date: 2026-11-17
+
+* bump version to 1.1.0 (pre-release); CQL Language Server stays at 5.0.0
+* read the test case description from `cqm-testCaseDescription` (Quality Measure IG, written by MADiE) as well as `cqfm-testCaseDescription`, preferring CQM (#201)
+* config.jsonc schema: parameter values are CQL literals; String values must be single-quoted, e.g. `'HMO'` (#198)
+* exclude compiled unit tests (`dist/__test__`) from the VSIX (#197)
+* add `docs/adr/` with ADR conventions and cross-repo links (#199)
+
+
 ## v1.0.0
 
 Date: 2026-11-07

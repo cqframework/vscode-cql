@@ -1,6 +1,14 @@
 import { expect } from 'chai';
 import { Uri, workspace } from 'vscode';
-import { getMeasureReportData, extractTestCaseDescription } from '../../../model/testCase';
+import {
+  getMeasureReportData,
+  extractTestCaseDescription,
+  mayContainTestCaseDescription,
+} from '../../../model/testCase';
+
+const CQM_URL = 'http://hl7.org/fhir/uv/cqm/StructureDefinition/cqm-testCaseDescription';
+const CQFM_URL =
+  'http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription';
 
 suite('testCase.getMeasureReportData tests', () => {
   test('returns undefined when directory does not exist', () => {
@@ -123,5 +131,43 @@ suite('testCase.getMeasureReportData tests', () => {
     };
     const result = extractTestCaseDescription(report);
     expect(result).to.equal('Diagnosis = Afib during encounter');
+  });
+
+  test('extractTestCaseDescription reads the cqm-testCaseDescription extension', () => {
+    const report = { extension: [{ url: CQM_URL, valueMarkdown: 'Exported from MADiE' }] };
+    expect(extractTestCaseDescription(report)).to.equal('Exported from MADiE');
+  });
+
+  test('extractTestCaseDescription prefers cqm over cqfm when both are present', () => {
+    const report = {
+      extension: [
+        { url: CQFM_URL, valueMarkdown: 'CQFM description' },
+        { url: CQM_URL, valueMarkdown: 'CQM description' },
+      ],
+    };
+    expect(extractTestCaseDescription(report)).to.equal('CQM description');
+  });
+
+  test('extractTestCaseDescription falls back to cqfm when cqm has no valueMarkdown', () => {
+    const report = {
+      extension: [
+        { url: CQM_URL },
+        { url: CQFM_URL, valueMarkdown: 'CQFM description' },
+      ],
+    };
+    expect(extractTestCaseDescription(report)).to.equal('CQFM description');
+  });
+
+  test('extractTestCaseDescription ignores unrelated extensions', () => {
+    const report = {
+      extension: [{ url: 'http://example.org/other-testCaseDescription', valueMarkdown: 'x' }],
+    };
+    expect(extractTestCaseDescription(report)).to.be.undefined;
+  });
+
+  test('mayContainTestCaseDescription matches both extension URLs and nothing else', () => {
+    expect(mayContainTestCaseDescription(JSON.stringify({ url: CQM_URL }))).to.be.true;
+    expect(mayContainTestCaseDescription(JSON.stringify({ url: CQFM_URL }))).to.be.true;
+    expect(mayContainTestCaseDescription('{"resourceType":"MeasureReport"}')).to.be.false;
   });
 });

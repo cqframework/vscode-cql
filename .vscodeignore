@@ -6,7 +6,7 @@ src/
 tsconfig.json
 dist/jars
 dist/java-support/jars
-dist/test
+dist/__test__/
 webview-ui/
 
 .vscode-test

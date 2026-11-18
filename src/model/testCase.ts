@@ -110,16 +110,31 @@ export function sanitizeDescription(raw: string): string {
     .trim();
 }
 
-const DESCRIPTION_URL =
-  'http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription';
+// Quality Measure IG (written by MADiE) first, then the older CQFM extension.
+const DESCRIPTION_URLS = [
+  'http://hl7.org/fhir/uv/cqm/StructureDefinition/cqm-testCaseDescription',
+  'http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription',
+];
+
+/**
+ * Cheap pre-check on raw MeasureReport text before parsing it. Matches both the
+ * cqm- and cqfm- extension URLs.
+ */
+export function mayContainTestCaseDescription(content: string): boolean {
+  return content.includes('-testCaseDescription');
+}
 
 export function extractTestCaseDescription(
   report: Record<string, unknown>,
 ): string | undefined {
   const extensions = report['extension'] as Array<Record<string, unknown>> | undefined;
-  const ext = extensions?.find(e => e['url'] === DESCRIPTION_URL);
-  const raw = ext?.['valueMarkdown'] as string | undefined;
-  return raw ? sanitizeDescription(raw) : undefined;
+  for (const url of DESCRIPTION_URLS) {
+    const raw = extensions?.find(e => e['url'] === url)?.['valueMarkdown'] as string | undefined;
+    if (raw) {
+      return sanitizeDescription(raw);
+    }
+  }
+  return undefined;
 }
 
 function extractPatientId(report: Record<string, unknown>): string | undefined {
