@@ -165,7 +165,7 @@ suite('testCase.getMeasureReportData tests', () => {
     expect(extractTestCaseDescription(report)).to.be.undefined;
   });
 
-  test('mayContainTestCaseDescription matches both extension URLs and nothing else', () => {
+  test('mayContainTestCaseDescription matches cqm and cqfm text, not a plain MeasureReport', () => {
     expect(mayContainTestCaseDescription(JSON.stringify({ url: CQM_URL }))).to.be.true;
     expect(mayContainTestCaseDescription(JSON.stringify({ url: CQFM_URL }))).to.be.true;
     expect(mayContainTestCaseDescription('{"resourceType":"MeasureReport"}')).to.be.false;
